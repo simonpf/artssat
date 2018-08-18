@@ -1,4 +1,6 @@
-"""The ArtsObject meta class.
+"""
+The ArtsObject meta class
+=========================
 
 The ArtsObject meta class implements functionality common
 to the handling of data that is required in an ARTS
@@ -172,16 +174,16 @@ class ArtsObject(ABCMeta):
 
             dct["__init__"] = make_init(ps, dct["__init__"])
 
-            for name, dim, t in ps:
-                getter = make_getter(name)
+            for nm, dim, t in ps:
+                getter = make_getter(nm)
 
                 # Check for custom setter.
-                if name + "_setter" in dct:
-                    setter = dct[name + "_setter"]
+                if nm + "_setter" in dct:
+                    setter = dct[nm + "_setter"]
                 else:
-                    setter = make_setter(name)
+                    setter = make_setter(nm)
 
-                prop = property(getter, setter, name)
-                dct[name] = prop
+                prop = property(getter, setter, nm)
+                dct[nm] = prop
 
         return super().__new__(cls, name, bases, dct)

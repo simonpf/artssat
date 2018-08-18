@@ -1,5 +1,5 @@
 import numpy as np
-from parts.atmosphere.scattering import CloudBox
+from parts.atmosphere.cloud_box import CloudBox
 
 class Atmosphere:
 

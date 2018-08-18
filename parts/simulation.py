@@ -1,7 +1,7 @@
 import numpy as np
 from typhon.arts.workspace     import Workspace
 from parts.sensor.sensor import ActiveSensor, PassiveSensor
-from parts.atmosphere.scattering import RT4
+from parts.scattering import RT4
 
 class ArtsSimulation:
     def __init__(self,

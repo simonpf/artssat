@@ -15,6 +15,7 @@ Attributes:
         longitude grid
     joker(Joker) Dimension object representing a dimensions that
         can take an arbitrary value.
+
 """
 
 class Dimension:
@@ -30,6 +31,7 @@ class Dimension:
     Dimension objects are used to define the dimensions of
     ARTS data and keep track of the different values inferred
     from user-provided data.
+
     """
     def __init__(self, name):
         """
@@ -37,6 +39,7 @@ class Dimension:
 
         Parameters:
             name(str): The name of the dimension, e.g. "Pressure grid"
+
         """
         self.name = name
         self.deductions = {}
@@ -49,11 +52,15 @@ class Dimension:
         each workspace separately.
 
         Parameters:
+
             ws(typhon.arts.workspace.Workspace): Workspace object
                 for which the dimension was deduced.
+
             value(Int): The deduced dimenions
+
             who(str): The name of the variable from which this
                 value was deduced.
+
         """
         if not ws in self.deductions:
             self.deductions[ws] = [(value, who)]
@@ -70,6 +77,7 @@ class Dimension:
 
         Raises:
             Exception: If inconsistencies are encountered.
+
         """
 
         if not ws in self.deductions:
@@ -122,6 +130,7 @@ class Dimension:
 class Joker(Dimension):
     """
     A dimension that can take an arbitrary value.
+
     """
     def __init__(self, name):
         """
@@ -129,6 +138,7 @@ class Joker(Dimension):
 
         Parameters:
             name(str): The name of the dimension, e.g. "Pressure grid"
+
         """
         self.name = name
         self.deductions = {}
@@ -136,12 +146,14 @@ class Joker(Dimension):
     def add_deduction(self, ws, value, who):
         """
         This function does nothing.
+
         """
         pass
 
     def check(self, *args, **kwargs):
         """
         This function does nothing.
+
         """
         pass
 

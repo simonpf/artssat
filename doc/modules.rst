@@ -5,6 +5,6 @@ PSDs
 ----
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
 
-   parts.atmosphere.scattering.psd
+   generated/parts
