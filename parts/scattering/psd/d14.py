@@ -47,7 +47,8 @@ In this module, two implementations of the D14 PSD are provided:
 """
 from parts import dimensions as dim
 from parts.arts_object import ArtsObject
-from parts.scattering.psd.arts_psd import ArtsPSD
+from parts.scattering.psd.arts.arts_psd import ArtsPSD
+from parts.scattering.psd.data.psd_data import PSDData
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
@@ -166,7 +167,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                 then not be queried from the data provider.
 
         """
-        from parts.scattering.psd import SizeParameter
+        from parts.scattering.psd.data.psd_data import SizeParameter
 
         self.alpha = alpha
         self.beta  = beta
@@ -229,7 +230,10 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
         n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
 
-        return evaluate_d14(x, n0, dm, alpha, beta)
+        return PSDData(evaluate_d14(x, n0, dm, alpha, beta),
+                       x,
+                       SizeParameter.D_eq)
+
 
 class D14N(ArtsPSD, metaclass = ArtsObject):
     """
@@ -268,7 +272,7 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                 then not be queried from the data provider.
 
         """
-        from parts.scattering.psd import SizeParameter
+        from parts.scattering.psd.data.psd_data import SizeParameter
 
         self.alpha = alpha
         self.beta  = beta
@@ -331,4 +335,6 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
 
         n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
 
-        return evaluate_d14(x, n0, dm, alpha, beta)
+        return PSDData(evaluate_d14(x, n0, dm, alpha, beta),
+                       x,
+                       SizeParameter.D_eq)

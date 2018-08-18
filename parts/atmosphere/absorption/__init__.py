@@ -1,3 +1,8 @@
+"""
+Absorption
+==========
+
+"""
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 
