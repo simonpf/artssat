@@ -8,7 +8,8 @@ import numpy as np
 import scipy as sp
 from abc import abstractproperty
 from parts.arts_object import ArtsObject
-from parts.scattering.psd.data.psd_data import SizeParameter
+from parts.scattering.psd.data.psd_data import SizeParameter, Area, D_eq,\
+                                               D_max, Mass
 
 class ArtsPSD(metaclass = ArtsObject):
     r"""
@@ -33,10 +34,10 @@ class ArtsPSD(metaclass = ArtsObject):
                   ("t_max", (), np.float),
                   ("x_fit_start", (), np.float)]
 
-    size_parameter_names = {SizeParameter.D_eq, "dveq",
-                            SizeParameter.D_max, "dmax",
-                            SizeParameter.mass, "mass",
-                            SizeParameter.area, "area"}
+    size_parameter_names = {D_eq : "dveq",
+                            D_max : "dmax",
+                            Mass : "mass",
+                            Area : "area"}
 
     def __init__(self,
                  size_parameter,
@@ -51,8 +52,9 @@ class ArtsPSD(metaclass = ArtsObject):
             m_max(numpy.float): ARTS parameter, maximum temperature for which PSD values
                 will be produced.
         """
-        self.t_min = 0.0
-        self.t_max = 999.0
+        self.size_parameter = size_parameter
+        self.t_min = t_min
+        self.t_max = t_max
 
         self.x_fit_start = 100e-6
 
@@ -86,7 +88,7 @@ class ArtsPSD(metaclass = ArtsObject):
         The ARTS agenda representing the PSD. Should be used as :code:`pnd_agenda`
         in the ARTS :code:`pnd_agenda_array`.
         """
-        size_parameter = ArtsPSD.size_parameter_names[self.size_parameter]
+        size_parameter = ArtsPSD.size_parameter_names[type(self.size_parameter)]
 
         @arts_agenda
         def pnd_agenda(ws):

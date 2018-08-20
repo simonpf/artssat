@@ -114,7 +114,7 @@ def make_setter(name):
         prop = getattr(self, "_" + name)
         if prop.expected_type == np.ndarray:
             x = np.asarray(x)
-        if not prop.expected_type == type(x):
+        if not isinstance(x, prop.expected_type):
             raise Exception("Type of provided value for {0} doesn't match "
                             "the expected type {1}.".format(name,
                                                             prop.expected_type))

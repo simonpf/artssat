@@ -48,7 +48,7 @@ In this module, two implementations of the D14 PSD are provided:
 from parts import dimensions as dim
 from parts.arts_object import ArtsObject
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
-from parts.scattering.psd.data.psd_data import PSDData
+from parts.scattering.psd.data.psd_data import PSDData, D_eq
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
@@ -60,8 +60,6 @@ from scipy.special import gamma
 def evaluate_d14(x, n0, dm, alpha, beta):
     """
     Compute the particle size distribution of the D14 PSD.
-
-
 
     Parameters:
 
@@ -94,10 +92,10 @@ def evaluate_d14(x, n0, dm, alpha, beta):
     shape = n0.shape
     result_shape = shape + (1,)
 
-    n0 = np.reshape(result_shape)
+    n0 = np.reshape(n0, result_shape)
 
     try:
-        np.broadcast_to(dm, shape).reshape(result_shape)
+        dm = np.broadcast_to(dm, shape).reshape(result_shape)
     except:
         raise Exception("Could not broadcast 'dm' parameter to shape of 'n0' "
                         "parameter.")
@@ -115,14 +113,17 @@ def evaluate_d14(x, n0, dm, alpha, beta):
                         "parameter.")
 
     x = x.reshape((1,) * len(shape) + (-1,))
+    x = x / dm
 
-    c1 = gamma(4) / 4 ** 4
+    c1 = gamma(4.0) / 4 ** 4
     c2 = gamma((alpha + 5) / beta) ** (4 + alpha) / \
          gamma((alpha + 4) / beta) ** (5 + alpha)
+    c3 = gamma((alpha + 5) / beta) / \
+         gamma((alpha + 4) / beta)
 
     y = n0 * beta * c1 * c2
-    y *= x ** alpha
-    y *= np.exp(- (x * c2) ** beta)
+    y = y * x ** alpha
+    y *= np.exp(- (x * c3) ** beta)
 
     return y
 
@@ -142,6 +143,27 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                   ("alpha", (), np.float),
                   ("beta", (), np.float),
                   ("rho", (), np.float)]
+
+    @classmethod
+    def from_psd_data(self, psd, alpha, beta, rho):
+        """
+        Create an instance of the D14 PSD from existing PSD data.
+
+        Parameters:
+            :code:`psd`: A numeric or analytic representation of
+                a PSD.
+
+            alpha(:code:`numpy.ndarray`): The :math:`alpha` parameter of
+            the to use for the D14 PSD.
+
+            beta(:code:`numpy.ndarray`): The :math:`beta` parameter of
+            the to use for the D14 PSD.
+
+            rho(:code:`numpy.float`): The density to use for the D14 PSD
+        """
+        md = psd.get_mass_density()
+        dm = psd.get_moment(4.0) / psd.get_moment(3.0)
+        return D14(alpha, beta, rho, md, dm)
 
     def __init__(self, alpha, beta, rho = 917.0,
                  mass_density = None,
@@ -167,18 +189,18 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                 then not be queried from the data provider.
 
         """
-        from parts.scattering.psd.data.psd_data import SizeParameter
+        from parts.scattering.psd.data.psd_data import D_eq
 
         self.alpha = alpha
         self.beta  = beta
         self.rho = rho
 
-        if mass_density:
+        if not mass_density is None:
             self.mass_density = mass_density
-        if mass_weighted_diameter:
+        if not mass_weighted_diameter is None:
             self.mass_weighted_diameter = mass_weighted_diameter
 
-        super().__init__(alpha, beta, SizeParameter.D_eq)
+        super().__init__(D_eq(self.rho))
 
         self.rho = rho
         self.t_min = 0.0
@@ -201,6 +223,82 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                       t_min  = self.t_min,
                       Dm_min = D14.dm_min,
                       t_max  = self.t_max)
+
+    def _get_parameters(self):
+
+        md = self.mass_density
+        if md is None:
+            raise Exception("The 'mass_density' array needs to be set to use"
+                            "this function.")
+
+        shape = md.shape
+
+        dm = self.mass_weighted_diameter
+        if dm is None:
+            raise Exception("The 'mass_weighted_diameter' array needs to be set "
+                            "to use this function.")
+
+        try:
+            dm = np.broadcast_to(dm, shape)
+        except:
+            raise Exception("Could not broadcast the 'mass_weighted_diameter'"
+                            "data into the shape of the mass density data.")
+
+        try:
+            alpha = np.broadcast_to(self.alpha, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'alpha' "
+                            " parameter  into the shape the mass density data.")
+
+        try:
+            beta = np.broadcast_to(self.beta, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'beta' "
+                            " parameter  into the shape the mass density data.")
+
+        return md, dm, alpha, beta
+
+    def get_moment(self, p):
+        """
+        Computes the moments of the PSD analytically.
+
+        Parameters:
+
+            p(:code:`numpy.float`): Wich moment of the PSD to compute
+
+        Returns:
+
+            Array containing the :math:`p` th moment of the PSD.
+        """
+
+        md, dm, alpha, beta = self._get_parameters()
+        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
+
+        nu_mgd    = beta
+        lmbd_mgd  = gamma((alpha + 5) / beta) / \
+                    gamma((alpha + 4) / beta)
+        alpha_mgd = (alpha + 1) / beta - 1
+        n_mgd = n0 * gamma(4.0) / 4.0 ** 4 * \
+                gamma((alpha + 1) / beta) * \
+                gamma((alpha + 5) / beta) ** 3 / \
+                gamma((alpha + 4) / beta) ** 4
+
+        m = n_mgd / lmbd_mgd ** p
+        m *= gamma(1 + alpha_mgd + p / nu_mgd)
+        m /= gamma(1 + alpha_mgd)
+
+        return m * dm ** (p + 1)
+
+    def get_mass_density(self):
+        """
+        Returns:
+            Array containing the mass density for all the bulk volumes described
+            by this PSD.
+        """
+        if self.mass_density is None:
+            raise Exception("The free mass_density parameter has not been set.")
+        else:
+            return self.mass_density
 
     def evaluate(self, x):
         """
@@ -230,10 +328,8 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
         n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
 
-        return PSDData(evaluate_d14(x, n0, dm, alpha, beta),
-                       x,
-                       SizeParameter.D_eq)
-
+        y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
+        return PSDData(x, y, D_eq(self.rho))
 
 class D14N(ArtsPSD, metaclass = ArtsObject):
     """
@@ -248,8 +344,31 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                   ("beta", (), np.float),
                   ("rho", (), np.float)]
 
+    @classmethod
+    def from_psd_data(self, psd, alpha, beta, rho):
+        """
+        Create an instance of the D14 PSD from existing PSD data.
+
+        Parameters:
+            :code:`psd`: A numeric or analytic representation of
+                a PSD.
+
+            alpha(:code:`numpy.ndarray`): The :math:`alpha` parameter of
+            the to use for the D14 PSD.
+
+            beta(:code:`numpy.ndarray`): The :math:`beta` parameter of
+            the to use for the D14 PSD.
+
+            rho(:code:`numpy.float`): The density to use for the D14 PSD
+        """
+        md = psd.get_mass_density()
+        dm = psd.get_moment(4.0) / psd.get_moment(3.0)
+        n0 = 4.0 ** 4 / (np.pi * rho) * md / dm ** 4
+
+        return D14N(alpha, beta, rho, n0, dm)
+
     def __init__(self, alpha, beta, rho = 917.0,
-                 intercept_paramter = None,
+                 intercept_parameter = None,
                  mass_weighted_diameter = None):
         """
         Parameters:
@@ -272,22 +391,18 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                 then not be queried from the data provider.
 
         """
-        from parts.scattering.psd.data.psd_data import SizeParameter
+        from parts.scattering.psd.data.psd_data import D_eq
 
         self.alpha = alpha
         self.beta  = beta
         self.rho = rho
 
-        if intercept_parameter:
+        if not intercept_parameter is None:
             self.intercept_parameter = intercept_parameter
-        if mass_weighted_diameter:
+        if not mass_weighted_diameter is None:
             self.mass_weighted_diameter = mass_weighted_diameter
 
-        super().__init__(alpha, beta, SizeParameter.D_eq)
-
-        self.rho = rho
-        self.t_min = 0.0
-        self.t_max = 999.0
+        super().__init__(D_eq(self.rho))
 
     @property
     def moment_names(self):
@@ -307,6 +422,85 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                       Dm_min = D14.dm_min,
                       t_max  = self.t_max)
 
+    def _get_parameters(self):
+
+        n0 = self.intercept_parameter
+        if n0 is None:
+            raise Exception("The 'intercept_parameter' data needs to be set to "
+                            " use this function.")
+
+        shape = n0.shape
+
+        dm = self.mass_weighted_diameter
+        if dm is None:
+            raise Exception("The 'mass_weighted_diameter' array needs to be set "
+                            "to use this function.")
+
+        try:
+            dm = np.broadcast_to(dm, shape)
+        except:
+            raise Exception("Could not broadcast the 'mass_weighted_diameter'"
+                            "data into the shape of the mass density data.")
+
+        try:
+            alpha = np.broadcast_to(self.alpha, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'alpha' "
+                            " parameter  into the shape the mass density data.")
+
+        try:
+            beta = np.broadcast_to(self.beta, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'beta' "
+                            " parameter  into the shape the mass density data.")
+
+        return n0, dm, alpha, beta
+
+
+    def get_mass_density(self):
+        """
+        Returns:
+            Array containing the mass density for all the bulk volumes described
+            by this PSD.
+        """
+        if self.intercept_parameter is None \
+           or self.mass_weighted_diameter is None :
+            raise Exception("The parameters of the PSD have not been set.")
+        else:
+            c = gamma(4.0) / 4.0 ** 4.0
+            m = c * np.pi * self.rho / 6.0 * self.intercept_parameter \
+                * self.mass_weighted_diameter ** 4.0
+            return m
+
+    def get_moment(self, p):
+        """
+        Computes the moments of the PSD analytically.
+
+        Parameters:
+
+            p(:code:`numpy.float`): Wich moment of the PSD to compute
+
+        Returns:
+
+            Array containing the :math:`p` th moment of the PSD.
+        """
+        n0, dm, alpha, beta = self._get_parameters()
+
+        nu_mgd    = beta
+        lmbd_mgd  = gamma((alpha + 5) / beta) / \
+                    gamma((alpha + 4) / beta)
+        alpha_mgd = (alpha + 1) / beta - 1
+        n_mgd = n0 * gamma(4.0) / 4.0 ** 4 * \
+                gamma((alpha + 1) / beta) * \
+                gamma((alpha + 5) / beta) ** 3 / \
+                gamma((alpha + 4) / beta) ** 4
+
+        m = n_mgd / lmbd_mgd ** p
+        m *= gamma(1 + alpha_mgd + p / nu_mgd)
+        m /= gamma(1 + alpha_mgd)
+
+        return m * dm ** (p + 1)
+
     def evaluate(self, x):
         """
         Compute value of the particle size distribution for given values of the
@@ -323,7 +517,7 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
             parameter and the last dimension to the size parameter.
 
         """
-        md = self.intercept_parameter
+        n0 = self.intercept_parameter
         if n0 is None:
             raise Exception("The 'intercept_parameter' array needs to be set,  before"
                             " the PSD can be evaluated.")
@@ -333,8 +527,5 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
             raise Exception("The 'mass_weighted_diameter' array needs to be"
                             " set,  before the PSD can be evaluated.")
 
-        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
-
-        return PSDData(evaluate_d14(x, n0, dm, alpha, beta),
-                       x,
-                       SizeParameter.D_eq)
+        y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
+        return PSDData(x, y, D_eq(self.rho))

@@ -9,57 +9,95 @@ module prvodies functionality for the handling of such PSD data.
 Class reference
 ---------------
 """
-from enum import Enum
-class SizeParameter(Enum):
+import numpy as np
+
+################################################################################
+# Size parameter classes
+################################################################################
+
+class SizeParameter:
     """
-    This Enum class is used to represent the type of the size parameter
-    which is used for the PSD data.
+    General representation of a size parameter of a PSD. The size parameter
+    is represented by its mass-size relation, which gives the mass :math:`m`
+    as a function of the size parameter :math:`X`:
+
+    .. math::
+        m(X) = a \cdot X^b
 
     Attributes:
-        D_eq: The particle volume equivalent sphere diameter
 
-        m: The particle mass
+        a(numpy.float): The :math:`a` factor of the mass-size relation
+
+        b(numpy.float): The :math:`b` exponent of the mass-size-relation
     """
-    D_eq  = 1
-    D_max = 2
-    mass  = 3
-    area  = 4
 
-def convert_size_paramter(data, x, src, dst, rho):
-    """
-    Convert PSD data :code:`data` give w.r.t. size parameter
-    :code:`src` to size paramter :code:`src`.
+    def __init__(self, a, b):
+        """
+        Create size parameter with given :math:`a` and :math:`b` parameters.
+        """
+        self.a = a
+        self.b = b
 
-    Parameters:
+    def convert(self, src, x, y):
+        """
+        Conversion of PSD data given over one size parameter to another.
 
-        data(numpy.array): The PSD data given as 2D array with size parameter
-                           running along second dimension.
+        Parameters:
 
-        x(numpy.array): Numpy array of shape :code:`(1, -1)` containing the size
-                        grid corresponding to :code:`data`.
+            src(SizeParameter): The size parameter in which the PSD data is given.
 
-        src(SizeParameter): The size parameter in which :code:`data` is given.
+            x(numpy.ndarray): The size grid over which the PSD data is given.
+            Must be broadcastable into the shape of :code:`y`.
 
-        dst(SizeParameter): The size paramter to convert to.
+            y(numpy.ndarray): The PSD data with the last axis corresponding to
+            the size grid :code:`x`.
 
-        rho(numpy.float): The mean density to use for the conversion.
+        Returns:
 
-    """
-    if src == dst:
-        pass
-    elif src == SizeParameter.D_eq and dst == SizeParameter.m:
-        # Multiply by dm/dD_eq
-        data = data * rho * np.pi / 2.0 * x ** 2.0
-        x = rho * np.pi / 6.0 * x ** 3.0
-    elif src == SizeParameter.D_eq and dest == SizeParameter.m:
-        # Multiply by dD_eq/dm
-        c = 3.0 / (4.0 * np.pi * rho)
-        data *= 2.0 / 3.0 * c * (c * x) ** (- 2.0 / 3.0)
-        x  = 2 * (c * x) ** (1.0 / 3.0)
-    else:
-        raise Exception("Conversion from {0} to {1} currently not implemented."
-                        .format(src, dst))
-    return data, x
+            :code:`(x, y)`: Tuple containing the transformed size grid :code:`x`
+            and PSD data :code:`y`
+        """
+        x = (src.a / self.a) ** (1.0 / self.b) * x ** (src.b / self.b)
+        y = y * (self.a / src.a) ** (1.0 / src.b) * (self.b / src.b) \
+            * x ** (self.b / src.b - 1.0)
+        return x, y
+
+    def get_mass_density(self, x, y):
+        """
+        Compute the mass of the PSD for given PSD data.
+
+        Parameters:
+
+            x(numpy.ndarray): The size grid over which the PSD data is given.
+            Must be broadcastable into the shape of :code:`y`.
+
+            y(numpy.ndarray): The PSD data with the last axis corresponding to
+            the size grid :code:`x`.
+
+        """
+        return np.trapz(self.a * x ** self.b * y, x)
+
+class Area(SizeParameter):
+    def __ini__(self, a, b):
+        super().__init__(a, b)
+
+class D_eq(SizeParameter):
+
+    def __init__(self, rho):
+        self.rho = rho
+        super().__init__(self.rho * np.pi / 6.0, 3.0)
+
+class D_max(SizeParameter):
+    def __init__(self, a, b):
+        super().__init__(a, b)
+
+class Mass(SizeParameter):
+    def __init__(self):
+        super().__init__(1.0, 1.0)
+
+################################################################################
+# PSD Data
+################################################################################
 
 class PSDData:
     """
@@ -79,7 +117,7 @@ class PSDData:
         size_parameter(SizeParameter): The size parameter used to represent
         the PSD.
     """
-    def __init__(self, data, x, size_parameter):
+    def __init__(self, x, data, size_parameter):
         """
         Create a PSDData object from data.
 
@@ -89,30 +127,27 @@ class PSDData:
         the size paramter.
 
         Parameters:
-            data(numpy.array): Array containing particle number density values
 
             x(numpy.array): The size grid used for :code:`data`
+
+            data(numpy.array): Array containing particle number density values
 
             size_paramter(SizeParameter): Enum representing the type of size
                 parameter used.
 
         """
-        # Data should be 2D with volume elements along first and
-        # size grid along second dimension.
-        x = x.reshape(1, -1)
-        n = x.size
+        x_shape = (len(data.shape) - 1) * (1,) + (-1,)
+        x = x.reshape(x_shape)
 
-        m = data.shape[0]
+        if data.shape[-1] != x.shape[-1]:
+            raise Exception("Size grid 'x' and PSD data 'y' must have the same"\
+                            " number of elements along the last dimension.")
 
-        if not data.shape == (m, n):
-            raise Exception("PSD data should be given by a 2D array with "
-                            " different volume elements along the first "
-                            " dimension and the size grid along the second.")
 
         self.data = data
         self.x = x
 
-        if not size_parameter in list(SizeParameter):
+        if not isinstance(size_parameter, SizeParameter):
             raise Exception("Provided size_parameter is not a valid value of "
                             "of type SizeParameter.")
         self.size_parameter = size_parameter
@@ -137,9 +172,19 @@ class PSDData:
             The particle number density for each volume element.
 
         """
-        return self.get_moment()
+        return self.get_moment(p = 0)
 
-    def change_size_parameter(size_parameter, rho):
+    def get_mass_density(self):
+        """
+        Computes the particle mass density corresponding to the PSD data.
+
+        Returns:
+            Array containing the particle mass density for each of the
+            bulk volumes described by the PSD data
+        """
+        return self.size_parameter.get_mass_density(self.x, self.data)
+
+    def change_size_parameter(self, size_parameter):
         """
         Change the size parameter of the data.
 
@@ -150,6 +195,7 @@ class PSDData:
             rho(np.float): Particle density.
 
         """
-        self.data, self.x = convert_size_parameter(self.data, self.x, rho,
-                                                   src = self.size_parameter,
-                                                   dst = self.size_parameter)
+
+        self.x, self.data = size_parameter.convert(self.size_parameter,
+                                                   self.x, self.data)
+        self.size_parameter = size_parameter
