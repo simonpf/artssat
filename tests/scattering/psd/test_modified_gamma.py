@@ -48,6 +48,8 @@ def test_moments(random_mgd_psd):
     m2     = psd.get_moment(2)
     m2_ref = psd_data.get_moment(2)
 
+    assert np.all(np.isclose(m2, m2_ref))
+
     m     = psd.get_mass_density()
     m_ref = psd_data.get_mass_density()
 
