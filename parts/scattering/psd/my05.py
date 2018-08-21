@@ -2,7 +2,8 @@ r"""
 The Milbrandt-Yau (2005) PSD
 ============================
 
-The Milbrandt-Yau (2005) PSD used in the GEM model:
+The Milbrandt-Yau (2005) PSD used in the GEM model uses a modified
+gamma distribution of the form:
 
 .. math::
     N(D_{max}) = N_0 D_{max}^\nu \exp(- \lambda D_{max} ^ \mu)
@@ -40,8 +41,8 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
     in an atmosphere using the number density :math:`\rho_n` and mass
     density :math:`\rho_m` as predictive moments.
 
-    The :math:`nu` and :math:`mu` parameters take on fixed values depending
-    on the hydrometero type.
+    The :math:`\nu` and :math:`\mu` parameters take on fixed values depending
+    on the hydrometeor type.
     """
 
     properties = [("number_density", (dim.p, dim.lat, dim.lon), np.ndarray),
@@ -51,27 +52,27 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
 
     def __init__(self, nu, mu, a, b,
                  number_density = None,
-                 mass_desnity = None)
-                 r"""
-                 Parameters:
-                     nu(:code:`numpy.float`): The :math:`\nu` parameter of the PSD
+                 mass_density = None):
+        r"""
+        Parameters:
+            nu(:code:`numpy.float`): The :math:`\nu` parameter of the PSD
 
-                     mu(:code:`numpy.float`): The :math:`\mu` parameter of the PSD
+            mu(:code:`numpy.float`): The :math:`\mu` parameter of the PSD
 
-                     a(:code:`numpy.float`): The :math:`a` coefficient of the
-                     mass-size realtionship.
+            a(:code:`numpy.float`): The :math:`a` coefficient of the
+            mass-size realtionship.
 
-                     b(:code:`numpy.float`): The :math:`b` coefficient of the
-                     mass-size realtionship.
+            b(:code:`numpy.float`): The :math:`b` coefficient of the
+            mass-size realtionship.
 
-                     number_density(:code:`numpy.ndarray`): Array containing
-                     the number density for a given set of volume elements in an
-                     atmosphere.
+            number_density(:code:`numpy.ndarray`): Array containing
+            the number density for a given set of volume elements in an
+            atmosphere.
 
-                     mass_density(:code:`numpy.ndarray`): Array containing
-                     the mass density for a given set of volume elements in an
-                     atmosphere.
-                 """
+            mass_density(:code:`numpy.ndarray`): Array containing
+            the mass density for a given set of volume elements in an
+            atmosphere.
+        """
         self.nu = nu
         self.mu = mu
 
@@ -160,12 +161,17 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
 
     def get_moment(self, p):
         r"""
-        Analytically computes the :math:`p` th moment of the PSD using
+        Analytically computes the :math:`p` th moment :maht:`M(p)` of the PSD
+        using
 
         .. math::
 
             M(p) = \frac{N_0}{\mu} \lambda ^{-\frac{\nu + p + 1}{\mu}}
                    \Gamma ( \frac{\nu + p + 1}{\mu})
+
+        Parameters:
+
+            p(:code:`float`): Which moment of the distribution to compute.
 
         Returns:
 
@@ -193,6 +199,11 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         r"""
         Compute a numeric representation of the PSD data.
 
+        Parameters:
+
+            x(:code:`numpy.ndarray`): Array containing the values of the size
+            parameter at which to evaluate the PSD.
+
         Returns:
 
             :code:`PSDData` object containing the numeric PSD data corresponding
@@ -201,6 +212,4 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         """
         n0, lmbd, mu, nu = self._get_parameters()
         y = n0 * x ** nu * np.exp(- lmbd * x ** mu)
-        print(x)
-        print(y)
         return PSDData(x, y, self.size_parameter)

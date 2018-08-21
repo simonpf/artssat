@@ -164,6 +164,43 @@ class PSDData:
         """
         return np.trapz(self.data * self.x ** p, x = self.x)
 
+    def __add__(self, other):
+        """
+        Adds the data from two particle size distributions. For this the PSDs
+        must be given w.r.t to the same size parameter type and grid.
+
+        Parameters:
+
+            other(:code:`PSDData`): The PSD to add.
+
+        Returns:
+
+            :code:`PSDData` object representing the sum of the two PSDs.
+
+        """
+        # TODO: Make an abstract base class for PSDs
+        if hasattr(other, "evaluate"):
+            x2, _ = other.size_parameter.convert(self.size_parameter,
+                                                 self.x,
+                                                 self.data)
+            other = other.evaluate(self.x2)
+            other.change_size_parameter(self.size_parameter)
+
+        if (not self.size_parameter.a == other.size_parameter.a) or \
+           (not self.size_parameter.b == other.size_parameter.b):
+           raise Exception("Addition of PSD data is only defined for PSDs"
+                           " given w.r.t. the same size parameter.")
+
+        if not np.all(np.isclose(self.x, other.x)):
+            raise Exception("Addition of PSD data is only defined for PSDs"
+                            " defined over the same size grid.")
+
+        size_parameter = self.size_parameter
+        y = self.data + other.data
+        x = self.x
+
+        return PSDData(x, y, size_parameter)
+
     def get_number_density(self):
         """
         Computes the total particle number density (:math:`0` th moment).

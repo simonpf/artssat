@@ -86,3 +86,17 @@ def test_psd_data(two_size_parameters, exponential_distribution):
 
     assert(np.all(np.isclose(n1, n2, rtol = 1e-3)))
     assert(np.all(np.isclose(m1, m2, rtol = 1e-3)))
+
+def test_psd_add(exponential_distribution, two_size_parameters):
+    """
+    Test addition of PSD data: Adding a PSDData object to itself
+    should double all elements in :code:`data`.
+    """
+    x, y = exponential_distribution
+    s1, _ = two_size_parameters
+
+    data = PSDData(x, y, s1)
+    data2 = data + data
+
+    assert np.all(np.isclose(2.0 * data.data, data2.data))
+
