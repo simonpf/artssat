@@ -11,5 +11,5 @@ subpackage provides functionality for the handling of PSD data.
 
 """
 from parts.scattering.psd.d14  import D14, D14N
-from parts.scattering.psd.MY05 import MY05
+from parts.scattering.psd.my05 import MY05
 

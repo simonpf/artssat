@@ -429,7 +429,7 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                       t_min  = self.t_min,
                       Dm_min = D14.dm_min,
                       t_max  = self.t_max)
-       return ["mass_density", "mass_weighted_diameter"]
+        return pnd_agenda
 
     def _get_parameters(self):
 
