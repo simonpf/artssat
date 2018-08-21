@@ -211,6 +211,10 @@ class D14(ArtsPSD, metaclass = ArtsObject):
         return ["mass_density", "mass_weighted_diameter"]
 
     @property
+    def moments(self):
+        return [self.mass_density, self.mass_weighted_diameter]
+
+    @property
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
@@ -409,6 +413,10 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
         return ["intercept_parameter", "mass_weighted_diameter"]
 
     @property
+    def moments(self):
+        return [self.intercept_parameter, self.mass_weighted_diameter]
+
+    @property
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
@@ -421,6 +429,7 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                       t_min  = self.t_min,
                       Dm_min = D14.dm_min,
                       t_max  = self.t_max)
+       return ["mass_density", "mass_weighted_diameter"]
 
     def _get_parameters(self):
 
