@@ -125,6 +125,9 @@ def evaluate_d14(x, n0, dm, alpha, beta):
     y = y * x ** alpha
     y *= np.exp(- (x * c3) ** beta)
 
+    # Set invalid values to zero
+    y[dm == 0.0] = 0.0
+
     return y
 
 ################################################################################
@@ -161,8 +164,27 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
+        size_parameter = D_eq(rho)
+        a = size_parameter.a
+        b = size_parameter.b
+
+        a2 = psd.size_parameter.a
+        b2 = psd.size_parameter.b
+
         md = psd.get_mass_density()
-        dm = psd.get_moment(4.0) / psd.get_moment(3.0)
+
+        # I am converting moments to take into account that they are
+        # computed w.r.t differnt size parameters.
+
+        c1 = (a2 / a)
+        c2 = (b2 / b)
+
+        m4 = c1 ** 4.0 * psd.get_moment(4.0 * c2)
+        m3 = c1 ** 3.0 * psd.get_moment(3.0 * c2)
+
+        dm = m4 / m3
+        dm[m3 == 0.0] = 0.0
+
         return D14(alpha, beta, rho, md, dm)
 
     def __init__(self, alpha, beta, rho = 917.0,

@@ -76,8 +76,6 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         self.nu = nu
         self.mu = mu
 
-        print(mass_density)
-
         if not number_density is None:
             self.number_density = number_density
 
@@ -144,7 +142,11 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
                / gamma((nu + 1) / mu)
         lmbd = lmbd ** (mu / b)
 
+        inds = np.logical_or(n == 0.0, m == 0.0)
+        lmbd[inds] = 0.0
+
         n0 = n * mu * lmbd ** ((nu + 1.0) / mu) / gamma((nu + 1.0) / mu)
+        n0[inds] = 0.0
 
         return n0, lmbd, mu, nu
 
@@ -197,6 +199,9 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
 
         n0, lmbd, mu, nu = self._get_parameters()
         m = n0 / mu * lmbd ** (-(nu + p + 1) / mu) * gamma((nu + 1.0 + p) / mu)
+
+        m[lmbd == 0.0] = 0.0
+
         return c * m
 
     def get_mass_density(self):
