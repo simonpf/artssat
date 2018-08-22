@@ -262,7 +262,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
         return md, dm, alpha, beta
 
-    def get_moment(self, p):
+    def get_moment(self, p, reference_size_parameter = None):
         """
         Computes the moments of the PSD analytically.
 
@@ -270,10 +270,24 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
             p(:code:`numpy.float`): Wich moment of the PSD to compute
 
+            reference_size_parameter(:class:`SizeParameter`): Size parameter
+            with respect to which the moment should be computed.
+
         Returns:
 
             Array containing the :math:`p` th moment of the PSD.
+
         """
+        if not reference_size_parameter is None:
+            a1 = self.size_parameter.a
+            b1 = self.size_parameter.b
+            a2 = reference_size_parameter.a
+            b2 = reference_size_parameter.b
+
+            c = (a1 / a2) ** (p / b2)
+            p = p * b1 / b2
+        else:
+            c = 1.0
 
         md, dm, alpha, beta = self._get_parameters()
         n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
@@ -481,18 +495,40 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                 * self.mass_weighted_diameter ** 4.0
             return m
 
-    def get_moment(self, p):
+    def get_moment(self, p, reference_size_parameter = None):
         """
         Computes the moments of the PSD analytically.
+
+        The physical significance of a moment of a PSD depends on the size
+        parameter. So in general, the moments of the same PSD given w.r.t.
+        different size parameters differ. If the
+        :code:`reference_size_parameter` argument is given then the
+        computed moment will correspond to the Moment of the PSD w.r.t. to
+        the given size parameter.
 
         Parameters:
 
             p(:code:`numpy.float`): Wich moment of the PSD to compute
 
+            reference_size_parameter(SizeParameter): Size parameter with
+            respect to which the moment should be computed.
+
         Returns:
 
             Array containing the :math:`p` th moment of the PSD.
+
         """
+        if not reference_size_parameter is None:
+            a1 = self.size_parameter.a
+            b1 = self.size_parameter.b
+            a2 = reference_size_parameter.a
+            b2 = reference_size_parameter.b
+
+            c = (a1 / a2) ** (p / b2)
+            p = p * b1 / b2
+        else:
+            c = 1.0
+
         n0, dm, alpha, beta = self._get_parameters()
 
         nu_mgd    = beta
@@ -508,7 +544,7 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
         m *= gamma(1 + alpha_mgd + p / nu_mgd)
         m /= gamma(1 + alpha_mgd)
 
-        return m * dm ** (p + 1)
+        return c * m * dm ** (p + 1)
 
     def evaluate(self, x):
         """

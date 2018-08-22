@@ -152,17 +152,42 @@ class PSDData:
                             "of type SizeParameter.")
         self.size_parameter = size_parameter
 
-    def get_moment(self, p = 0):
+    def get_moment(self, p, reference_size_parameter = None):
         """
-        Compute the :math:`p` th moment of the PSD data.
+        Compute the :math:`p` th moment :math:M(p) of the PSD data:
 
-        Parameter:
+        .. math::
+            M(p) = \int_0^\infty X^P \frac{dN}{dX}(X)\:dX
+
+        The physical significance of a moment of a PSD depends on the size
+        parameter. So in general, the moments of the same PSD given w.r.t.
+        different size parameters differ. If :code: `reference_size_parameter`
+        argument is given then the computed moment will correspond to the
+        Moment of the PSD w.r.t. to the given size parameter.
+
+        Parameters:
+
             p(numpy.float): The moment which to compute.
+
+            reference_size_parameter(:class: `SizeParameter`): Size parameter
+            with respect to which the moment should be computed.
+
         Return:
             The :math:`p` th moment of the particle size distribution.
 
         """
-        return np.trapz(self.data * self.x ** p, x = self.x)
+        if not reference_size_parameter is None:
+            a1 = self.size_parameter.a
+            b1 = self.size_parameter.b
+            a2 = reference_size_parameter.a
+            b2 = reference_size_parameter.b
+
+            c = (a1 / a2) ** (p / b2)
+            p = p * b1 / b2
+        else:
+            c = 1.0
+
+        return c * np.trapz(self.data * self.x ** p, x = self.x)
 
     def __add__(self, other):
         """

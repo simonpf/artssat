@@ -59,10 +59,32 @@ def test_size_parameter(two_size_parameters, exponential_distribution):
 
     m1 = s1.get_mass_density(xc, yc)
     m2 = s2.get_mass_density(x, y)
-    print("masses", m1, m2)
 
     assert np.all(np.isclose(s1.get_mass_density(xc, yc),
-                             s2.get_mass_density(x, y), rtol = 1e-3))
+                             s2.get_mass_density(x, y), rtol = 1e-2))
+
+    psd = PSDData(x, y, s1)
+
+def test_moments(two_size_parameters, exponential_distribution):
+    """
+    Test the computation of moments w.r.t to different size parameters.
+    Conversion of the PSD must not change the moments of the distribution
+    if the reference size parameter stays the same.
+    """
+    s1, s2 = two_size_parameters
+    x, y = exponential_distribution
+
+    psd1 = PSDData(x, y, s1)
+    psd2 = PSDData(*s2.convert(s1, x, y), s2)
+
+    for p in range(5):
+        m1 = psd1.get_moment(p)
+        m2 = psd2.get_moment(p, reference_size_parameter = psd1.size_parameter)
+
+        print(m1)
+        print(m2)
+        assert np.all(np.isclose(m1, m2, rtol = 1e-3))
+
 
 def test_psd_data(two_size_parameters, exponential_distribution):
     """

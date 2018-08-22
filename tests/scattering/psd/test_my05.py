@@ -38,27 +38,27 @@ def test_moments(random_my05_psd):
     m0     = psd.get_moment(0)
     m0_ref = psd_data.get_moment(0)
 
-    assert np.all(np.isclose(m0.ravel(), m0_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m0.ravel(), m0_ref, rtol = 1e-3))
 
     m1     = psd.get_moment(1)
     m1_ref = psd_data.get_moment(1)
 
-    assert np.all(np.isclose(m1.ravel(), m1_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m1.ravel(), m1_ref, rtol = 1e-3))
 
     m2     = psd.get_moment(2)
     m2_ref = psd_data.get_moment(2)
 
-    assert np.all(np.isclose(m2.ravel(), m2_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m2.ravel(), m2_ref, rtol = 1e-3))
 
     m3     = psd.get_moment(3)
     m3_ref = psd_data.get_moment(3)
 
-    assert np.all(np.isclose(m3.ravel(), m3_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m3.ravel(), m3_ref, rtol = 1e-3))
 
     m4     = psd.get_moment(4)
     m4_ref = psd_data.get_moment(4)
 
-    assert np.all(np.isclose(m4.ravel(), m4_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m4.ravel(), m4_ref, rtol = 1e-3))
 
     m     = psd.mass_density.ravel()
     m_ref = psd_data.get_mass_density()

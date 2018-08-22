@@ -161,7 +161,7 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         """
         pass
 
-    def get_moment(self, p):
+    def get_moment(self, p, reference_size_parameter = None):
         r"""
         Analytically computes the :math:`p` th moment :maht:`M(p)` of the PSD
         using
@@ -180,10 +180,24 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
             :code:`numpy.ndarray` containing the :math:`p` th moment for
             all volume elements described by the PSD.
 
+            reference_size_parameter(:class: `SizeParameter`): Size parameter
+            with respect to which the moment should be computed.
+
         """
+        if not reference_size_parameter is None:
+            a1 = self.size_parameter.a
+            b1 = self.size_parameter.b
+            a2 = reference_size_parameter.a
+            b2 = reference_size_parameter.b
+
+            c = (a1 / a2) ** (p / b2)
+            p = p * b1 / b2
+        else:
+            c = 1.0
+
         n0, lmbd, mu, nu = self._get_parameters()
         m = n0 / mu * lmbd ** (-(nu + p + 1) / mu) * gamma((nu + 1.0 + p) / mu)
-        return m
+        return c * m
 
     def get_mass_density(self):
         r"""

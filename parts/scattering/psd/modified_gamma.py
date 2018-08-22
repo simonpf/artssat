@@ -163,7 +163,7 @@ class ModifiedGamma(ArtsPSD, metaclass = ArtsObject):
         """
         return []
 
-    def get_moment(self, p):
+    def get_moment(self, p, reference_size_parameter = None):
         r"""
         Computes the :math:`p` th moment :math:`M(p)` of the PSD using
 
@@ -178,6 +178,16 @@ class ModifiedGamma(ArtsPSD, metaclass = ArtsObject):
             Exception: If any of the parameters of the PSD is not set.
 
         """
+        if not reference_size_parameter is None:
+            a1 = self.size_parameter.a
+            b1 = self.size_parameter.b
+            a2 = reference_size_parameter.a
+            b2 = reference_size_parameter.b
+
+            c = (a1 / a2) ** (p / b2)
+            p = p * b1 / b2
+        else:
+            c = 1.0
 
         n, lmbd, alpha, nu = self._get_parameters()
 
@@ -185,7 +195,7 @@ class ModifiedGamma(ArtsPSD, metaclass = ArtsObject):
         m *= gamma(1 + alpha + p / nu)
         m /= gamma(1 + alpha)
 
-        return m
+        return c * m
 
     def get_mass_density(self):
         r"""
