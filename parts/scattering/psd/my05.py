@@ -50,6 +50,31 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
                   ("nu", (), np.float),
                   ("mu", (), np.float)]
 
+    @classmethod
+    def from_psd_data(self, psd, nu, mu, a, b):
+        r"""
+        Create a MY05 PSD from given psd data.
+
+        Parameters:
+
+            psd(PSDData or other PSD): PSD data from which to create the MY05
+            representation.
+
+            nu(:code:`float`): :math:`\nu` parameter of MY05 PSD
+
+            mu(:code:`float`): :math:`\mu` parameter of MY05 PSD
+
+            a(:code:`float`): :math:`a` coefficient of the mass-size relationship
+
+            b(:code:`float`): :math:`b` coefficient of the mass-size relationship
+
+        """
+        size_parameter = D_max(a, b)
+        number_density = psd.get_moment(0)
+        mass_density   = psd.get_mass_density()
+
+        return MY05(nu, mu, a, b, number_density, mass_density)
+
     def __init__(self, nu, mu, a, b,
                  number_density = None,
                  mass_density = None):

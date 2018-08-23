@@ -126,7 +126,7 @@ def evaluate_d14(x, n0, dm, alpha, beta):
     y *= np.exp(- (x * c3) ** beta)
 
     # Set invalid values to zero
-    y[dm == 0.0] = 0.0
+    y[np.broadcast_to(dm == 0.0, y.shape)] = 0.0
 
     return y
 
@@ -165,22 +165,11 @@ class D14(ArtsPSD, metaclass = ArtsObject):
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
         size_parameter = D_eq(rho)
-        a = size_parameter.a
-        b = size_parameter.b
-
-        a2 = psd.size_parameter.a
-        b2 = psd.size_parameter.b
 
         md = psd.get_mass_density()
 
-        # I am converting moments to take into account that they are
-        # computed w.r.t differnt size parameters.
-
-        c1 = (a2 / a)
-        c2 = (b2 / b)
-
-        m4 = c1 ** 4.0 * psd.get_moment(4.0 * c2)
-        m3 = c1 ** 3.0 * psd.get_moment(3.0 * c2)
+        m4 = psd.get_moment(4.0, reference_size_parameter = size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter = size_parameter)
 
         dm = m4 / m3
         dm[m3 == 0.0] = 0.0
@@ -327,7 +316,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
         m *= gamma(1 + alpha_mgd + p / nu_mgd)
         m /= gamma(1 + alpha_mgd)
 
-        return m * dm ** (p + 1)
+        return c * m * dm ** (p + 1)
 
     def get_mass_density(self):
         """
@@ -401,10 +390,17 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
 
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
-        md = psd.get_mass_density()
-        dm = psd.get_moment(4.0) / psd.get_moment(3.0)
-        n0 = 4.0 ** 4 / (np.pi * rho) * md / dm ** 4
+        size_parameter = D_eq(rho)
 
+        md = psd.get_mass_density()
+
+        m4 = psd.get_moment(4.0, reference_size_parameter = size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter = size_parameter)
+
+        dm = m4 / m3
+        dm[m3 == 0.0] = 0.0
+
+        n0 = 4.0 ** 4 / (np.pi * rho) * md / dm ** 4
         return D14N(alpha, beta, rho, n0, dm)
 
     def __init__(self, alpha, beta, rho = 917.0,

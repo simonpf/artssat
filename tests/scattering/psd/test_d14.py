@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from parts.scattering.psd import D14, D14N
+from parts.scattering.psd import MY05
 
 ################################################################################
 # Fixtures
@@ -52,6 +53,26 @@ def test_d14(random_d14_psd):
     print(m1_ref)
 
     assert np.all(np.isclose(m2, m2_ref, rtol = 1e-3))
+
+def test_conversion_d14_my05(random_d14_psd):
+    """
+    Test conversion between D14 and MY05. Conversion back and forth
+    must conserve predictive moments.
+    """
+    d14_ref = random_d14_psd
+    d14_cls = type(d14_ref)
+    a = 2 * d14_ref.size_parameter.a
+    b = d14_ref.size_parameter.b
+
+    my05 = MY05.from_psd_data(d14_ref, d14_ref.alpha, d14_ref.beta, a, b)
+    print(d14_ref.get_moment(0))
+
+    d14 =  d14_cls.from_psd_data(my05, d14_ref.alpha, d14_ref.beta, d14_ref.rho)
+    print(d14.get_moment(0))
+
+    for m1, m2 in zip(d14_ref.moments, d14.moments):
+        assert np.all(np.isclose(m1, m2))
+
 
 def test_d14_from_psd_data(random_d14_psd):
     """
