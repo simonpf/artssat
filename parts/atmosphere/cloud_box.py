@@ -1,6 +1,7 @@
 class CloudBox:
-    def __init__(self, n_dimensions):
+    def __init__(self, n_dimensions, scattering = True):
 
+        self._scattering = scattering
         self._adaptive = None
         self._vertical_limits = None
         self._vertical_limits_type = None
@@ -97,6 +98,12 @@ class CloudBox:
 
     def get_data(self, ws, provider, *args, **kwargs):
 
+        if not self._scattering:
+            ws.jacobianOff()
+            ws.cloudboxOff()
+            ws.cloudbox_checked = 1
+            return
+
         if not self._adaptive and self._vertical_limits is None:
             ws.cloudboxSetFullAtm()
             return
@@ -147,5 +154,10 @@ class CloudBox:
             ws._checked = False
 
     def run_checks(self, ws):
+
+        if not self._scattering:
+            return None
+
         ws.pnd_fieldCalcFromParticleBulkProps()
         ws.cloudbox_checkedCalc()
+

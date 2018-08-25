@@ -23,8 +23,11 @@ class Atmosphere:
 
         self.absorbers  = absorbers
         self.scatterers = scatterers
+        self.scattering = len(scatterers) > 0
         self._dimensions = dimensions
-        self._cloud_box = CloudBox(n_dimensions = len(dimensions))
+
+        self._cloud_box = CloudBox(n_dimensions = len(dimensions),
+                                   scattering = self.scattering)
 
 
 

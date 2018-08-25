@@ -68,7 +68,7 @@ class ArtsSimulation:
         self.atmosphere.setup(ws)
 
         for s in self.sensors:
-            s.setup(ws)
+            s.setup(ws, self.atmosphere.scattering)
             print("setup done.", s)
 
     def check_dimensions(self, f, name):
@@ -139,12 +139,14 @@ class ArtsSimulation:
             f(ws)
 
             # Run scattering solver
-            m = self.scattering_solver.solver_call
-            m.call(ws,
-                   *s.get_wsm_args(m),
-                   **self.scattering_solver.solver_kwargs)
+            if self.atmosphere.scattering:
+                m = self.scattering_solver.solver_call
+                m.call(ws,
+                       *s.get_wsm_args(m),
+                       **self.scattering_solver.solver_kwargs)
 
-            f = s.make_y_calc_function(append = i > 0)
+            f = s.make_y_calc_function(append = i > 0,
+                                       scattering = self.atmosphere.scattering)
             f(ws)
 
             s.y = np.copy(ws.y.value[y_index:].reshape((-1, s.stokes_dimension)))

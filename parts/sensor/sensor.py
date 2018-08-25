@@ -152,8 +152,8 @@ class Sensor(metaclass = ArtsObject):
     # Abstract properties and methods
     #
 
-    @abstractproperty
-    def iy_main_agenda(self):
+    @abstractmethod
+    def make_iy_main_agenda(self, scattering = False):
         """
         Property that takes the role of a factory function that creates
         the :code:`iy_main_agenda` for the given sensor. This will
@@ -184,7 +184,8 @@ class Sensor(metaclass = ArtsObject):
 
     @abstractmethod
     def make_y_calc_function(self,
-                             append = False,):
+                             append = False,
+                             scattering = False):
         """
         Factory method that should create a function :code:`f` that runs
         the actual radiative transfer on a provided workspace.
@@ -224,7 +225,7 @@ class Sensor(metaclass = ArtsObject):
     # General sensor setup
     #
 
-    def setup(self, ws):
+    def setup(self, ws, scattering = True):
         """
         General setup for an ARTS sensor.
 
@@ -268,7 +269,7 @@ class Sensor(metaclass = ArtsObject):
             ws.ArrayOfStringSet(wsvs["iy_aux_vars"],
                                 self.iy_aux_vars)
 
-        wsvs["iy_unit"] = self.iy_unit
+        wsvs["iy_unit"] = ws.add_variable(self.iy_unit)
 
         # Stokes dimension
 
@@ -281,8 +282,8 @@ class Sensor(metaclass = ArtsObject):
         wsvs["sensor_response"] = ws.add_variable(np.zeros((0, 0)))
 
         # sensor response
-        wsvs["antenna_dim"] = self.antenna_dim
-        wsvs["sensor_norm"] = self.sensor_norm
+        wsvs["antenna_dim"] = ws.add_variable(self.antenna_dim)
+        wsvs["sensor_norm"] = ws.add_variable(self.sensor_norm)
 
         name = "sensor_response_" + str(id(self))
         ws.SparseCreate(name)
@@ -302,7 +303,8 @@ class Sensor(metaclass = ArtsObject):
 
         # Need to add agendas in the end so that input arguments
         # can be replaced by private sensor variables.
-        wsvs["iy_main_agenda"] = ws.add_variable(self.iy_main_agenda)
+        wsvs["iy_main_agenda"] = ws.add_variable(
+            self.make_iy_main_agenda(scattering))
 
     def get_data(self, ws, provider, *args, **kwargs):
         """
@@ -333,7 +335,7 @@ class Sensor(metaclass = ArtsObject):
         # Sensor line of sight
 
         if self._sensor_line_of_sight.fixed:
-            los = self.sensor_los
+            los = self.sensor_line_of_sight
         else:
             los = provider.get_sensor_line_of_sight(*args, **kwargs)
 
@@ -453,8 +455,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
         return iy_transmitter_agenda
 
-    @property
-    def iy_main_agenda(self):
+    def make_iy_main_agenda(self, scattering = False):
         """
         The :code: `iy_main_agenda` for active sensor. Currently uses
         the single scattering radar module, but might be extended
@@ -522,7 +523,9 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
         return preparations
 
-    def make_y_calc_function(self, append = False):
+    def make_y_calc_function(self,
+                             append = False,
+                             scattering = False):
         """
         Returns y_calc function, which computes the radar signal
         on an accordingly prepared workspace. This function can
@@ -588,13 +591,13 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
                 the sensor measurement. Must be one of [1, 2, 4].
         """
         super().__init__(f_grid, stokes_dimension)
+        self.iy_unit = "PlanckBT"
 
     #
     # Agendas
     #
 
-    @property
-    def iy_main_agenda(self):
+    def make_iy_main_agenda(self, scattering = False):
         """
         Factory property that returns the :code:`iy_main_agenda` that has to be used
         for passive sensors.
@@ -604,10 +607,11 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
             The ARTS :code:`iy_main_agenda`
         """
 
-        args = self.get_wsm_args(wsm["iyHybrid"])
+        for k in self._wsvs:
+            print(k)
+            print(self._wsvs[k].value)
 
-        @arts_agenda
-        def iy_main_agenda(ws):
+        def iy_main_agenda_scattering(ws):
             ws.Ignore(ws.iy_id)
             ws.Ignore(ws.nlte_field)
             ws.Ignore(ws.rte_pos2)
@@ -617,7 +621,26 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
             ws.iyHybrid(*args)
-        return iy_main_agenda
+
+        def iy_main_agenda_no_scattering(ws):
+            ws.Ignore(ws.iy_id)
+            ws.Ignore(ws.nlte_field)
+            ws.Ignore(ws.rte_pos2)
+            ws.Ignore(ws.iy_unit)
+            ws.Ignore(ws.iy_aux_vars)
+            ws.ppathCalc()
+            ws.iyEmissionStandard(*args)
+
+        if scattering:
+            agenda = iy_main_agenda_scattering
+            args = self.get_wsm_args(wsm["iyHybrid"])
+        else:
+            agenda = iy_main_agenda_no_scattering
+            args = self.get_wsm_args(wsm["iyEmissionStandard"])
+
+        agenda.__name__ = "iy_main_agenda"
+
+        return arts_agenda(agenda)
 
     #
     # Customized setter
@@ -683,7 +706,9 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
 
         return preparations
 
-    def make_y_calc_function(self, append = False):
+    def make_y_calc_function(self,
+                             append = False,
+                             scattering = False):
         """
         Factory function that produces a function that simulates a passive
         measurement with the given sensor on an accordingly prepared workspace.
