@@ -151,6 +151,29 @@ class PlaceHolder:
         self.expected_type = expected_type
         self.dimensions = dimensions
 
+def add_property(obj, name, dims, t):
+    """
+    Add an ARTS property to an existing object.
+
+    Parameters:
+
+        obj(:code:`object`): The object to add the property to.
+
+        name(:code: `str`): Name of the property to create
+
+        dims(:code:`tuple`): Tuple describing the expected dimensions
+        of the property.
+
+        t(:code:`type`): The expected type of the property.
+    """
+    getter = make_getter(name)
+    setter = make_setter(name)
+    prop = property(getter, setter, name)
+    obj.__dict__[name] = prop
+
+    ph = PlaceHolder(name, dims, t)
+    obj.__dict__["_" + name] = ph
+
 class ArtsObject(ABCMeta):
     """
     The ArtsObject meta class looks for a class attribute :code:`properties`

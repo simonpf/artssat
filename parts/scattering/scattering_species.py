@@ -2,6 +2,44 @@ import numpy as np
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 
+class Jacobian:
+
+    def __init__(self, quantity):
+
+        self.quantity = quantity
+        self.p_grid   = None
+        self.lat_grid = None
+        self.lon_grid = None
+
+
+    def _make_setup_kwargs(self, ws):
+
+        if self.p_grid is None:
+            g1 = ws.p_grid
+        else:
+            g1 = self.p_grid
+
+        if self.lat_grid is None:
+            g2 = ws.lat_grid
+        else:
+            g2 = self.lat_grid
+
+        if self.lon_grid is None:
+            g3 = ws.lon_grid
+        else:
+            g3 = self.lon_grid
+
+        kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
+                  "species" : self.quantity.name,
+                  "quantity" : self.quantity._species_name}
+
+        return kwargs
+
+    def setup_jacobian(self, ws):
+
+        kwargs = self._make_setup_kwargs(ws)
+        ws.jacobianAddScatteringSpecies(**kwargs)
+
 class Moment(AtmosphericQuantity):
     def __init__(self,
                  species_name,
@@ -11,6 +49,7 @@ class Moment(AtmosphericQuantity):
         name = species_name + "_" + moment_name
         AtmosphericQuantity.__init__(self, (0, 0, 0), jacobian)
 
+        self._jacobian = None
         self._species_name = species_name
 
     #
@@ -23,20 +62,15 @@ class Moment(AtmosphericQuantity):
     def get_data(self, ws, provider, *args, **kwargs):
         AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
 
-    def setup_jacobian(self, ws):
-        kwargs = {"species" : self.name,
-                  "quantity" : self._species_name}
+    #
+    # Jacobian
+    #
 
-        if not self.jacobian.p_grid is None:
-            kwargs["g1"] = self.jacobian.p_grid
-
-        if not self.jacobian.lat_grid is None:
-            kwargs["g2"] = self.jacobian.lat_grid
-
-        if not self.jacobian.lon_grid is None:
-            kwargs["g3"] = self.jacobian.lon_grid
-
-        ws.jacobianAddScatSpecies(**kwargs)
+    @property
+    def jacobian(self):
+        if self._jacobian is None:
+            self._jacobian = Jacobian(self)
+        return self._jacobian
 
     #
     # Properties

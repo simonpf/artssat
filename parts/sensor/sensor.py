@@ -101,6 +101,7 @@ class Sensor(metaclass = ArtsObject):
                   ("sensor_response_pol_grid", (dim.joker,), list),
                   ("sensor_response_dlos_grid", (dim.joker, dim.joker),
                    np.ndarray),
+                  ("sensor_time", (dim.joker,) , np.ndarray),
                   ("sensor_norm", (1,), int),
                   ("antenna_dim", (1,), int)]
 
@@ -278,6 +279,7 @@ class Sensor(metaclass = ArtsObject):
         # los, pos, offsets and response
         wsvs["sensor_los"] = ws.add_variable(np.zeros((0, 0)))
         wsvs["sensor_pos"] = ws.add_variable(np.zeros((0, 0)))
+        wsvs["sensor_time"] = ws.add_variable(np.zeros((0)))
         wsvs["mblock_dlos_grid"] = ws.add_variable(np.zeros((0, 0)))
         wsvs["sensor_response"] = ws.add_variable(np.zeros((0, 0)))
 
@@ -303,7 +305,7 @@ class Sensor(metaclass = ArtsObject):
 
         # Need to add agendas in the end so that input arguments
         # can be replaced by private sensor variables.
-        wsvs["iy_main_agenda"] = ws.add_variable(
+        wsvs["_iy_main_agenda"] = ws.add_variable(
             self.make_iy_main_agenda(scattering))
 
     def get_data(self, ws, provider, *args, **kwargs):
@@ -370,6 +372,21 @@ class Sensor(metaclass = ArtsObject):
                                 "{0} elements  along the second dimension"
                                 " for a {0}D atmosphere.".format(dim))
         ws.MatrixSet(wsvs["sensor_pos"], pos)
+
+        # Sensor time
+
+        if self._sensor_time.fixed:
+            t = self.sensor_time
+        elif hasattr(provider, "get_sensor_time"):
+            t = provider.get_sensor_time(*args, **kwargs)
+        else:
+            t = np.zeros(pos.shape[0])
+
+        if not len(np.shape(t)) == 1:
+            raise Exception("Provided sensor time must be a 1D numpy "
+                            " array.")
+
+        ws.VectorSet(wsvs["sensor_time"], t)
 
         # Line of sight offsets
         if self._sensor_line_of_sight_offsets.fixed:
@@ -519,6 +536,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
             ws.Copy(ws.iy_transmitter_agenda,
                     self._wsvs["iy_transmitter_agenda"])
             ws.Copy(ws.instrument_pol, self._wsvs["instrument_pol"])
+            ws.IndexSet(self.wsvs["stokes_dim"], self.stokes_dimension)
             ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
 
         return preparations
@@ -606,11 +624,6 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
 
             The ARTS :code:`iy_main_agenda`
         """
-
-        for k in self._wsvs:
-            print(k)
-            print(self._wsvs[k].value)
-
         def iy_main_agenda_scattering(ws):
             ws.Ignore(ws.iy_id)
             ws.Ignore(ws.nlte_field)
@@ -701,8 +714,9 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
         """
 
         def preparations(ws):
+            ws.IndexSet(self._wsvs["stokes_dim"], self.stokes_dimension)
             ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
-            ws.Copy(ws.iy_main_agenda, self._wsvs["iy_main_agenda"])
+            ws.Copy(ws.iy_main_agenda, self._wsvs["_iy_main_agenda"])
 
         return preparations
 
@@ -742,36 +756,6 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
 
         return f
 
-
-class ICI(PassiveSensor):
-    channels = np.array([1.749100000000000e+11,
-                         1.799100000000000e+11,
-                         1.813100000000000e+11,
-                         1.853100000000000e+11,
-                         1.867100000000000e+11,
-                         1.917100000000000e+11,
-                         2.407000000000000e+11,
-                         2.457000000000000e+11,
-                         3.156500000000000e+11,
-                         3.216500000000000e+11,
-                         3.236500000000000e+11,
-                         3.266500000000000e+11,
-                         3.286500000000000e+11,
-                         3.346500000000000e+11,
-                         4.408000000000000e+11,
-                         4.450000000000000e+11,
-                         4.466000000000000e+11,
-                         4.494000000000000e+11,
-                         4.510000000000000e+11,
-                         4.552000000000000e+11,
-                         6.598000000000000e+11,
-                         6.682000000000000e+11])
-    def __init__(self, channels = None):
-        if channels is None:
-            channels = ICI.channels
-        else:
-            channels = ICI.channels[channels]
-        super().__init__(channels)
 
 class ICI(PassiveSensor):
     channels = np.array([1.749100000000000e+11,

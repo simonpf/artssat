@@ -2,6 +2,7 @@ import numpy as np
 from typhon.arts.workspace     import Workspace
 from parts.sensor.sensor import ActiveSensor, PassiveSensor
 from parts.scattering import RT4
+from parts.jacobian import Jacobian, Retrieval
 
 class ArtsSimulation:
     def __init__(self,
@@ -16,6 +17,9 @@ class ArtsSimulation:
         self._scattering_solver = scattering_solver
         self._data_provider     = data_provider
         self._workspace         = None
+
+        self.jacobian  = Jacobian()
+        self.retrieval = Retrieval()
 
 
     #
@@ -69,7 +73,6 @@ class ArtsSimulation:
 
         for s in self.sensors:
             s.setup(ws, self.atmosphere.scattering)
-            print("setup done.", s)
 
     def check_dimensions(self, f, name):
         s = f.shape
@@ -83,24 +86,15 @@ class ArtsSimulation:
                     in zip(s, self.dimensions)]):
             raise Exception(err)
 
-    def run(self, *args, **kwargs):
+    def _run_forward_simulation(self):
 
         ws = self.workspace
 
-        self.atmosphere.get_data(ws, self.data_provider, *args, **kwargs)
-        for s in self.sensors:
-            s.get_data(ws, self.data_provider, *args, **kwargs)
-
-        if self.atmosphere.has_jacobian():
-            ws.jacobianInit()
-            self.atmosphere.setup_jacobian(ws)
-            ws.jacobianClose()
-        else:
-            ws.jacobianOff()
+        # Jacobian setup
+        self.jacobian.setup(ws)
 
         # Run atmospheric checks
         self.atmosphere.run_checks(ws)
-
 
         i_active = []
         i_passive = []
@@ -155,8 +149,39 @@ class ArtsSimulation:
             i += 1
 
 
+    def _run_retrieval(self, *args, **kwargs):
+
+        ws = self.workspace
+        scattering = len(self.atmosphere.scatterers) > 0
+
+        self.retrieval.setup(self.workspace, self.sensors, self.scattering_solver,
+                             scattering, self.data_provider, *args, **kwargs)
+
+        ws.y = self.retrieval.y
+
+        self.atmosphere.run_checks(ws)
+
+        ws.covmat_seAddBlock(
+            block = self.data_provider.get_observation_error_covariance(*args,
+                                                                        **kwargs)
+        )
 
 
+
+        ws.OEM(**self.retrieval.settings)
+
+    def run(self, *args, **kwargs):
+
+        ws = self.workspace
+
+        self.atmosphere.get_data(ws, self.data_provider, *args, **kwargs)
+        for s in self.sensors:
+            s.get_data(ws, self.data_provider, *args, **kwargs)
+
+        if len(self.retrieval.retrieval_quantities) > 0:
+            self._run_retrieval(*args, **kwargs)
+        else:
+            self._run_forward_simulation()
 
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)

@@ -29,11 +29,6 @@ class AtmosphericQuantity(metaclass = ABCMeta):
         self._wsv_index = None
         self._constant  = False
 
-        if jacobian:
-            self.jacobian = Jacobian()
-        else:
-            self.jacobian = None
-
     #
     # Properties
     #

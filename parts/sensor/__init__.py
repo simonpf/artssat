@@ -3,7 +3,7 @@
 Sensor
 ======
 """
-from parts.sensor.sensor import ICI, PassiveSensor, CloudSat
+from parts.sensor.sensor import ICI, ActiveSensor, PassiveSensor, CloudSat
 
 
 
