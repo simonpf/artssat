@@ -112,6 +112,9 @@ class ArtsSimulation:
         i = 0
         y_index = 0
 
+        if self.atmosphere.scattering:
+            ws.pnd_fieldCalcFromParticleBulkProps()
+
         # Simulate active sensor
         if len(i_active) > 0:
             s = self.sensors[i_active[0]]
@@ -166,7 +169,9 @@ class ArtsSimulation:
                                                                         **kwargs)
         )
 
-
+        print(ws.y.value)
+        print(ws.xa.value)
+        print(ws.x.value)
 
         ws.OEM(**self.retrieval.settings)
 

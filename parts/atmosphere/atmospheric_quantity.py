@@ -82,7 +82,7 @@ class AtmosphericQuantity(metaclass = ABCMeta):
 
     @abstractmethod
     def get_data(self, ws, provider, *args, **kwargs):
-        dimensions = ws.t_field.shape
+        dimensions = ws.t_field.value.shape
         f = provider.__getattribute__("get_" + self.name)
         x = f(*args, **kwargs)
         x = extend_dimensions(x)
@@ -91,3 +91,5 @@ class AtmosphericQuantity(metaclass = ABCMeta):
             raise Exception("Shape of {0} field is inconsistent with "
                             "the dimensions of the atmosphere."
                             .format(self.name))
+
+        self._wsv.value[self._wsv_index, :, :, :] = x

@@ -49,6 +49,7 @@ from parts import dimensions as dim
 from parts.arts_object import ArtsObject
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq
+from typhon.arts.workspace import arts_agenda
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
@@ -145,6 +146,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                   ("mass_weighted_diameter", (dim.p, dim.lat, dim.lon), np.ndarray),
                   ("alpha", (), np.float),
                   ("beta", (), np.float),
+                  ("dm_min", (), np.float),
                   ("rho", (), np.float)]
 
     @classmethod
@@ -214,8 +216,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
         super().__init__(D_eq(self.rho))
 
         self.rho = rho
-        self.t_min = 0.0
-        self.t_max = 999.0
+        self.dm_min = 1e-12
 
     @property
     def moment_names(self):
@@ -236,8 +237,9 @@ class D14(ArtsPSD, metaclass = ArtsObject):
                       alpha  = self.alpha,
                       beta   = self.beta,
                       t_min  = self.t_min,
-                      Dm_min = D14.dm_min,
+                      Dm_min = self.dm_min,
                       t_max  = self.t_max)
+        return pnd_call
 
     def _get_parameters(self):
 
@@ -371,7 +373,8 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                   ("mass_weighted_diameter", (dim.p, dim.lat, dim.lon), np.ndarray),
                   ("alpha", (), np.float),
                   ("beta", (), np.float),
-                  ("rho", (), np.float)]
+                  ("rho", (), np.float),
+                  ("dm_min", (), np.float)]
 
     @classmethod
     def from_psd_data(self, psd, alpha, beta, rho):
@@ -438,6 +441,8 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
         if not mass_weighted_diameter is None:
             self.mass_weighted_diameter = mass_weighted_diameter
 
+        self.dm_min = 1e-12
+
         super().__init__(D_eq(self.rho))
 
     @property
@@ -459,9 +464,9 @@ class D14N(ArtsPSD, metaclass = ArtsObject):
                       alpha  = self.alpha,
                       beta   = self.beta,
                       t_min  = self.t_min,
-                      Dm_min = D14.dm_min,
+                      Dm_min = self.dm_min,
                       t_max  = self.t_max)
-        return pnd_agenda
+        return pnd_call
 
     def _get_parameters(self):
 

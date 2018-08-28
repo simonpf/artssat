@@ -10,6 +10,7 @@ from abc import abstractproperty
 from parts.arts_object import ArtsObject
 from parts.scattering.psd.data.psd_data import SizeParameter, Area, D_eq,\
                                                D_max, Mass
+from typhon.arts.workspace import arts_agenda
 
 class ArtsPSD(metaclass = ArtsObject):
     r"""
@@ -97,7 +98,7 @@ class ArtsPSD(metaclass = ArtsObject):
                                        x_fit_start = self.x_fit_start)
             ws.Copy(ws.psd_size_grid, ws.scat_species_x)
             ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-            INCLUDE(self.pndf_agenda_call)
+            INCLUDE(self.pnd_call_agenda)
             ws.pndFromPsdBasic()
 
         return pnd_agenda

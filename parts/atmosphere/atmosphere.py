@@ -163,7 +163,6 @@ class Atmosphere:
                 ws.propmat_clearsky_agenda__OnTheFly)
 
     def __setup_scattering__(self, ws):
-
         ws.ScatSpeciesInit()
         pb_names = []
         for s in self._scatterers:
@@ -292,32 +291,8 @@ class Atmosphere:
 
         dimensions = ws.t_field.value.shape
 
-        i = 0
         for s in self.scatterers:
-            fname = "get_" + s.name
-            f = provider.__getattribute__(fname)
-            x = f(s.psd, *args, **kwargs)
-
-            if not len(x) == len(s.moment_names):
-                raise Exception("Bulk property data provided for scattering "
-                                "species " + s.name + " is inconsistent "
-                                "with PSD.")
-
-            for j,m in enumerate(x):
-
-                print(m)
-                self.__check_dimensions__(m, s.moment_names[j])
-                m = self.__reshape__(m)
-
-                if not m.shape == dimensions:
-                    raise Exception("Dimensions of " + s.name + " " +
-                                    s.moment_names[i] + " field "
-                                    "inconcistent with dimensions of "
-                                    " temperature field.")
-                ws.particle_bulkprop_field.value[i, :, :, :] = m
-                i += 1
-
-
+            s.get_data(ws, provider, *args, **kwargs)
 
     def get_data(self, ws, provider, *args, **kwargs):
 
