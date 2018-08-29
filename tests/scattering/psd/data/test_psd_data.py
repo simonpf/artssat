@@ -115,7 +115,7 @@ def test_psd_add(exponential_distribution, two_size_parameters):
     should double all elements in :code:`data`.
     """
     x, y = exponential_distribution
-    s1, _ = two_size_parameters
+    s1, s2 = two_size_parameters
 
     data = PSDData(x, y, s1)
     data2 = data + data

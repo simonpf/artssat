@@ -10,11 +10,6 @@ from examples.data_provider import DataProvider, APrioriProvider, DataProvider2I
 
 import matplotlib.pyplot as plt
 
-from IPython import get_ipython
-ip = get_ipython()
-ip.magic("%load_ext autoreload")
-ip.magic("%autoreload 2")
-
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               surface = Tessem())
@@ -114,6 +109,9 @@ def test_simulation_scattering_retrieval():
     y = np.copy(simulation.workspace.y)
 
     simulation.retrieval.add(ice.mass_density)
+    ice.mass_density.limit_low = 0.0
+    simulation.retrieval.settings["max_iter"] = 2
+
     simulation.retrieval.y = y
     simulation.setup()
     simulation.run()
@@ -162,6 +160,3 @@ def test_simulation_absorption_retrieval():
     simulation.run()
 
     print(simulation.workspace.x.value)
-
-ws = test_simulation_scattering_retrieval()
-#ws = test_simulation_scattering()

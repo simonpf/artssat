@@ -4,6 +4,8 @@ from parts.atmosphere.atmospheric_quantity \
 from parts.arts_object import add_property
 import parts.dimensions as dim
 
+from typhon.arts.workspace import arts_agenda
+
 class Jacobian:
 
     def __init__(self, quantity):
@@ -51,6 +53,8 @@ class Retrieval(Jacobian):
                         np.ndarray)
         add_property(self, "xa", (dim.joker), np.ndarray)
         add_property(self, "x0", (dim.joker), np.ndarray)
+        add_property(self, "limit_low", (), np.float)
+        add_property(self, "limit_high", (), np.float)
 
     def setup_retrieval(self, ws, retrieval_provider, *args, **kwargs):
 
@@ -72,6 +76,24 @@ class Retrieval(Jacobian):
             self.x0 = x0_fun(*args, **kwargs)
         else:
             self.x0 = None
+
+    def get_iteration_preparations(self, index):
+
+        if self.limit_low is None and self.limit_high is None:
+            return None
+
+        limit_low = -np.inf
+        if self._limit_low.fixed:
+            limit_low = self._limit_low.value
+
+        limit_high = np.inf
+        if self._limit_high.fixed:
+            limit_high = self._limit_high.value
+
+        def agenda(ws):
+            ws.xClip(ijq = index, limit_low = limit_low, limit_high = limit_high)
+
+        return arts_agenda(agenda)
 
 class Moment(AtmosphericQuantity):
     def __init__(self,
