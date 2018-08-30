@@ -1,12 +1,56 @@
 import scipy as sp
 import numpy as np
 
+from abc import ABCMeta, abstractmethod
+
 from typhon.arts.workspace import arts_agenda
 from typhon.arts.workspace.agendas import Agenda
 from parts.sensor import ActiveSensor, PassiveSensor
 from typhon.arts.workspace.methods import workspace_methods
 
 wsm = workspace_methods
+
+class Transformation(metaclass = ABCMeta):
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def setup(self, ws):
+        pass
+
+    @abstractmethod
+    def __call__(self, x):
+        pass
+
+class Log10(Transformation):
+    def __init__(self):
+        pass
+
+    def setup(self, ws):
+        ws.jacobianSetFuncTransformation(transformation_func = "log10")
+
+    def __call__(self, x):
+        return np.log10(x)
+
+class Log(Transformation):
+    def __init__(self):
+        pass
+
+    def setup(self, ws):
+        ws.jacobianSetFuncTransformation(transformation_func = "log")
+
+    def __call__(self, x):
+        return np.log10(x)
+
+class Identity(Transformation):
+    def __init__(self):
+        pass
+
+    def setup(self, ws):
+        pass
+
+    def __call__(self, x):
+        return x
 
 class Jacobian:
     """
@@ -92,6 +136,12 @@ class Retrieval:
         #
 
         agenda = Agenda.create("inversion_iterate_agenda")
+
+        @arts_agenda
+        def debug_print(ws):
+            ws.Print(ws.x, 0)
+
+        agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.get_iteration_preparations(i)

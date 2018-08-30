@@ -169,10 +169,6 @@ class ArtsSimulation:
                                                                         **kwargs)
         )
 
-        print(ws.y.value)
-        print(ws.xa.value)
-        print(ws.x.value)
-
         ws.OEM(**self.retrieval.settings)
 
     def run(self, *args, **kwargs):

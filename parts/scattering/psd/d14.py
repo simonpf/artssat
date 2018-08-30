@@ -166,17 +166,22 @@ class D14(ArtsPSD, metaclass = ArtsObject):
 
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
-        size_parameter = D_eq(rho)
+        new_psd = D14(alpha, beta, rho)
+        new_psd.convert_from(psd)
+        return new_psd
+
+    def convert_from(self, psd):
 
         md = psd.get_mass_density()
 
-        m4 = psd.get_moment(4.0, reference_size_parameter = size_parameter)
-        m3 = psd.get_moment(3.0, reference_size_parameter = size_parameter)
+        m4 = psd.get_moment(4.0, reference_size_parameter = self.size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter = self.size_parameter)
 
         dm = m4 / m3
         dm[m3 == 0.0] = 0.0
 
-        return D14(alpha, beta, rho, md, dm)
+        self.mass_density = md
+        self.mass_weighted_diameter = dm
 
     def __init__(self, alpha, beta, rho = 917.0,
                  mass_density = None,

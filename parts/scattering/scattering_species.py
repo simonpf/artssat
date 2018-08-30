@@ -47,6 +47,8 @@ class Jacobian:
 class Retrieval(Jacobian):
 
     def __init__(self, quantity):
+        from parts.jacobian import Identity
+
         super().__init__(quantity)
 
         add_property(self, "covariance_matrix", (dim.joker, dim.joker),
@@ -55,6 +57,8 @@ class Retrieval(Jacobian):
         add_property(self, "x0", (dim.joker), np.ndarray)
         add_property(self, "limit_low", (), np.float)
         add_property(self, "limit_high", (), np.float)
+
+        self.transformation = Identity()
 
     def setup_retrieval(self, ws, retrieval_provider, *args, **kwargs):
 
@@ -65,6 +69,8 @@ class Retrieval(Jacobian):
         ws.covmat_block = covmat
 
         ws.retrievalAddScatSpecies(**self._make_setup_kwargs(ws))
+        if not self.transformation is None:
+            self.transformation.setup(ws)
 
         fname = "get_" + self.quantity.name + "_xa"
         xa_fun = getattr(retrieval_provider, fname)
@@ -84,11 +90,15 @@ class Retrieval(Jacobian):
 
         limit_low = -np.inf
         if self._limit_low.fixed:
-            limit_low = self._limit_low.value
+            limit_low = self.transformation(self._limit_low.value)
+
+        print("limit low:", limit_low)
 
         limit_high = np.inf
         if self._limit_high.fixed:
-            limit_high = self._limit_high.value
+            limit_high = self.transformation(self._limit_high.value)
+
+        print("limit high:", limit_high)
 
         def agenda(ws):
             ws.xClip(ijq = index, limit_low = limit_low, limit_high = limit_high)
