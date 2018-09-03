@@ -1,7 +1,7 @@
 import numpy as np
 from typhon.arts.workspace     import Workspace
 from parts.sensor.sensor import ActiveSensor, PassiveSensor
-from parts.scattering import RT4
+from parts.scattering.solvers import ScatteringSolver, RT4
 from parts.jacobian import Jacobian, Retrieval
 
 class ArtsSimulation:
@@ -45,6 +45,14 @@ class ArtsSimulation:
     @property
     def scattering_solver(self):
         return self._scattering_solver
+
+    @scattering_solver.setter
+    def scattering_solver(self, s):
+        if isinstance(s, ScatteringSolver):
+            self._scattering_solver = s
+        else:
+            raise ValueError("The scattering solver must be an instance of the "
+                             "abstract ScatteringSolver class.")
 
     @property
     def workspace(self):
@@ -119,8 +127,6 @@ class ArtsSimulation:
         if len(i_active) > 0:
             s = self.sensors[i_active[0]]
 
-            f = s.make_preparation_function()
-            f(ws)
             f = s.make_y_calc_function(append = False)
             f(ws)
 
@@ -132,15 +138,10 @@ class ArtsSimulation:
         # Simulate passive sensors
         for s in [self.sensors[i] for i in i_passive]:
 
-            f = s.make_preparation_function()
-            f(ws)
-
             # Run scattering solver
             if self.atmosphere.scattering:
-                m = self.scattering_solver.solver_call
-                m.call(ws,
-                       *s.get_wsm_args(m),
-                       **self.scattering_solver.solver_kwargs)
+                f = self.scattering_solver.make_solver_call(s)
+                f(ws)
 
             f = s.make_y_calc_function(append = i > 0,
                                        scattering = self.atmosphere.scattering)
@@ -159,6 +160,7 @@ class ArtsSimulation:
 
         self.retrieval.setup(self.workspace, self.sensors, self.scattering_solver,
                              scattering, self.data_provider, *args, **kwargs)
+
 
         ws.y = self.retrieval.y
 

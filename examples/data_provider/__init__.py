@@ -97,9 +97,8 @@ class DataProvider:
 
     def get_ice_mass_density(self):
         z = self.get_altitude()
-        m = 1e-3 * np.exp(-(z - 10.0e3) ** 2 / 1e3 ** 2)
+        m = 1e-3 * np.exp(-(z - 10.0e3) ** 2 / 10e3 ** 2)
         m[m < 1e-6] = 0.0
-        print(m)
         return m
 
     def get_ice_mass_weighted_diameter(self):
@@ -127,7 +126,7 @@ class APrioriProvider(DataProvider):
 
     def get_ice_mass_density_xa(self):
         z = self.get_altitude()
-        xa = 1e-5 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
+        xa = 1e-6 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
         return np.maximum(xa, 1e-12)
 
     def get_ice_mass_density_covariance(self):
@@ -137,15 +136,27 @@ class APrioriProvider(DataProvider):
     def get_observation_error_covariance(self):
         return np.diag(1.0 * np.ones(22 * 2))
 
-
-class DataProvider2Ice(DataProvider):
-
+class APrioriProviderCombined(DataProvider):
     def __init__(self):
-        pass
+        super().__init__()
 
-    def get_ice_mass_density(self):
+    def get_ice_mass_density_xa(self):
         z = self.get_altitude()
-        m = 1e-5 * np.exp(-(z - 10.0e3) ** 2 / 1e3 ** 2)
-        m[m < 1e-6] = 0.0
-        print(m)
-        return m
+        xa = 1e-5 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
+        return np.maximum(xa, 1e-12)
+
+    def get_ice_mass_density_covariance(self):
+        xa = np.maximum(self.get_ice_mass_density_xa(), 1e-12)
+        return sp.sparse.diags(xa / 0.2) ** 2.0
+
+    def get_ice_mass_weighted_diameter_xa(self):
+        z = self.get_altitude()
+        xa = 1e-4 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
+        return np.maximum(xa, 1e-12)
+
+    def get_ice_mass_weighted_diameter_covariance(self):
+        xa = np.maximum(self.get_ice_mass_density_xa(), 1e-12)
+        return sp.sparse.diags(xa / 0.2) ** 2.0
+
+    def get_observation_error_covariance(self):
+        return np.diag(1.0 * np.ones(30 + 22 * 2))

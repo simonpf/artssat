@@ -7,7 +7,9 @@ from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 from parts.arts_object import add_property
 import parts.dimensions as dim
+
 import numpy as np
+from typhon.arts.workspace import arts_agenda
 
 class Jacobian:
 

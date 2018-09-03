@@ -120,8 +120,13 @@ class Retrieval:
 
         ws.retrievalDefClose()
 
+        print(xa)
+        print(x0)
+
         xa = np.concatenate(xa)
         x0 = np.concatenate(x0)
+
+
 
         ws.x = x0
         ws.xa = xa
@@ -170,7 +175,6 @@ class Retrieval:
         if len(i_active) > 0:
             s = sensors[i_active[0]]
 
-            agenda.append(arts_agenda(s.make_preparation_function()))
             agenda.append(arts_agenda(s.make_y_calc_function(append = False)))
 
             i += 1
@@ -178,12 +182,9 @@ class Retrieval:
         # Passive sensor
         for s in [sensors[i] for i in i_passive]:
 
-            agenda.append(arts_agenda(s.make_preparation_function()))
             # Scattering solver call
             if scattering:
-                m = scattering_solver.solver_call
-                agenda.add_method(ws, m, *s.get_wsm_args(m),
-                                  **scattering_solver.solver_kwargs)
+                agenda.append(arts_agenda(scattering_solver.make_solver_call(s)))
 
             agenda.append(arts_agenda(
                 s.make_y_calc_function(append = i > 0,

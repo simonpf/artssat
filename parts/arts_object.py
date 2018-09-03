@@ -169,10 +169,10 @@ def add_property(obj, name, dims, t):
     getter = make_getter(name)
     setter = make_setter(name)
     prop = property(getter, setter, name)
-    obj.__dict__[name] = prop
+    setattr(type(obj), name, prop)
 
     ph = PlaceHolder(name, dims, t)
-    obj.__dict__["_" + name] = ph
+    setattr(obj, "_" + name, ph)
 
 class ArtsObject(ABCMeta):
     """

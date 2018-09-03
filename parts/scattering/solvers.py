@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABCMeta, abstractproperty, abstractmethod
+from parts.arts_object import ArtsObject
 from typhon.arts.workspace.methods import workspace_methods
 from typhon.arts.workspace.variables import workspace_variables
 
@@ -10,17 +11,10 @@ class ScatteringSolver(metaclass = ABCMeta):
     def __init__(self):
         pass
 
-    @abstractproperty
-    def solver_call(self):
+    @abstractmethod
+    def make_solver_call(self, sensor):
         pass
 
-    @abstractproperty
-    def solver_args(self):
-        pass
-
-    @abstractproperty
-    def solver_kwargs(self):
-        pass
 
 class RT4(ScatteringSolver):
     def __init__(self,
@@ -71,21 +65,44 @@ class RT4(ScatteringSolver):
     def robust(self):
         return self._robust
 
-    @property
-    def solver_call(self):
-        return wsm["RT4Calc"]
+    def make_solver_call(self, sensor):
 
-    @property
-    def solver_args(self):
-        return []
+        args = sensor.get_wsm_args(wsm["RT4Calc"])
+        def run_solver(ws):
+            ws.RT4Calc(*args,
+                       nstreams = self._nstreams,
+                       pfct_method = self._pfct_method,
+                       quad_type = self._quad_type,
+                       add_straight_angles = self._add_straight_angles,
+                       pfct_aa_grid_size = self._pfct_aa_grid_size,
+                       auto_inc_nstreams = self._auto_inc_nstreams,
+                       robust = self.robust)
 
-    @property
-    def solver_kwargs(self):
-       return {"nstreams" : self.nstreams,
-               "pfct_method" : self.pfct_method,
-               "quad_type" : self.quad_type,
-               "add_straight_angles" : self.add_straight_angles,
-               "pfct_aa_grid_size" : self.pfct_aa_grid_size,
-               "auto_inc_nstreams" : self.auto_inc_nstreams,
-               "robust" : self.robust}
+        return run_solver
+
+class Disort(ScatteringSolver, metaclass = ArtsObject):
+
+    def __init__(self,
+                 nstreams = 8,
+                 pfct_method = "interpolate",
+                 new_optprop = 1,
+                 Npfct = 181):
+
+        self._nstreams = nstreams
+        self._pfct_method = pfct_method
+        self._new_optprop = new_optprop
+        self._Npfct = Npfct
+
+    def make_solver_call(self, sensor):
+
+        args = sensor.get_wsm_args(wsm["DisortCalc"])
+        args_scat_data = sensor.get_wsm_args(wsm["scat_data_checkedCalc"])
+        def run_solver(ws):
+            ws.DOAngularGridsSet(N_za_grid = 72, za_grid_opt_file = "")
+            ws.DisortCalcSurface(*args, nstreams = self._nstreams,
+                                 pfct_method = self._pfct_method,
+                                 new_optprop = self._new_optprop,
+                                 Npfct = self._Npfct)
+
+        return run_solver
 

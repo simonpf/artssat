@@ -80,8 +80,6 @@ class Retrieval(Jacobian):
         if hasattr(retrieval_provider, fname):
             x0_fun = getattr(retrieval_provider, fname)
             self.x0 = x0_fun(*args, **kwargs)
-        else:
-            self.x0 = None
 
     def get_iteration_preparations(self, index):
 

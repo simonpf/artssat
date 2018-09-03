@@ -105,7 +105,16 @@ class Sensor(metaclass = ArtsObject):
                   ("sensor_norm", (1,), int),
                   ("antenna_dim", (1,), int)]
 
-    def __init__(self, f_grid = None, stokes_dimension = 1):
+    private_wsvs = ["f_grid", "stokes_dim", "scat_data", "scat_data_checked",
+                    "iy_unit", "iy_aux_vars", "sensor_los", "sensor_pos",
+                    "sensor_time", "mblock_dlos_grid", "sensor_response",
+                    "antenna_dim", "sensor_norm", "sensor_response",
+                    "sensor_response_f", "sensor_response_f_grid",
+                    "sensor_response_dlos", "sensor_response_dlos_grid",
+                    "sensor_response_pol", "sensor_response_pol_grid",
+                    "iy_main_agenda"]
+
+    def __init__(self, name, f_grid = None, stokes_dimension = 1):
         """
         Create a sensor with given frequency grid :code:`f_grid` and
         stokes dimension :code: `stokes_dimension`
@@ -116,9 +125,19 @@ class Sensor(metaclass = ArtsObject):
         if not f_grid is None:
             self.f_grid = f_grid
 
+        self.name = name
+
         self.stokes_dimension = stokes_dimension
         self.sensor_norm = 1
         self.antenna_dim = 1
+
+    def _create_private_wsvs(self, ws, names):
+
+        for name in names:
+            wsv = ws.__getattr__(name)
+            wsv_private = ws.create_variable(wsv.group,
+                                             self.name + "_" + name)
+            self._wsvs[name] = wsv_private
 
     def get_wsm_args(self, wsm):
         """
@@ -245,68 +264,52 @@ class Sensor(metaclass = ArtsObject):
             ws(typhon.arts.workspace.Workspace): The workspace on which
                 to perform the setup of the sensor.
         """
+        self._create_private_wsvs(ws, type(self).private_wsvs)
         wsvs = self._wsvs
 
-        wsvs["f_grid"] = ws.add_variable(self.f_grid)
+        wsvs["f_grid"].value = self.f_grid
 
         # Scat data
-        name = "scat_data_" + str(id(self))
-        ws.ArrayOfArrayOfSingleScatteringDataCreate(name)
-        wsvs["scat_data"] = ws.__getattr__(name)
         ws.scat_dataCalc(ws.scat_data_raw, wsvs["f_grid"], interp_order = 1)
         ws.Copy(wsvs["scat_data"], ws.scat_data)
 
         args = self.get_wsm_args(wsm["scat_data_checkedCalc"])
         ws.scat_data_checkedCalc(*args)
-        wsvs["scat_data_checked"] = ws.add_variable(1)
+        wsvs["scat_data_checked"].value = ws.scat_data_checked
 
         # iy_aux_vars
-        name = "iy_aux_vars_" + str(id(self))
-        ws.ArrayOfStringCreate(name)
-        wsvs["iy_aux_vars"] = ws.__getattr__(name)
-        if self.iy_aux_vars is None or len(self.iy_aux_vars) == 0:
-            ws.Touch(wsvs["iy_aux_vars"])
-        else:
-            ws.ArrayOfStringSet(wsvs["iy_aux_vars"],
-                                self.iy_aux_vars)
+        wsvs["iy_aux_vars"].value = self.iy_aux_vars
 
-        wsvs["iy_unit"] = ws.add_variable(self.iy_unit)
+        wsvs["iy_unit"].value = self.iy_unit
 
         # Stokes dimension
 
-        wsvs["stokes_dim"] = ws.add_variable(self.stokes_dimension)
+        wsvs["stokes_dim"].value = self.stokes_dimension
 
         # los, pos, offsets and response
-        wsvs["sensor_los"] = ws.add_variable(np.zeros((0, 0)))
-        wsvs["sensor_pos"] = ws.add_variable(np.zeros((0, 0)))
-        wsvs["sensor_time"] = ws.add_variable(np.zeros((0)))
-        wsvs["mblock_dlos_grid"] = ws.add_variable(np.zeros((0, 0)))
-        wsvs["sensor_response"] = ws.add_variable(np.zeros((0, 0)))
+        wsvs["sensor_los"].value       = []
+        wsvs["sensor_pos"].value       = []
+        wsvs["sensor_time"].value      = []
+        wsvs["mblock_dlos_grid"].value = []
+        wsvs["sensor_response"].value  = []
 
         # sensor response
-        wsvs["antenna_dim"] = ws.add_variable(self.antenna_dim)
-        wsvs["sensor_norm"] = ws.add_variable(self.sensor_norm)
+        wsvs["antenna_dim"].value = self.antenna_dim
+        wsvs["sensor_norm"].value = self.sensor_norm
 
-        name = "sensor_response_" + str(id(self))
-        ws.SparseCreate(name)
-        wsvs["sensor_response"] = getattr(ws, name)
+        wsvs["sensor_response"].value = []
 
-        wsvs["sensor_response_f"] = ws.add_variable(np.zeros((0,)))
-        wsvs["sensor_response_f_grid"] = ws.add_variable(np.zeros((0,)))
-        wsvs["sensor_response_dlos"] = ws.add_variable(np.zeros((0, 0)))
-        wsvs["sensor_response_dlos_grid"] = ws.add_variable(np.zeros((0, 0)))
+        wsvs["sensor_response_f"].value         = []
+        wsvs["sensor_response_f_grid"].value    = []
+        wsvs["sensor_response_dlos"].value      = []
+        wsvs["sensor_response_dlos_grid"].value = []
 
-        name = "sensor_response_pol_" + str(id(self))
-        ws.ArrayOfIndexCreate(name)
-        wsvs["sensor_response_pol"] = getattr(ws, name)
-        name = "sensor_response_pol_grid_" + str(id(self))
-        ws.ArrayOfIndexCreate(name)
-        wsvs["sensor_response_pol_grid"] = getattr(ws, name)
+        wsvs["sensor_response_pol"].value      = []
+        wsvs["sensor_response_pol_grid"].value = []
 
         # Need to add agendas in the end so that input arguments
         # can be replaced by private sensor variables.
-        wsvs["_iy_main_agenda"] = ws.add_variable(
-            self.make_iy_main_agenda(scattering))
+        wsvs["iy_main_agenda"].value = self.make_iy_main_agenda(scattering)
 
     def get_data(self, ws, provider, *args, **kwargs):
         """
@@ -403,6 +406,8 @@ class Sensor(metaclass = ArtsObject):
         ws.MatrixSet(wsvs["mblock_dlos_grid"], dlos)
 
         args = self.get_wsm_args(wsm["sensor_responseInit"])
+
+        ws.stokes_dim = self.stokes_dimension
         ws.sensor_responseInit(*args)
         ws.Copy(wsvs["sensor_response"], ws.sensor_response)
         ws.Copy(wsvs["sensor_response_f"], ws.sensor_response_f)
@@ -437,8 +442,13 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
                   ("instrument_pol_array", (dim.joker, dim.joker), list),
                   ("instrument_pol", (dim.joker,), list)}
 
-    def __init__(self, f_grid, stokes_dimension, range_bins = None):
-        super().__init__(f_grid, stokes_dimension = stokes_dimension)
+    private_wsvs = Sensor.private_wsvs + ["range_bins",
+                                          "instrument_pol_array",
+                                          "instrument_pol",
+                                          "iy_transmitter_agenda"]
+
+    def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
+        super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
 
         self.iy_unit = "dBZe"
         self.iy_aux_vars = []
@@ -479,6 +489,8 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
         at some point.
         """
 
+        args = self.get_wsm_args(wsm["iyActiveSingleScat"])
+
         @arts_agenda
         def iy_main_agenda(ws):
             ws.Ignore(ws.iy_id)
@@ -489,8 +501,9 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyActiveSingleScat(pext_scaling = self.extinction_scaling,
-                                trans_in_jacobian = 1)
+            ws.iyActiveSingleScat(*args,
+                                  pext_scaling = self.extinction_scaling,
+                                  trans_in_jacobian = 1)
 
         return iy_main_agenda
 
@@ -533,11 +546,14 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
         """
 
         def preparations(ws):
-            ws.Copy(ws.iy_transmitter_agenda,
-                    self._wsvs["iy_transmitter_agenda"])
-            ws.Copy(ws.instrument_pol, self._wsvs["instrument_pol"])
-            ws.IndexSet(self.wsvs["stokes_dim"], self.stokes_dimension)
-            ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
+            ws.Ignore(ws.atmosphere_dim)
+            #ws.Copy(ws.iy_transmitter_agenda,
+            #        self._wsvs["iy_transmitter_agenda"])
+            #ws.Copy(ws.iy_main_agenda,
+            #        self._wsvs["_iy_main_agenda"])
+            #ws.Copy(ws.instrument_pol, self._wsvs["instrument_pol"])
+            #ws.IndexSet(self._wsvs["_stokes_dim"], self.stokes_dimension)
+            #ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
 
         return preparations
 
@@ -569,17 +585,16 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
     # Setup
     #
 
-    def setup(self, ws):
+    def setup(self, ws, scattering = True):
 
         wsvs = self._wsvs
-        wsvs["iy_transmitter_agenda"] = ws.add_variable(
-            self.iy_transmitter_agenda
-        )
-        wsvs["instrument_pol"] = ws.add_variable(self.instrument_pol)
-        wsvs["instrument_pol_array"] = ws.add_variable(
-            self.instrument_pol_array
-        )
-        super().setup(ws)
+        super().setup(ws, scattering)
+
+        wsvs["iy_transmitter_agenda"].value = self.iy_transmitter_agenda
+        wsvs["instrument_pol"].value        = self.instrument_pol
+        wsvs["instrument_pol_array"].value  = self.instrument_pol_array
+
+        wsvs["pext_scaling"] = ws.add_variable(1.0)
 
     def get_data(self, ws, provider, *args, **kwargs):
 
@@ -601,14 +616,14 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
     Specialization of the abstract Sensor class for passive sensors.
     """
 
-    def __init__(self, f_grid, stokes_dimension = 1):
+    def __init__(self, name, f_grid, stokes_dimension = 1):
         """
         Paramters:
             f_grid(numpy.ndarray) The frequency grid of the sensor.
             stokes_dimension(int) The stokes dimensions to use for simulating
                 the sensor measurement. Must be one of [1, 2, 4].
         """
-        super().__init__(f_grid, stokes_dimension)
+        super().__init__(name, f_grid, stokes_dimension)
         self.iy_unit = "PlanckBT"
 
     #
@@ -714,9 +729,10 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
         """
 
         def preparations(ws):
-            ws.IndexSet(self._wsvs["stokes_dim"], self.stokes_dimension)
-            ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
-            ws.Copy(ws.iy_main_agenda, self._wsvs["_iy_main_agenda"])
+            ws.Ignore(ws.stokes_dim)
+            #ws.IndexSet(self._wsvs["_stokes_dim"], self.stokes_dimension)
+            #ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
+            #ws.Copy(ws.iy_main_agenda, self._wsvs["_iy_main_agenda"])
 
         return preparations
 
@@ -781,20 +797,23 @@ class ICI(PassiveSensor):
                          6.598000000000000e+11,
                          6.682000000000000e+11])
     def __init__(self,
+                 name = "ici",
                  channels = None,
                  stokes_dimension = 2):
         if channels is None:
             channels = ICI.channels
         else:
             channels = ICI.channels[channels]
-        super().__init__(channels, stokes_dimension = stokes_dimension)
+        super().__init__(name, channels, stokes_dimension = stokes_dimension)
 
 class CloudSat(ActiveSensor):
     channels = np.array([94.0e9])
 
     def __init__(self,
+                 name = "cloud_sat",
                  range_bins = np.arange(500.0, 20e3, 500.0),
                  stokes_dimension = 2):
-        super().__init__(f_grid = np.array([94e9]),
+        super().__init__(name,
+                         f_grid = np.array([94e9]),
                          stokes_dimension = stokes_dimension,
                          range_bins = range_bins)

@@ -1,14 +1,19 @@
 import numpy as np
+import pytest
 
 from parts import ArtsSimulation
 from parts.atmosphere import Atmosphere1D
 from parts.atmosphere.absorption import O2, N2, H2O
 from parts.scattering import ScatteringSpecies, D14
+from parts.scattering.solvers import RT4, Disort
 from parts.atmosphere.surface import Tessem
-from parts.sensor import ICI
-from examples.data_provider import DataProvider, APrioriProvider, DataProvider2Ice
+from parts.sensor import CloudSat, ICI
+from examples.data_provider import DataProvider, \
+    APrioriProvider, APrioriProviderCombined
 
 import matplotlib.pyplot as plt
+
+scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
@@ -22,9 +27,16 @@ def test_simulation_absorption():
                                 sensors = [ici])
     simulation.setup()
     simulation.run()
-    print(ici.y)
 
-def test_simulation_scattering():
+    y1 = np.copy(ici.y)
+
+    simulation.run()
+    y2 = np.copy(ici.y)
+
+    assert(np.all(np.isclose(y1, y2)))
+
+@scattering_solvers
+def test_simulation_scattering(scattering_solver):
 
     scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
     scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
@@ -37,24 +49,17 @@ def test_simulation_scattering():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI()
+    ici = ICI(stokes_dimension = 1)
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
+    ici.f_grid = np.array([9e10, 19e10])
 
     simulation = ArtsSimulation(atmosphere = atmosphere,
                                 data_provider = DataProvider(),
                                 sensors = [ici])
+    simulation.scattering_solver = scattering_solver()
     simulation.setup()
     simulation.run()
-    print(simulation.workspace.y.value)
-
-    simulation = ArtsSimulation(atmosphere = atmosphere,
-                                data_provider = DataProvider2Ice(),
-                                sensors = [ici])
-    simulation.setup()
-    simulation.run()
-    print(simulation.workspace.y.value)
-    return simulation.workspace
 
 def test_simulation_scattering_jacobian():
 
@@ -109,12 +114,87 @@ def test_simulation_scattering_retrieval():
     y = np.copy(simulation.workspace.y)
 
     simulation.retrieval.add(ice.mass_density)
-    ice.mass_density.limit_low = 0.0
-    simulation.retrieval.settings["max_iter"] = 2
+    ice.mass_density.limit_low = 1e-6
+    simulation.retrieval.settings["max_iter"] = 5
 
     simulation.retrieval.y = y
     simulation.setup()
     simulation.run()
+    return simulation.workspace
+
+def test_simulation_scattering_combined():
+
+    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
+    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
+    ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
+                            scattering_data = scattering_data,
+                            scattering_meta_data = scattering_meta)
+    ice.psd.t_min = 0.0
+    ice.psd.t_max = 275.0
+
+    ici = ICI()
+    ici.sensor_line_of_sight = np.array([[135.0]])
+    ici.sensor_position = np.array([[600e3]])
+
+    cs = CloudSat()
+    cs.range_bins = np.linspace(0, 30e3, 31)
+    cs.sensor_line_of_sight = np.array([[135.0]])
+    cs.sensor_position = np.array([[600e3]])
+
+    atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
+                              scatterers = [ice],
+                              surface = Tessem())
+    simulation = ArtsSimulation(atmosphere = atmosphere,
+                                data_provider = APrioriProvider(),
+                                sensors = [ici, cs])
+
+    simulation.setup()
+    simulation.run()
+    y = np.copy(simulation.workspace.y)
+    return y
+
+def test_simulation_scattering_combined_retrieval():
+
+    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
+    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
+    ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
+                            scattering_data = scattering_data,
+                            scattering_meta_data = scattering_meta)
+    ice.psd.t_min = 0.0
+    ice.psd.t_max = 275.0
+
+    ici = ICI()
+    ici.sensor_line_of_sight = np.array([[135.0]])
+    ici.sensor_position = np.array([[600e3]])
+
+    cs = CloudSat()
+    cs.range_bins = np.linspace(0, 30e3, 31)
+    cs.sensor_line_of_sight = np.array([[135.0]])
+    cs.sensor_position = np.array([[600e3]])
+
+    atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
+                              scatterers = [ice],
+                              surface = Tessem())
+    simulation = ArtsSimulation(atmosphere = atmosphere,
+                                data_provider = APrioriProviderCombined(),
+                                sensors = [ici, cs])
+
+    simulation.setup()
+    simulation.run()
+    y = np.copy(simulation.workspace.y)
+
+    simulation.retrieval.add(ice.mass_density)
+    simulation.retrieval.add(ice.mass_weighted_diameter)
+    ice.mass_density.retrieval.limit_low = 1e-10
+    ice.mass_weighted_diameter.retrieval.limit_low = 1e-5
+    simulation.retrieval.settings["max_iter"] = 10
+    simulation.retrieval.y = y
+
+    simulation.setup()
+    simulation.run()
+    y_f = np.copy(simulation.workspace.yf.value)
+    x   = np.copy(simulation.workspace.x.value)
+    #return x, y_f, y
     return simulation.workspace
 
 def test_simulation_absorption_jacobian():
@@ -159,4 +239,3 @@ def test_simulation_absorption_retrieval():
     simulation.setup()
     simulation.run()
 
-    print(simulation.workspace.x.value)
