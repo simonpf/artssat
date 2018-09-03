@@ -95,14 +95,14 @@ class Disort(ScatteringSolver, metaclass = ArtsObject):
 
     def make_solver_call(self, sensor):
 
-        args = sensor.get_wsm_args(wsm["DisortCalc"])
+        args = sensor.get_wsm_args(wsm["DisortCalcWithARTSSurface"])
         args_scat_data = sensor.get_wsm_args(wsm["scat_data_checkedCalc"])
         def run_solver(ws):
             ws.DOAngularGridsSet(N_za_grid = 72, za_grid_opt_file = "")
-            ws.DisortCalcSurface(*args, nstreams = self._nstreams,
-                                 pfct_method = self._pfct_method,
-                                 new_optprop = self._new_optprop,
-                                 Npfct = self._Npfct)
+            ws.DisortCalcWithARTSSurface(*args, nstreams = 64,
+                                         pfct_method = self._pfct_method,
+                                         new_optprop = self._new_optprop,
+                                         Npfct = self._Npfct)
 
         return run_solver
 
