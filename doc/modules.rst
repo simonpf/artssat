@@ -1,9 +1,3 @@
-Reference
-=========
-
-PSDs
-----
-
 .. toctree::
    :maxdepth: 4
 

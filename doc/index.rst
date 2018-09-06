@@ -3,10 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-The pain-free Atmospheric Radiative Transfer Simulator (pARTS)
-==============================================================
+parts
+=====
+
+Welcome to the documentation of parts. A modular high-level interface
+for the `Atmospheric Radiative Transfer Simulator <http://radiativetransfer.org>`_
+(ARTS).
+
+Source code documentation
+-------------------------
 
 .. toctree::
-   :maxdepth: 2
-   
-   modules
+   :maxdepth: 4
+
+   generated/parts
