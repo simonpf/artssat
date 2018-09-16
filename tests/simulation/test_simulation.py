@@ -60,6 +60,7 @@ def test_simulation_scattering(scattering_solver):
     simulation.scattering_solver = scattering_solver()
     simulation.setup()
     simulation.run()
+    return simulation.workspace
 
 def test_simulation_scattering_jacobian():
 
@@ -122,7 +123,8 @@ def test_simulation_scattering_retrieval():
     simulation.run()
     return simulation.workspace
 
-def test_simulation_scattering_combined():
+@scattering_solvers
+def test_simulation_scattering_combined(scattering_solver):
 
     scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
     scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
@@ -132,11 +134,11 @@ def test_simulation_scattering_combined():
     ice.psd.t_min = 0.0
     ice.psd.t_max = 275.0
 
-    ici = ICI()
+    ici = ICI(stokes_dimension = 1)
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
-    cs = CloudSat()
+    cs = CloudSat(stokes_dimension = 1)
     cs.range_bins = np.linspace(0, 30e3, 31)
     cs.sensor_line_of_sight = np.array([[135.0]])
     cs.sensor_position = np.array([[600e3]])
@@ -148,6 +150,7 @@ def test_simulation_scattering_combined():
                                 data_provider = APrioriProvider(),
                                 sensors = [ici, cs])
 
+    simulation.scattering_solver = scattering_solver()
     simulation.setup()
     simulation.run()
     y = np.copy(simulation.workspace.y)
@@ -239,3 +242,4 @@ def test_simulation_absorption_retrieval():
     simulation.setup()
     simulation.run()
 
+y = test_simulation_scattering_combined(Disort)

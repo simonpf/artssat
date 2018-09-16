@@ -452,8 +452,8 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
         self.iy_unit = "dBZe"
         self.iy_aux_vars = []
-        self.instrument_pol = [5]
-        self.instrument_pol_array = [[5]]
+        self.instrument_pol = [1]
+        self.instrument_pol_array = [[1]]
         self.extinction_scaling = 1.0
 
     #
@@ -546,7 +546,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
         """
 
         def preparations(ws):
-            ws.Ignore(ws.atmosphere_dim)
+            ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
             #ws.Copy(ws.iy_transmitter_agenda,
             #        self._wsvs["iy_transmitter_agenda"])
             #ws.Copy(ws.iy_main_agenda,

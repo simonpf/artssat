@@ -15,6 +15,53 @@ be provided by the data provider.
 import numpy as np
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+
+def arts_property(group, shape = (), wsv = None)
+    class ArtsProperty:
+
+        def __init__(self, fdefault):
+
+            self.fixed = False
+            self.value = None
+
+            self.fsetup    = None
+            self.fget_data = None
+
+            self.name = fdefault.__name__
+            self.default = fdefault()
+
+        def setup(*args, **kwargs):
+            if self.fsetup is None:
+                self._setup_default(ws)
+            else:
+                self.fsetup(ws)
+
+        def get_data(*args, **kwargs):
+            if self.fget_data is None:
+                self._get_data_default(*args, **kwargs)
+            else:
+                self.fget_data(ws, data_proo)
+
+        def _setup_default(self, ws):
+            if self.wsv and if self.fixed:
+                if wsv.name in self._wsvs:
+                    self._wsvs[wsv.name] = self.value
+                else:
+                    setattr(ws, "wsv.name", value)
+
+        def _get_data_default(self, ws, data_provider, *args, **kwargs):
+            if self.wsv and if not self.fixed:
+                f = getattr(data_provider, "get_" + self.name)
+
+
+
+
+
+
+
+
+    return ArtsProperty
+
 def get_shape(obj):
     """
     Get the shape of a :code:'numpy.ndarray' or of a nested list.
