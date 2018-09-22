@@ -76,6 +76,7 @@ import numpy as np
 import inspect
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typhon.arts.workspace.variables import WorkspaceVariable
+from typhon.arts.workspace.variables import workspace_variables as wsv
 
 ################################################################################
 # The Dimension class
@@ -98,24 +99,18 @@ class Dimension:
     #
     class P:
         """Singleton class representing the pressure dimension."""
-        pass
-
         @classmethod
         def __repr__(self):
             return "pressure"
 
     class Lat:
         """Singleton class representing the latitude dimension."""
-        pass
-
         @classmethod
         def __repr__(self):
             return "latitude"
 
     class Lon:
         """Singleton class representing the longitude dimension."""
-        pass
-
         @classmethod
         def __repr__(self):
             return "longitude"
@@ -125,24 +120,27 @@ class Dimension:
         Singleton class representing the number of dimensions of the
         Atmosphere.
         """
-        pass
-
         @classmethod
         def __repr__(self):
             return "atmosphere"
 
     class Los:
         """ Singleton class representing the line-of-sight dimension. """
-        pass
-
         @classmethod
         def __repr__(self):
             return "line-of-sight"
 
+    class Obs:
+        """
+        Singleton dimension representing the number of measurement
+        blocks.
+        """
+        @classmethod
+        def __repr__(cls):
+            return "measurement block"
+
     class Frq:
         """Singleton class representing the number of frequencies."""
-        pass
-
         @classmethod
         def __repr__(self):
             return "frequency"
@@ -154,7 +152,7 @@ class Dimension:
         """
         pass
 
-    dimensions = [P, Lat, Lon, Atm, Los, Frq, Joker]
+    dimensions = [P, Lat, Lon, Atm, Los, Obs, Frq, Joker]
 
     def __init__(self):
         """
@@ -269,7 +267,10 @@ def get_shape(obj):
     if type(obj) == np.ndarray:
         return obj.shape
     elif type(obj) == list:
-        return (len(obj),) + get_shape(obj[0])
+        if obj == []:
+            return (0,)
+        else:
+            return (len(obj),) + get_shape(obj[0])
     else:
         return ()
 
@@ -403,7 +404,7 @@ class ArtsProperty:
         self.fset      = None
 
         self.name  = fdefault.__name__
-        self.value = fdefault()
+        self.fdefault = fdefault
 
     def get_name(self, owner, separator = "_"):
         """
@@ -605,7 +606,7 @@ class ArtsProperty:
         """
         if self.wsv and self.fixed:
             if self.wsv.name in owner._wsvs:
-                owner._wsvs[wsv.name].value = owner.value
+                owner._wsvs[self.wsv.name].value = self.value
             else:
                 setattr(ws, self.wsv.name, self.value)
 
@@ -628,11 +629,13 @@ class ArtsProperty:
             in determining the value of the :code:`ArtsProperty`.
         """
         if self.wsv and not self.fixed:
-            getter_name = "get_" + self.name
+            getter_name = "get_" + self.get_name(owner, separator = "_")
+
+            default = self.fdefault(owner)
 
             # Try to get value from provider.
             if hasattr(data_provider, getter_name):
-                f = getattr(data_provider, "get_" + self.name)
+                f = getattr(data_provider, getter_name)
                 value = f(*args, **kwargs)
 
                 converted = WorkspaceVariable.convert(self.group, value)
@@ -645,10 +648,11 @@ class ArtsProperty:
                 if not self.shape is None:
                     value = self.check_and_broadcast(value, owner)
                     owner.set_wsv(ws, self.wsv, value)
+                    self.value = value
 
             # Check if there's a default value.
-            elif not self.default is None:
-                owner.set_wsv(ws, self.wsv, value)
+            elif not default is None:
+                owner.set_wsv(ws, self.wsv, default)
 
             # No value - throw exception
             else:
@@ -859,10 +863,85 @@ class ArtsObjectReplacement:
             value(obj): The value to set the WSV :code:`wsv` to.
         """
         if wsv.name in self._wsvs:
-            self._wsvs[wsv].ws    = ws
-            self._wsvs[wsv].value = value
+            self._wsvs[wsv.name].ws    = ws
+            self._wsvs[wsv.name].value = value
         else:
             setattr(ws, wsv.name, value)
+
+    def call_wsm(self, ws, wsm):
+        """
+        Call workspace method on the given workspace.
+
+        This method replaces inputs of the workspace variable with the private
+        WSMs of the object. After execution of the method the results are
+        copied to the private WSMs of the object.
+
+        Parameters:
+
+            ws(typhon.arts.workspace.Workspace): The workspace on which to
+            execute the method.
+
+            wsm(typhon.arts.workspace.WorkspaceMethod): The workspace method
+            to execute.
+
+        """
+        args = self.get_wsm_args(wsm)
+        wsm.call(ws, *args)
+
+        # Copy output
+        for i in wsm.outs:
+            name = WorkspaceVariable.get_variable_name(i)
+            print(name)
+            if name in self._wsvs and not i in wsm.ins:
+                ws.Copy(self._wsvs[name], wsv[name])
+
+    def _create_private_wsvs(self, ws, names):
+        """
+        Create private copies of given WSV names.
+
+        Parameters:
+
+            ws(:code:`typhon.arts.workspace.Workspace`): A workspace instance
+            on which to create the workspace variables.
+
+            names(list): List of strings containing the names of the workspace
+            variables to create.
+        """
+        for name in names:
+            wsv = ws.__getattr__(name)
+            wsv_private = ws.create_variable(wsv.group,
+                                             self.name + "_" + name)
+            self._wsvs[name] = wsv_private
+
+    def get_wsm_args(self, wsm):
+        """
+        Generate a list of arguments to the given ARTS workspace method
+        :code:`wsm` for which the sensor related input parameters are
+        replace by the ones of this sensor. This is done by checking
+        whether the input argument name is in the sensors :code:`_wsv`
+        dictionary and if so replacing the argument.
+
+        Parameters:
+
+           wsm(typhon.arts.workspace.methods.Workspacemethod): The ARTS
+               workspace method object for which to generate the input
+               argument list.
+
+        Returns:
+
+            The list of input arguments with sensor specific input arguments
+            replaced by the corresponding WSVs of the sensor.
+
+        """
+        args = []
+        for i in wsm.ins:
+            name = WorkspaceVariable.get_variable_name(i)
+            if name in self._wsvs:
+                args += [self._wsvs[name]]
+            else:
+                args += [wsv[name]]
+        return args
+
 
 
 class ArtsObject(ABCMeta):
@@ -901,4 +980,3 @@ class ArtsObject(ABCMeta):
                 dct[nm] = prop
 
         return super().__new__(cls, name, bases, dct)
-

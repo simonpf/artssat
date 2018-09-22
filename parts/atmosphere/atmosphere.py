@@ -7,6 +7,7 @@ The model atmosphere
 import numpy as np
 from parts.atmosphere.cloud_box import CloudBox
 
+
 class Atmosphere:
 
     def __init__(self,

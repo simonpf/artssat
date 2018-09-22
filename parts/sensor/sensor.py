@@ -54,9 +54,8 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 
-from parts import dimensions as dim
-
-from parts.arts_object import ArtsObject
+from parts.arts_object import ArtsObjectReplacement, ArtsObject, arts_property
+from parts.arts_object import Dimension as dim
 from typhon.arts.types import SingleScatteringData
 from typhon.arts.workspace import Workspace, arts_agenda
 from typhon.arts.workspace.methods import workspace_methods
@@ -70,7 +69,7 @@ wsm = workspace_methods
 ### Abstract sensor class
 ################################################################################
 
-class Sensor(metaclass = ArtsObject):
+class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
     """
     Defines an interface and implementes common functionality for
     classes representing ARTS sensors.
@@ -84,27 +83,6 @@ class Sensor(metaclass = ArtsObject):
             all sensors in ARTS.
     """
 
-    properties = [("f_grid", (dim.joker), np.ndarray),
-                  ("stokes_dimension", (), int),
-                  ("iy_unit", (), str),
-                  ("iy_aux_vars", (dim.joker), list),
-                  ("sensor_position", (dim.joker, dim.atm), np.ndarray),
-                  ("sensor_line_of_sight", (dim.joker, dim.los), np.ndarray),
-                  ("sensor_line_of_sight_offsets", (dim.joker, dim.los),
-                   np.ndarray),
-                  ("sensor_response", (dim.joker, dim.joker), np.ndarray),
-                  ("sensor_response_f", (dim.joker,), np.ndarray),
-                  ("sensor_response_pol", (dim.joker,), list),
-                  ("sensor_response_dlos", (dim.joker, dim.joker),
-                   np.ndarray),
-                  ("sensor_response_f_grid", (dim.joker,), np.ndarray),
-                  ("sensor_response_pol_grid", (dim.joker,), list),
-                  ("sensor_response_dlos_grid", (dim.joker, dim.joker),
-                   np.ndarray),
-                  ("sensor_time", (dim.joker,) , np.ndarray),
-                  ("sensor_norm", (1,), int),
-                  ("antenna_dim", (1,), int)]
-
     private_wsvs = ["f_grid", "stokes_dim", "scat_data", "scat_data_checked",
                     "iy_unit", "iy_aux_vars", "sensor_los", "sensor_pos",
                     "sensor_time", "mblock_dlos_grid", "sensor_response",
@@ -114,59 +92,186 @@ class Sensor(metaclass = ArtsObject):
                     "sensor_response_pol", "sensor_response_pol_grid",
                     "iy_main_agenda"]
 
+
+    ############################################################################
+    # ARTS properties
+    ############################################################################
+
+    @arts_property("Vector",
+                   shape = (dim.Frq,),
+                   wsv = wsv["f_grid"])
+    def f_grid(self):
+        """
+        The frequency grid of the sensor.
+        """
+        return None
+
+    @arts_property("String",
+                   wsv = wsv["iy_unit"])
+    def iy_unit(self):
+        """
+        The unit which to use for the measurement vector.
+        """
+        return "1"
+
+    @arts_property("ArrayOfString",
+                   shape = (dim.Joker,),
+                   wsv = wsv["iy_aux_vars"])
+    def iy_aux_vars(self):
+        """
+        Which auxilliary variables to compute dunring the simulation.
+        """
+        return []
+
+    @arts_property("Integer", wsv = wsv["stokes_dim"])
+    def stokes_dimension(self):
+        """
+        Which stokes dimensions to use for the simulations.
+        """
+        return 1
+
+    @arts_property("Matrix",
+                   shape = (dim.Obs, dim.Atm),
+                   wsv = wsv["sensor_pos"])
+    def sensor_position(self):
+        """
+        For which sensor positions ot perform the simulations.
+        """
+        return []
+
+    @arts_property("Matrix",
+                   shape = (dim.Joker, dim.Atm),
+                   wsv = wsv["transmitter_pos"])
+    def transmitter_pos(self):
+        """
+        Positions of the transmitter for radio link calculations.
+        """
+        return []
+
+    @arts_property("Matrix",
+                   shape = (dim.Obs, dim.Los),
+                   wsv = wsv["sensor_los"])
+    def sensor_line_of_sight(self):
+        """
+        Line of sight for each sensor position.
+        """
+        return []
+
+    @arts_property("Matrix",
+                   shape = (dim.Obs, dim.Los),
+                   wsv = wsv["mblock_dlos_grid"])
+    def sensor_line_of_sight_offsets(self):
+        """
+        Line of sight offsets for each measurment block.
+        """
+        return np.zeros((1, self.sensor_line_of_sight.shape[1]))
+
+    @arts_property("Matrix",
+                   shape = (dim.Joker, dim.Joker),
+                   wsv = wsv["sensor_response"])
+    def sensor_response(self):
+        """
+        The sensor response matrix.
+        """
+        return []
+
+    @arts_property("Vector",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_f"])
+    def sensor_response_f(self):
+        """
+        The frequencies associated with the rows of the sensor response matrix.
+        """
+        return []
+
+    @arts_property("ArrayOfIndex",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_pol"])
+    def sensor_response_pol(self):
+        """
+        The polarization states associated with the rows of the sensor reponse
+        matrix.
+        """
+        return []
+
+    @arts_property("Matrix",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_dlos"])
+    def sensor_response_dlos(self):
+        """
+        The line-of-sight offsets associates with the rows of the sensor
+        response matrix.
+        """
+        return []
+
+    @arts_property("Vector",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_f_grid"])
+    def sensor_response_f_grid(self):
+        """
+        The frequency grid associated with sensor response.
+        """
+        return []
+
+    @arts_property("ArrayOfInteger",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_pol_grid"])
+    def sensor_response_pol_grid(self):
+        """
+        The polarization states associated with sensor response.
+        """
+        return []
+
+    @arts_property("Vector",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_response_dlos_grid"])
+    def sensor_response_dlos_grid(self):
+        """
+        The LOS offsets associated with sensor response.
+        """
+        return []
+
+    @arts_property("Vector",
+                   shape = (dim.Joker,),
+                   wsv = wsv["sensor_time"])
+    def sensor_time(self):
+        """
+        The times associated with each measurment block.
+        """
+        return np.array(np.zeros(self.sensor_position.shape[0]))
+
+    @arts_property("Index",
+                   wsv = wsv["sensor_norm"])
+    def sensor_norm(self):
+        """
+        Flag whether or not to normalize the sensor response.
+        """
+        return 1
+    @arts_property("Index",
+                   wsv = wsv["antenna_dim"])
+    def antenna_dim(self):
+        """
+        The dimensionality of the antenna pattern.
+        """
+        return 1
+
+    ############################################################################
+    # Class methods
+    ############################################################################
+
     def __init__(self, name, f_grid = None, stokes_dimension = 1):
         """
         Create a sensor with given frequency grid :code:`f_grid` and
         stokes dimension :code: `stokes_dimension`
         """
-
+        super().__init__()
         self._wsvs = {}
 
         if not f_grid is None:
             self.f_grid = f_grid
 
         self.name = name
-
         self.stokes_dimension = stokes_dimension
-        self.sensor_norm = 1
-        self.antenna_dim = 1
-
-    def _create_private_wsvs(self, ws, names):
-
-        for name in names:
-            wsv = ws.__getattr__(name)
-            wsv_private = ws.create_variable(wsv.group,
-                                             self.name + "_" + name)
-            self._wsvs[name] = wsv_private
-
-    def get_wsm_args(self, wsm):
-        """
-        Generate a list of arguments to the given ARTS workspace method
-        :code:`wsm` for which the sensor related input parameters are
-        replace by the ones of this sensor. This is done by checking
-        whether the input argument name is in the sensors :code:`_wsv`
-        dictionary and if so replacing the argument.
-
-        Parameters:
-
-           wsm(typhon.arts.workspace.methods.Workspacemethod): The ARTS
-               workspace method object for which to generate the input
-               argument list.
-
-        Returns:
-
-            The list of input arguments with sensor specific input arguments
-            replaced by the corresponding WSVs of the sensor.
-
-        """
-        args = []
-        for i in wsm.ins:
-            name = WorkspaceVariable.get_variable_name(i)
-            if name in self._wsvs:
-                args += [self._wsvs[name]]
-            else:
-                args += [wsv[name]]
-        return args
 
     #
     # Abstract properties and methods
@@ -221,6 +326,7 @@ class Sensor(metaclass = ArtsObject):
     # Special setters
     #
 
+    @stokes_dimension.setter
     def stokes_dimension_setter(self, n):
         """
         Specialized setter that overwrites the default from the
@@ -238,8 +344,8 @@ class Sensor(metaclass = ArtsObject):
         """
         if not (n in [1, 2, 4]):
             raise Exception("Stokes dimension must be 1, 2 or 4.")
-        self._stokes_dimension.fixed = True
-        self._stokes_dimension.value = n
+        self.fixed = True
+        self.value = n
 
     #
     # General sensor setup
@@ -267,51 +373,26 @@ class Sensor(metaclass = ArtsObject):
         self._create_private_wsvs(ws, type(self).private_wsvs)
         wsvs = self._wsvs
 
-        wsvs["f_grid"].value = self.f_grid
+        self.setup_arts_properties(ws)
 
+        #
         # Scat data
-        ws.scat_dataCalc(ws.scat_data_raw, wsvs["f_grid"], interp_order = 1)
-        ws.Copy(wsvs["scat_data"], ws.scat_data)
+        #
+        if ws.scat_data_raw.initialized and not ws.scat_data.initialized:
+            ws.scat_dataCalc(ws.scat_data_raw, wsvs["f_grid"], interp_order = 1)
+            ws.Copy(wsvs["scat_data"], ws.scat_data)
 
         args = self.get_wsm_args(wsm["scat_data_checkedCalc"])
         ws.scat_data_checkedCalc(*args)
         wsvs["scat_data_checked"].value = ws.scat_data_checked
 
-        # iy_aux_vars
-        wsvs["iy_aux_vars"].value = self.iy_aux_vars
-
-        wsvs["iy_unit"].value = self.iy_unit
-
-        # Stokes dimension
-
-        wsvs["stokes_dim"].value = self.stokes_dimension
-
-        # los, pos, offsets and response
-        wsvs["sensor_los"].value       = []
-        wsvs["sensor_pos"].value       = []
-        wsvs["sensor_time"].value      = []
-        wsvs["mblock_dlos_grid"].value = []
-        wsvs["sensor_response"].value  = []
-
-        # sensor response
-        wsvs["antenna_dim"].value = self.antenna_dim
-        wsvs["sensor_norm"].value = self.sensor_norm
-
-        wsvs["sensor_response"].value = []
-
-        wsvs["sensor_response_f"].value         = []
-        wsvs["sensor_response_f_grid"].value    = []
-        wsvs["sensor_response_dlos"].value      = []
-        wsvs["sensor_response_dlos_grid"].value = []
-
-        wsvs["sensor_response_pol"].value      = []
-        wsvs["sensor_response_pol_grid"].value = []
-
+        #
         # Need to add agendas in the end so that input arguments
         # can be replaced by private sensor variables.
+        #
         wsvs["iy_main_agenda"].value = self.make_iy_main_agenda(scattering)
 
-    def get_data(self, ws, provider, *args, **kwargs):
+    def get_data(self, ws, data_provider, *args, **kwargs):
         """
         Get required data from data provided.
 
@@ -331,98 +412,9 @@ class Sensor(metaclass = ArtsObject):
         WSV.
 
         """
-
-        wsvs = self._wsvs
-
-        # TODO: Use easel.dimension.atm here
-        dim = ws.atmosphere_dim.value
-
-        # Sensor line of sight
-
-        if self._sensor_line_of_sight.fixed:
-            los = self.sensor_line_of_sight
-        else:
-            los = provider.get_sensor_line_of_sight(*args, **kwargs)
-
-        if not len(np.shape(los)) == 2:
-            raise Exception("Provided line of sight must be a 2D "
-                            "numpy array.")
-
-        if dim in [1, 2] and not los.shape[1] == 1:
-                raise Exception("Provided line of sight must contain "
-                                " only one element along the second "
-                                "dimension for 1D and 2D atmospheres.")
-        if dim == 3 and not los.shape[1] == 2:
-                raise Exception("Provided line of sight must contain "
-                                "two elements along the second dimension"
-                                " for 1D and 2D atmospheres.")
-        ws.MatrixSet(wsvs["sensor_los"], los)
-
-
-        # Sensor position
-
-        if self._sensor_position.fixed:
-            pos = self.sensor_position
-        else:
-            pos = provider.get_sensor_position(*args, **kwargs)
-
-        if not len(np.shape(los)) == 2:
-            raise Exception("Provided sensor position must be a 2D numpy "
-                            " array.")
-
-        if not dim == np.shape(los)[1]:
-                raise Exception("Provided sensor position must contain "
-                                "{0} elements  along the second dimension"
-                                " for a {0}D atmosphere.".format(dim))
-        ws.MatrixSet(wsvs["sensor_pos"], pos)
-
-        # Sensor time
-
-        if self._sensor_time.fixed:
-            t = self.sensor_time
-        elif hasattr(provider, "get_sensor_time"):
-            t = provider.get_sensor_time(*args, **kwargs)
-        else:
-            t = np.zeros(pos.shape[0])
-
-        if not len(np.shape(t)) == 1:
-            raise Exception("Provided sensor time must be a 1D numpy "
-                            " array.")
-
-        ws.VectorSet(wsvs["sensor_time"], t)
-
-        # Line of sight offsets
-        if self._sensor_line_of_sight_offsets.fixed:
-            dlos = self.sensor_line_of_sight_offsets
-        elif hasattr(provider, "get_sensor_line_of_sight_offsets"):
-            dlos = provider.get_sensor_line_of_sight_offsets(*args, **kwargs)
-        else:
-            dlos = np.zeros((1, 1))
-
-        if dlos.shape != (0,0) and not dlos.shape[1] in [1, 2]:
-                raise Exception("Provided line of sight offsets must contain"
-                                " one or two elements along the second "
-                                "dimension.")
-        ws.MatrixSet(wsvs["mblock_dlos_grid"], dlos)
-
-        args = self.get_wsm_args(wsm["sensor_responseInit"])
-
-        ws.stokes_dim = self.stokes_dimension
-        ws.sensor_responseInit(*args)
-        ws.Copy(wsvs["sensor_response"], ws.sensor_response)
-        ws.Copy(wsvs["sensor_response_f"], ws.sensor_response_f)
-        ws.Copy(wsvs["sensor_response_f_grid"], ws.sensor_response_f_grid)
-        ws.Copy(wsvs["sensor_response_pol"], ws.sensor_response_pol)
-        ws.Copy(wsvs["sensor_response_pol_grid"], ws.sensor_response_pol_grid)
-        ws.Copy(wsvs["sensor_response_dlos"], ws.sensor_response_dlos)
-        ws.Copy(wsvs["sensor_response_dlos_grid"], ws.sensor_response_dlos_grid)
-
-        ws.sensor_checkedCalc(*self.get_wsm_args(wsm["sensor_checkedCalc"]))
-        # Check sensor data
-        if not "sensor_checked" in wsvs.keys():
-            wsvs["sensor_checkedCalc"] = ws.add_variable(1)
-        else:
-            ws.IndexSet(wsvs["sensor_checkedCalc"], 1)
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
+        self.call_wsm(ws, wsm["sensor_responseInit"])
+        self.call_wsm(ws, wsm["sensor_checkedCalc"])
 
 
 
@@ -437,24 +429,36 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
     """
 
-    properties = {("extinction_scaling", (), np.float),
-                  ("range_bins", (dim.joker,), np.ndarray),
-                  ("instrument_pol_array", (dim.joker, dim.joker), list),
-                  ("instrument_pol", (dim.joker,), list)}
-
     private_wsvs = Sensor.private_wsvs + ["range_bins",
                                           "instrument_pol_array",
                                           "instrument_pol",
                                           "iy_transmitter_agenda"]
 
+    ############################################################################
+    # ARTS properties
+    ############################################################################
+
+    @arts_property("Numeric")
+    def extinction_scaling(self):
+        return 1.0
+
+    @arts_property("Vector", shape = (dim.Joker,), wsv = wsv["range_bins"])
+    def range_bins(self):
+        return []
+
+    @arts_property("ArrayOfArrayOfIndex",
+                   wsv = wsv["instrument_pol_array"])
+    def instrument_pol_array(self):
+        return [[1]]
+
+    @arts_property("ArrayOfIndex",
+                   wsv = wsv["instrument_pol"])
+    def instrument_pol_array(self):
+        return [1]
+
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
-
         self.iy_unit = "dBZe"
-        self.iy_aux_vars = []
-        self.instrument_pol = [1]
-        self.instrument_pol_array = [[1]]
-        self.extinction_scaling = 1.0
 
     #
     # Agendas
@@ -586,30 +590,8 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
     #
 
     def setup(self, ws, scattering = True):
-
-        wsvs = self._wsvs
         super().setup(ws, scattering)
-
-        wsvs["iy_transmitter_agenda"].value = self.iy_transmitter_agenda
-        wsvs["instrument_pol"].value        = self.instrument_pol
-        wsvs["instrument_pol_array"].value  = self.instrument_pol_array
-
-        wsvs["pext_scaling"] = ws.add_variable(1.0)
-
-    def get_data(self, ws, provider, *args, **kwargs):
-
-        if self._range_bins.fixed:
-            range_bins = self.range_bins
-        else:
-            range_bins = provider.get_range_bins(*args, **kwargs)
-        range_bins = range_bins.ravel()
-
-        if "range_bins" in self._wsvs:
-            ws.VectorSet(self._wsvs["range_bins"], range_bins)
-        else:
-            self._wsvs["range_bins"] = ws.add_variable(range_bins)
-
-        super().get_data(ws, provider, *args, **kwargs)
+        self._wsvs["pext_scaling"] = ws.add_variable(1.0)
 
 class PassiveSensor(Sensor, metaclass = ArtsObject):
     """
@@ -817,3 +799,5 @@ class CloudSat(ActiveSensor):
                          f_grid = np.array([94e9]),
                          stokes_dimension = stokes_dimension,
                          range_bins = range_bins)
+
+ici = ICI()

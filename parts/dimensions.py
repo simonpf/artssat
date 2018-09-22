@@ -67,41 +67,30 @@ class Dimension:
         else:
             self.deductions[ws] += [(value, who)]
 
-    def check(self, ws):
+    def check(self, ws, n, who):
         """
-        Check deduced values for consistency.
+        Check given value for consistency.
 
         Parameters:
+
             ws(typhon.arts.workspace.Workspace): The workspace for which
                 to check the deduction.
 
-        Raises:
-            Exception: If inconsistencies are encountered.
+            n(int): The value which to check against previous deduced values.
+
+        Returns:
+
+            True if this is the first deduction or is previous deuctions agree
+            with the current value. False otherwise.
 
         """
 
         if not ws in self.deductions:
-            raise Exception("No deductions have been made for the given"
-                            " workspace.")
-
-        ds = self.deductions[ws]
-
-        inconsistencies = []
-        for i in range(len(ds)):
-            for j in range(i + 1, len(ds)):
-                u = ds[i][0]
-                v = ds[j][0]
-                if not u == v:
-                    inconsistencies += [(i, j)]
-
-        if len(inconsistencies) > 0:
-
-            s = r"- {0} deduced from {1} and {2} deduce from {3} \\n"
-            ls = [s.format(*ds[i], *ds[j]) for (i,j) in inconsistencies]
-
-            raise Exception(r"During deduction of the dimensions of the {0}"
-                            " the following inconsistencies were encountered"
-                            ":\\n" .format(self.name) + ls)
+            self.deductions[ws] = (n, who)
+            return True
+        else:
+            (m, who) = self.deductions[ws]
+            return m == n
 
     def get_value(self, ws):
         """
