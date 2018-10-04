@@ -57,7 +57,7 @@ def test_dimension():
     n, who = dims2.infer(dim.P)
     assert(n == 10)
 
-    dims2.deduce(Lat, 2, "Latitude grid")
+    dims2.deduce(dim.Lat, 2, "Latitude grid")
     n, who = dims1.infer(dim.Lat)
     assert(n == 2)
 
@@ -82,7 +82,7 @@ def test_dimension_broadcast():
         @arts_property("Tensor3",
                        shape = (dim.P, dim.Lat, dim.Lon),
                        wsv = wsv["t_field"])
-        def temperature():
+        def temperature(self):
             return None
 
     class TProvider:

@@ -49,10 +49,9 @@ def test_simulation_scattering(scattering_solver):
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI(stokes_dimension = 1)
+    ici = ICI(stokes_dimension = 1, channels = [1, 19])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
-    ici.f_grid = np.array([9e10, 19e10])
 
     simulation = ArtsSimulation(atmosphere = atmosphere,
                                 data_provider = DataProvider(),
@@ -60,7 +59,6 @@ def test_simulation_scattering(scattering_solver):
     simulation.scattering_solver = scattering_solver()
     simulation.setup()
     simulation.run()
-    return simulation.workspace
 
 def test_simulation_scattering_jacobian():
 
@@ -241,5 +239,3 @@ def test_simulation_absorption_retrieval():
 
     simulation.setup()
     simulation.run()
-
-y = test_simulation_scattering_combined(Disort)

@@ -122,11 +122,8 @@ class Retrieval:
 
         print(xa)
         print(x0)
-
         xa = np.concatenate(xa)
         x0 = np.concatenate(x0)
-
-
 
         ws.x = x0
         ws.xa = xa

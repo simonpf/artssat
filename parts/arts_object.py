@@ -77,6 +77,7 @@ import inspect
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typhon.arts.workspace.variables import WorkspaceVariable
 from typhon.arts.workspace.variables import workspace_variables as wsv
+from typhon.arts.workspace import Workspace
 
 ################################################################################
 # The Dimension class
@@ -348,6 +349,8 @@ def arts_property(group, shape = (), wsv = None):
             super().__init__(fdefault, group, shape, wsv)
     return ArtsPropertySpecialization
 
+ws = Workspace(verbosity = 0)
+
 class ArtsProperty:
     """
     The :code:`ArtsProperty` class that implements the main functionality of
@@ -394,11 +397,16 @@ class ArtsProperty:
         """
         self.group = group
         self.shape = shape
+
+        if not wsv is None:
+            if type(wsv) == str:
+                if hasattr(ws, wsv):
+                    wsv = getattr(ws, wsv)
+                else:
+                    raise Exception("Workspace variable {0} associated with"\
+                                    " ARTS property {1} does not exist."\
+                                    .format(wsv, fdefault.__name__))
         self.wsv = wsv
-
-        self.fixed = False
-        self.value = None
-
         self.fsetup    = None
         self.fget_data = None
         self.fset      = None
@@ -541,15 +549,15 @@ class ArtsProperty:
         value = broadcast(deduced, value)
         return value
 
-    def __get__(self, obj, objtype = None):
-        if obj is None:
+    def __get__(self, owner, objtype = None):
+        if owner is None:
             return self
 
-        return self.value
+        return owner.__dict__["_" + self.name].value
 
     def __set__(self, owner, value):
         if not self.fset is None:
-            self.fset(self, value)
+            self.fset(owner, value)
             return None
 
         converted = WorkspaceVariable.convert(self.group, value)
@@ -563,8 +571,9 @@ class ArtsProperty:
         if not self.shape is None:
             value = self.check_and_broadcast(value, owner)
 
-        self.fixed = True
-        self.value = value
+        ph = owner.__dict__["_" + self.name]
+        ph.fixed = True
+        ph.value = value
 
     def _setup(self, *args, **kwargs):
         """
@@ -604,11 +613,9 @@ class ArtsProperty:
             ws(arts.typhon.workspace.Workspace): Ths workspace which to
             setup.
         """
-        if self.wsv and self.fixed:
-            if self.wsv.name in owner._wsvs:
-                owner._wsvs[self.wsv.name].value = self.value
-            else:
-                setattr(ws, self.wsv.name, self.value)
+        ph = owner.__dict__["_" + self.name]
+        if self.wsv and ph.fixed:
+            owner.set_wsv(ws, self.wsv, ph.value)
 
     def _default_get_data(self, owner, ws, data_provider, *args, **kwargs):
         """
@@ -628,7 +635,8 @@ class ArtsProperty:
             4. Throw an exception if all of the previous steps were unsuccessful
             in determining the value of the :code:`ArtsProperty`.
         """
-        if self.wsv and not self.fixed:
+        ph = owner.__dict__["_" + self.name]
+        if self.wsv and not ph.fixed:
             getter_name = "get_" + self.get_name(owner, separator = "_")
 
             default = self.fdefault(owner)
@@ -648,7 +656,8 @@ class ArtsProperty:
                 if not self.shape is None:
                     value = self.check_and_broadcast(value, owner)
                     owner.set_wsv(ws, self.wsv, value)
-                    self.value = value
+                    ph = owner.__dict__["_" + self.name]
+                    ph.value = value
 
             # Check if there's a default value.
             elif not default is None:
@@ -730,17 +739,18 @@ def make_setter(name):
 
     """
     def set(self, x):
-        prop = getattr(self, "_" + name)
-        if prop.expected_type == np.ndarray:
-            x = np.asarray(x)
-        if not isinstance(x, prop.expected_type):
-            raise Exception("Type of provided value for {0} doesn't match "
-                            "the expected type {1}.".format(name,
-                                                            prop.expected_type))
-        p = getattr(self, "_" + name)
+        if not x is None:
+            prop = getattr(self, "_" + name)
+            if prop.expected_type == np.ndarray:
+                x = np.asarray(x)
+            if not isinstance(x, prop.expected_type):
+                raise Exception("Type of provided value for {0} doesn't match "
+                                "the expected type {1}.".format(name,
+                                                                prop.expected_type))
+            p = getattr(self, "_" + name)
 
-        p.value = x
-        p.fixed = True
+            p.value = x
+            p.fixed = True
 
     return set
 
@@ -769,6 +779,30 @@ class PlaceHolder:
         self.value = None
         self.expected_type = expected_type
         self.dimensions = dimensions
+
+class PlaceHolderReplacement:
+    """
+    Data that is required for an ARTS simulation and can be set
+    either to a fixed value, or taken from a data provider.
+    """
+    def __init__(self):
+        """
+        Create a PlaceHolder object representing the property
+        :code:`name` with expected dimensions :code:`dimensions` and
+        expected type :code:`expected_type`.
+
+        Parameters:
+
+            name(str): The name of the property for which this object
+                is the placeholder.
+            dimensions(tuple): A tuple of :code:`Dimension` objects
+                describing the expected dimensions of the corresponding
+                property.
+            expected_type(type): The expected type for the corresponding
+                property.
+        """
+        self.fixed = False
+        self.value = None
 
 def add_property(obj, name, dims, t):
     """
@@ -810,6 +844,9 @@ class ArtsObjectReplacement:
         """
         self._wsvs      = {}
         self.dimensions = Dimension()
+
+        for _, ap in inspect.getmembers(type(self), is_arts_property):
+            self.__dict__["_" + ap.name] = PlaceHolderReplacement()
 
     def setup_arts_properties(self, ws):
         """

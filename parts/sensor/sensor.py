@@ -83,7 +83,7 @@ class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
             all sensors in ARTS.
     """
 
-    private_wsvs = ["f_grid", "stokes_dim", "scat_data", "scat_data_checked",
+    private_wsvs = ["f_grid", "scat_data", "scat_data_checked",
                     "iy_unit", "iy_aux_vars", "sensor_los", "sensor_pos",
                     "sensor_time", "mblock_dlos_grid", "sensor_response",
                     "antenna_dim", "sensor_norm", "sensor_response",
@@ -344,8 +344,8 @@ class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
         """
         if not (n in [1, 2, 4]):
             raise Exception("Stokes dimension must be 1, 2 or 4.")
-        self.fixed = True
-        self.value = n
+        self._stokes_dimension.fixed = True
+        self._stokes_dimension.value = n
 
     #
     # General sensor setup
@@ -378,7 +378,7 @@ class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
         #
         # Scat data
         #
-        if ws.scat_data_raw.initialized and not ws.scat_data.initialized:
+        if ws.scat_data_raw.initialized:
             ws.scat_dataCalc(ws.scat_data_raw, wsvs["f_grid"], interp_order = 1)
             ws.Copy(wsvs["scat_data"], ws.scat_data)
 
@@ -428,17 +428,19 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
     active sensors (Radar).
 
     """
-
+    ws = Workspace()
+    extinction_scaling = ws.create_variable("Numeric", "extinction_scaling")
     private_wsvs = Sensor.private_wsvs + ["range_bins",
                                           "instrument_pol_array",
                                           "instrument_pol",
-                                          "iy_transmitter_agenda"]
+                                          "iy_transmitter_agenda",
+                                          "extinction_scaling"]
 
     ############################################################################
     # ARTS properties
     ############################################################################
 
-    @arts_property("Numeric")
+    @arts_property("Numeric", wsv = "extinction_scaling")
     def extinction_scaling(self):
         return 1.0
 
@@ -446,15 +448,15 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
     def range_bins(self):
         return []
 
+    @arts_property("ArrayOfIndex",
+                   wsv = wsv["instrument_pol"])
+    def instrument_pol(self):
+        return [1]
+
     @arts_property("ArrayOfArrayOfIndex",
                    wsv = wsv["instrument_pol_array"])
     def instrument_pol_array(self):
         return [[1]]
-
-    @arts_property("ArrayOfIndex",
-                   wsv = wsv["instrument_pol"])
-    def instrument_pol_array(self):
-        return [1]
 
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
@@ -506,7 +508,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
             ws.iyActiveSingleScat(*args,
-                                  pext_scaling = self.extinction_scaling,
+                                  pext_scaling = self._wsvs["extinction_scaling"],
                                   trans_in_jacobian = 1)
 
         return iy_main_agenda
@@ -520,7 +522,8 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
             raise Exception("Value of iy_unit for an active sensor must"
                             " be one of ['1', 'Ze', 'dBZe']")
         else:
-            self._iy_unit = u
+            self._iy_unit.value = u
+            self._iy_unit.fixed = True
 
     def iy_aux_vars_setter(self, v):
         if not type(v) == list:
@@ -532,7 +535,8 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
                             "['RadiativeBackground', 'Backscattering', "
                             "'Optical depth', Particle extinction'].")
         else:
-            self._iy_aux_vars = v
+            self._iy_aux_vars.value = v
+            self._iy_aux_vars.fixed = False
 
     #
     # Preparation and y_calc factories.
@@ -591,7 +595,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
     def setup(self, ws, scattering = True):
         super().setup(ws, scattering)
-        self._wsvs["pext_scaling"] = ws.add_variable(1.0)
+        self._wsvs["iy_transmitter_agenda"].value = self.iy_transmitter_agenda
 
 class PassiveSensor(Sensor, metaclass = ArtsObject):
     """
