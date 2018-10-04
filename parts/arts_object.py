@@ -302,7 +302,7 @@ def broadcast(shape, obj):
                             " length of the provided shape tuple.")
 
 
-def arts_property(group, shape = (), wsv = None):
+def arts_property(group, shape = None, wsv = None):
     """
     The :code:`arts_property` decorator.
 
@@ -504,6 +504,8 @@ class ArtsProperty:
         who = self.get_name(owner, separator = ".")
         shape = get_shape(value)
 
+        if self.shape is None:
+            return value
 
         # catch inconsistent number of dimensions.
         if not len(shape) == len(self.shape):

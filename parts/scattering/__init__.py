@@ -10,6 +10,6 @@ contains some functionality for the handling of PSD data.
 from parts.scattering.scattering_species \
     import ScatteringSpecies
 from parts.scattering.psd \
-    import D14
+    import D14, MY05
 from parts.scattering.solvers import RT4
 

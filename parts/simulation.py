@@ -125,6 +125,10 @@ class ArtsSimulation:
 
         # Simulate active sensor
         if len(i_active) > 0:
+
+            # TODO: Get around the need to fix this.
+            ws.stokes_dim = s.stokes_dimension
+
             s = self.sensors[i_active[0]]
 
             f = s.make_y_calc_function(append = False)
@@ -137,6 +141,9 @@ class ArtsSimulation:
 
         # Simulate passive sensors
         for s in [self.sensors[i] for i in i_passive]:
+
+            # TODO: Get around the need to fix this.
+            ws.stokes_dim = s.stokes_dimension
 
             # Run scattering solver
             if self.atmosphere.scattering:

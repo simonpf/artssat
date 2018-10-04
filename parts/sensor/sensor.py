@@ -584,8 +584,13 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
 
         args = self.get_wsm_args(wsm["yActive"])
 
+        if self.y_min:
+            y_min = self.y_min
+        else:
+            y_min = - np.inf
+
         def y_calc(ws):
-            ws.yActive(*args)
+            ws.yActive(*args, dbze_min = self.y_min)
 
         return y_calc
 
@@ -715,10 +720,7 @@ class PassiveSensor(Sensor, metaclass = ArtsObject):
         """
 
         def preparations(ws):
-            ws.Ignore(ws.stokes_dim)
-            #ws.IndexSet(self._wsvs["_stokes_dim"], self.stokes_dimension)
-            #ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
-            #ws.Copy(ws.iy_main_agenda, self._wsvs["_iy_main_agenda"])
+            ws.IndexSet(ws.stokes_dim, self.stokes_dimension)
 
         return preparations
 

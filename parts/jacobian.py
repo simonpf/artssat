@@ -107,8 +107,12 @@ class Retrieval:
 
         ws.retrievalDefInit()
 
-        for rt in self.retrieval_quantities:
+        indices = {}
+
+        for i,rt in enumerate(self.retrieval_quantities):
             rt.setup_retrieval(ws, retrieval_provider, *args, **kwargs)
+
+            indices[rt.quantity.name] = i
 
             xa += [rt.xa]
 
@@ -116,6 +120,18 @@ class Retrieval:
                 x0 += [rt.xa]
             else:
                 x0 += [rt.x0]
+
+        # Handle covariances.
+        covariances = retrieval_provider.get_covariances(*args, **kwargs)
+        for (q1, q2, c) in covariances:
+            i = indices[q1]
+            j = indices[q2]
+
+            if i > j:
+                i, j = j, i
+                c = c.T
+
+            ws.covmat_sxAddBlock(block = c, i = i, j = j)
 
 
         ws.retrievalDefClose()
@@ -182,6 +198,8 @@ class Retrieval:
             # Scattering solver call
             if scattering:
                 agenda.append(arts_agenda(scattering_solver.make_solver_call(s)))
+                wsv = ws.add_variable(arts_agenda(scattering_solver.make_solver_call(s)))
+                wsv.print()
 
             agenda.append(arts_agenda(
                 s.make_y_calc_function(append = i > 0,

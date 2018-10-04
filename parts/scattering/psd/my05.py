@@ -28,6 +28,8 @@ where :math:`a, b` are the parameters of the mass-size relationship
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
+from typhon.arts.workspace import arts_agenda
+
 from parts import dimensions as dim
 from parts.arts_object import ArtsObject
 from parts.scattering.psd.modified_gamma     import ModifiedGamma
@@ -73,9 +75,10 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         number_density = psd.get_moment(0)
         mass_density   = psd.get_mass_density()
 
-        return MY05(nu, mu, a, b, number_density, mass_density)
+        return MY05(nu, mu, a, b, None, number_density, mass_density)
 
     def __init__(self, nu, mu, a, b,
+                 hydrometeor_type = None,
                  number_density = None,
                  mass_density = None):
         r"""
@@ -100,6 +103,8 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         """
         self.nu = nu
         self.mu = mu
+
+        self.hydrometeor_type = hydrometeor_type
 
         if not number_density is None:
             self.number_density = number_density
@@ -182,11 +187,17 @@ class MY05(ArtsPSD, metaclass = ArtsObject):
         """
         return ["number_density", "mass_density"]
 
+    @property
     def pnd_call_agenda(self):
         """
         The ARTS WSM implementing the MY05 PSD.
         """
-        pass
+        @arts_agenda
+        def pnd_call(ws):
+            ws.psdMY05(hydrometeor_type = self.hydrometeor_type,
+                       t_min = self.t_min,
+                       t_max = self.t_max)
+        return pnd_call
 
     def get_moment(self, p, reference_size_parameter = None):
         r"""

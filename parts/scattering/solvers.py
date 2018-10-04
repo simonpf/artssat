@@ -98,8 +98,9 @@ class Disort(ScatteringSolver, metaclass = ArtsObject):
         args = sensor.get_wsm_args(wsm["DisortCalcWithARTSSurface"])
         args_scat_data = sensor.get_wsm_args(wsm["scat_data_checkedCalc"])
         def run_solver(ws):
-            ws.DOAngularGridsSet(N_za_grid = 72, za_grid_opt_file = "")
-            ws.DisortCalcWithARTSSurface(*args, nstreams = 64,
+            ws.Ignore(ws.atmosphere_dim)
+            ws.DOAngularGridsSet(N_za_grid = 38, N_aa_grid = 1, za_grid_opt_file = "")
+            ws.DisortCalcWithARTSSurface(*args, nstreams = self._nstreams,
                                          pfct_method = self._pfct_method,
                                          new_optprop = self._new_optprop,
                                          Npfct = self._Npfct)
