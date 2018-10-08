@@ -863,6 +863,9 @@ class ArtsObjectReplacement:
         for _, ap in inspect.getmembers(type(self), is_arts_property):
             ap._setup(self, ws)
 
+    def setup(self, ws):
+        self.setup_arts_properties(ws)
+
     def get_data_arts_properties(self, ws, data_provider, *args, **kwargs):
         """
         Run the :code:`get_data` method for all ARTS properties of this
@@ -884,6 +887,9 @@ class ArtsObjectReplacement:
         """
         for _, ap in inspect.getmembers(type(self), is_arts_property):
             ap._get_data(self, ws, data_provider, *args, **kwargs)
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
 
     def set_wsv(self, ws, wsv, value):
         """

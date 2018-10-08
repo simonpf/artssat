@@ -238,9 +238,15 @@ class ScatteringSpecies:
         for j, m in enumerate(self.moments):
             m.setup(ws, i + j)
 
+        if hasattr(self.psd, "setup"):
+            self.psd.setup(ws, i)
+
     def get_data(self, ws, provider, *args, **kwargs):
         for m in self.moments:
             m.get_data(ws, provider, *args, **kwargs)
+
+        if hasattr(self.psd, "get_data"):
+            self.psd.get_data(ws, provider, *args, **kwargs)
 
     def setup_jacobian(self, ws):
         for m in moments:
