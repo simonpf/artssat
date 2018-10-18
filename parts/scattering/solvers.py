@@ -1,3 +1,17 @@
+"""
+parts.solvers
+-------------
+
+This module contains scattering solver classes that represent the
+different scattering solver class that are available in ARTS.
+
+It provides the abstract :class:`ScatteringSolver` class which defines
+the general scattering solver interface as well as concrete implementations
+of solvers available in ARTS.
+
+Reference
+=========
+"""
 import numpy as np
 from abc import ABCMeta, abstractproperty, abstractmethod
 from parts.arts_object import ArtsObject
@@ -7,14 +21,30 @@ from typhon.arts.workspace.variables import workspace_variables
 wsv = workspace_variables
 wsm = workspace_methods
 
+################################################################################
+# Scattering solver
+################################################################################
+
 class ScatteringSolver(metaclass = ABCMeta):
+    """
+    Abstract base class that defines the scattering solver interface.
+    """
     def __init__(self):
         pass
 
     @abstractmethod
     def make_solver_call(self, sensor):
+        """
+        This method should return a function :code:`run(ws)` that runs the scattering solver
+        on a given workspace :code:`ws`. This function is called for each sensor before
+        the corresponding pencil beam calculations are performed. To be used within a
+        retrieval this method must be convertible to an ARTS agenda.
+        """
         pass
 
+################################################################################
+# RT4 solver
+################################################################################
 
 class RT4(ScatteringSolver):
     def __init__(self,
@@ -80,7 +110,7 @@ class RT4(ScatteringSolver):
 
         return run_solver
 
-class Disort(ScatteringSolver, metaclass = ArtsObject):
+class Disort(ScatteringSolver, metaclass):
 
     def __init__(self,
                  nstreams = 8,
