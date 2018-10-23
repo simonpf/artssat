@@ -21,11 +21,10 @@ import numpy as np
 import scipy as sp
 from scipy.special import gamma
 from parts import dimensions as dim
-from parts.arts_object import ArtsObject
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq
 
-class ModifiedGamma(ArtsPSD, metaclass = ArtsObject):
+class ModifiedGamma(ArtsPSD):
     r"""
     The :class:`ModifiedGamma` class describes the size distribution of
     scattering particles in an atmosphere using the four parameters of the

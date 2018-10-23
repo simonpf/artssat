@@ -46,7 +46,6 @@ In this module, two implementations of the D14 PSD are provided:
 
 """
 from parts import dimensions as dim
-from parts.arts_object import ArtsObject
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq
 from typhon.arts.workspace import arts_agenda
@@ -135,7 +134,7 @@ def evaluate_d14(x, n0, dm, alpha, beta):
 # PSD classes
 ################################################################################
 
-class D14(ArtsPSD, metaclass = ArtsObject):
+class D14(ArtsPSD):
     """
 
     Implementation of the D14 PSD that uses mass density :math:`\rho_m`  and
@@ -367,7 +366,7 @@ class D14(ArtsPSD, metaclass = ArtsObject):
         y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
         return PSDData(x, y, D_eq(self.rho))
 
-class D14N(ArtsPSD, metaclass = ArtsObject):
+class D14N(ArtsPSD):
     """
 
     Implementation of the D14 PSD that uses the intercept parameter :math:`N_0^*`

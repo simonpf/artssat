@@ -1,8 +1,9 @@
 import numpy as np
 from typhon.arts.workspace     import Workspace
-from parts.sensor.sensor import ActiveSensor, PassiveSensor
-from parts.scattering.solvers import ScatteringSolver, RT4
-from parts.jacobian import Jacobian, Retrieval
+from parts.sensor.sensor       import ActiveSensor, PassiveSensor
+from parts.scattering.solvers  import ScatteringSolver, RT4
+from parts.jacobian            import JacobianCalculation
+from parts.retrieval           import RetrievalCalculation
 
 class ArtsSimulation:
     def __init__(self,
@@ -18,8 +19,8 @@ class ArtsSimulation:
         self._data_provider     = data_provider
         self._workspace         = None
 
-        self.jacobian  = Jacobian()
-        self.retrieval = Retrieval()
+        self.jacobian  = JacobianCalculation()
+        self.retrieval = RetrievalCalculation()
 
 
     #

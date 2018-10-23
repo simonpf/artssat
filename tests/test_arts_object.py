@@ -1,7 +1,7 @@
 import numpy as np
 
 from parts.arts_object import Dimension, get_shape, broadcast, arts_property, \
-    ArtsObjectReplacement
+    ArtsObject
 from parts.arts_object import Dimension as dim
 from typhon.arts.workspace import Workspace
 from typhon.arts.workspace.variables import workspace_variables as wsv
@@ -67,7 +67,7 @@ def test_dimension_broadcast():
     as well as broadcasting.
     """
 
-    class A(ArtsObjectReplacement):
+    class A(ArtsObject):
 
         def __init__(self):
             super().__init__()

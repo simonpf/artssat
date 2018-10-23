@@ -75,7 +75,7 @@ Reference
 import numpy as np
 import inspect
 from abc import ABCMeta, abstractmethod, abstractproperty
-from typhon.arts.workspace.variables import WorkspaceVariable
+from typhon.arts.workspace.variables import WorkspaceVariable, group_names
 from typhon.arts.workspace.variables import workspace_variables as wsv
 from typhon.arts.workspace import Workspace
 
@@ -485,6 +485,40 @@ class ArtsProperty:
         """
         self.fset = fset
 
+    def check_and_convert(self, value):
+        """
+        Checks type of :code:`value` against the group specification of this
+        ARTS property contained in :code:`self.group`.
+
+        The group specification can be a single string in which case this
+        function will try to convert the provided value to the given group
+        using the :code:`convert` class method of
+        :class:`typhon.arts.workspace.WorkspaceVariable`.
+
+        It is also possible to specify a list of groups for the expected
+        value. In this case this function simply checks whether the group
+        inferred by :code:`WorkspaceVariable.get_group_id`
+        group of the :code:``
+
+        """
+        if type(self.group) == str:
+            converted = WorkspaceVariable.convert(self.group, value)
+
+            if converted is None:
+                raise Exception("Provided value of type {0} cannot be converted"
+                                " to ARTS group {1}".format(type(value),
+                                                            self.group))
+            value = converted
+        elif type(self.group) == list:
+            g_i = WorkspaceVariable.get_group_id(value)
+            g = group_names[g_i]
+            if not g in self.group:
+                raise Exception("Provided value of type {0} is not of any of "
+                                " the expected ARTS groups {1}."\
+                                .format(type(value), self.group))
+
+        return value
+
     def check_and_broadcast(self, value, owner):
         """
         check the shape of a given variable against a symbolic shape specification.
@@ -560,13 +594,7 @@ class ArtsProperty:
             self.fset(owner, value)
             return None
 
-        converted = WorkspaceVariable.convert(self.group, value)
-
-        if converted is None:
-            raise Exception("Provided value of type {0} cannot be converted"
-                            " to ARTS group {1}".format(type(value),
-                                                        self.group))
-        value = converted
+        value = self.check_and_convert(value)
 
         if not self.shape is None:
             value = self.check_and_broadcast(value, owner)
@@ -646,12 +674,7 @@ class ArtsProperty:
                 f = getattr(data_provider, getter_name)
                 value = f(*args, **kwargs)
 
-                converted = WorkspaceVariable.convert(self.group, value)
-
-                if converted is None:
-                    raise Exception("Provided value of type {0} cannot be"\
-                                    " converted to ARTS group {1}"\
-                                    .format(type(value), self.group))
+                value = self.check_and_convert(value)
 
                 if not self.shape is None:
                     value = self.check_and_broadcast(value, owner)
@@ -669,118 +692,7 @@ class ArtsProperty:
                                 " has been provided for the ARTS property"
                                 "{0}.".format(self.get_name(owner, ".")))
 
-
-def make_init(properties, old_init):
-    """
-    Factory function that creates a wrapper for the provided :code:`__init__`
-    function that initializes attributes corresponding to the list
-    of ARTS properties given in :code:`properties`.
-
-    Parameters:
-        properties(list): List containing triplets of property names,
-            expected dimension and expected type for the corresponding
-            properties.
-        old_init(function): The old :code:(__init__) function to be
-            wrapped.
-
-    Returns:
-        The wrapper around the provided :code:`__init__` function.
-    """
-    def new_init(self, *args, **kwargs):
-        for (p, t, dims) in properties:
-            self.__setattr__("_" + p, PlaceHolder(p, t, dims))
-        old_init(self, *args, **kwargs)
-    return new_init
-
-def make_getter(name):
-    """
-    Factory function producing a getter for a property called
-    :code:`name`.
-
-    The getter function returns the :code:`value`
-    attribute of the :code:`PlaceHolder` object that is stored
-    as an attribute with name `"_" + name` of the :code:`self`
-    object.
-
-    Parameters:
-
-        name(str): The name of the property.
-
-    Returns:
-
-        A getter method for a property with the given name.
-
-    """
-    def get(self):
-        return getattr(self, "_" + name).value
-
-    return get
-
-def make_setter(name):
-    """
-    Factory function producing a setter for a property called
-    :code:`name`.
-
-    The setter function sets the :code:`value` attribute of the
-    PlaceHolder object, which is an attribute of name
-    :code:`"_" + name` of the :code:`self` object.
-
-    The setter function checks the type of the provided object
-    against the expected type of the property and throws an
-    exception if they don't match.
-
-    Parameters:
-
-        name(str): The name of the property.
-
-    Returns:
-
-        A setter method for a property with the given name.
-
-    """
-    def set(self, x):
-        if not x is None:
-            prop = getattr(self, "_" + name)
-            if prop.expected_type == np.ndarray:
-                x = np.asarray(x)
-            if not isinstance(x, prop.expected_type):
-                raise Exception("Type of provided value for {0} doesn't match "
-                                "the expected type {1}.".format(name,
-                                                                prop.expected_type))
-            p = getattr(self, "_" + name)
-
-            p.value = x
-            p.fixed = True
-
-    return set
-
 class PlaceHolder:
-    """
-    Data that is required for an ARTS simulation and can be set
-    either to a fixed value, or taken from a data provider.
-    """
-    def __init__(self, name, dimensions, expected_type):
-        """
-        Create a PlaceHolder object representing the property
-        :code:`name` with expected dimensions :code:`dimensions` and
-        expected type :code:`expected_type`.
-
-        Parameters:
-
-            name(str): The name of the property for which this object
-                is the placeholder.
-            dimensions(tuple): A tuple of :code:`Dimension` objects
-                describing the expected dimensions of the corresponding
-                property.
-            expected_type(type): The expected type for the corresponding
-                property.
-        """
-        self.fixed = False
-        self.value = None
-        self.expected_type = expected_type
-        self.dimensions = dimensions
-
-class PlaceHolderReplacement:
     """
     Data that is required for an ARTS simulation and can be set
     either to a fixed value, or taken from a data provider.
@@ -830,7 +742,7 @@ def add_property(obj, name, dims, t):
 def is_arts_property(obj):
     return isinstance(obj, ArtsProperty)
 
-class ArtsObjectReplacement:
+class ArtsObject:
     """
     The :ArtsObject: class provides a base class for objects that bundle
     ARTS workspace variables and functionality into a conceptual unit. The
@@ -846,7 +758,7 @@ class ArtsObjectReplacement:
         self.dimensions = Dimension()
 
         for _, ap in inspect.getmembers(type(self), is_arts_property):
-            self.__dict__["_" + ap.name] = PlaceHolderReplacement()
+            self.__dict__["_" + ap.name] = PlaceHolder()
 
     def setup_arts_properties(self, ws):
         """
@@ -981,39 +893,3 @@ class ArtsObjectReplacement:
 
 
 
-class ArtsObject(ABCMeta):
-    """
-    The ArtsObject meta class looks for a class attribute :code:`properties`
-    and when found adds getters and setter as well as corresponding
-    Placeholder objects as attributes to the class.
-
-    The :code:`properties` attribute is expected to consist of a list
-    of triplets containing the name of the property, the expected dimension
-    as a tuple of :code:`Dimension` objects, and the expected type for
-    this property.
-
-    The ArtsObject meta class ensures that the data for these
-    ARTS properties can be set directly through the attributes
-    of the inhereting class and hides away the the placeholder
-    objects from users of the class.
-    """
-    def __new__(cls, name, bases, dct):
-
-        if "properties" in dct:
-            ps = dct["properties"]
-
-            dct["__init__"] = make_init(ps, dct["__init__"])
-
-            for nm, dim, t in ps:
-                getter = make_getter(nm)
-
-                # Check for custom setter.
-                if nm + "_setter" in dct:
-                    setter = dct[nm + "_setter"]
-                else:
-                    setter = make_setter(nm)
-
-                prop = property(getter, setter, nm)
-                dct[nm] = prop
-
-        return super().__new__(cls, name, bases, dct)

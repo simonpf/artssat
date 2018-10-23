@@ -5,17 +5,25 @@ Absorption
 """
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
-from parts.arts_object import add_property
-import parts.dimensions as dim
+
+from parts.arts_object import ArtsObject, arts_property
+from parts.jacobian    import JacobianBase
+from parts.retrieval   import RetrievalBase, RetrievalQuantity
 
 import numpy as np
 from typhon.arts.workspace import arts_agenda
 
-class Jacobian:
+class Jacobian(JacobianBase, ArtsObject):
 
-    def __init__(self, quantity):
+    @arts_property("Numeric")
+    def perturbation(self):
+        return 0.01
 
-        self.quantity = quantity
+    def __init__(self, quantity, index):
+
+        JacobianBase.__init__(self, quantity, index)
+        ArtsObject.__init__(self)
+
         self.p_grid   = None
         self.lat_grid = None
         self.lon_grid = None
@@ -51,63 +59,21 @@ class Jacobian:
 
         return kwargs
 
-    def setup_jacobian(self, ws):
-
+    def setup(self, ws):
         kwargs = self._make_setup_kwargs(ws)
+        print(kwargs)
         ws.jacobianAddAbsSpecies(**kwargs)
 
-class Retrieval(Jacobian):
+class Retrieval(RetrievalBase, Jacobian):
 
-    def __init__(self, quantity):
-        super().__init__(quantity)
+    def __init__(self, quantity, index):
+        super().__init__(quantity, index)
 
-        add_property(self, "covariance_matrix", (dim.joker, dim.joker),
-                        np.ndarray)
-        add_property(self, "xa", (dim.joker), np.ndarray)
-        add_property(self, "x0", (dim.joker), np.ndarray)
-        add_property(self, "limit_low", (), np.float)
-        add_property(self, "limit_high", (), np.float)
-
-    def setup_retrieval(self, ws, retrieval_provider, *args, **kwargs):
-
-        fname = "get_" + self.quantity.name + "_covariance"
-        covmat_fun = getattr(retrieval_provider, fname)
-        covmat = covmat_fun(*args, **kwargs)
-
-        ws.covmat_block = covmat
-
+    def add(self, ws):
         ws.retrievalAddAbsSpecies(**self._make_setup_kwargs(ws))
 
-        fname = "get_" + self.quantity.name + "_xa"
-        xa_fun = getattr(retrieval_provider, fname)
-        self.xa = xa_fun(*args, **kwargs)
 
-        fname = "get_" + self.quantity.name + "_x0"
-        if hasattr(retrieval_provider, fname):
-            x0_fun = getattr(retrieval_provider, fname)
-            self.x0 = x0_fun(*args, **kwargs)
-        else:
-            self.x0 = None
-
-    def get_iteration_preparations(self, index):
-
-        if self.limit_low is None and self.limit_high is None:
-            return None
-
-        limit_low = -np.inf
-        if self._limit_low.fixed:
-            limit_low = self._limit_low.value
-
-        limit_high = np.inf
-        if self._limit_high.fixed:
-            limit_high = self._limit_high.value
-
-        def agenda(ws):
-            ws.xClip(ijq = index, limit_low = limit_low, limit_high = limit_high)
-
-        return arts_agenda(agenda)
-
-class AbsorptionSpecies(AtmosphericQuantity):
+class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
     def __init__(self,
                  name,
@@ -122,6 +88,7 @@ class AbsorptionSpecies(AtmosphericQuantity):
         AtmosphericQuantity.__init__(self,
                                      name,
                                      (0, 0, 0))
+        RetrievalQuantity.__init__(self)
 
         self._dimensions = (0, 0, 0)
 
@@ -199,24 +166,21 @@ class AbsorptionSpecies(AtmosphericQuantity):
         return ts
 
     #
-    # Jacobian
+    # Jacobian & retrieval
     #
 
     @property
-    def jacobian(self):
-        if self._jacobian is None:
-            self._jacobian = Jacobian(self)
-        return self._jacobian
+    def jacobian_class(self):
+        return Jacobian
+
+    @property
+    def retrieval_class(self):
+        return Retrieval
+
 
     #
     # Retrieval
     #
-
-    @property
-    def retrieval(self):
-        if self._retrieval is None:
-            self._retrieval = Retrieval(self)
-        return self._retrieval
 
     @property
     def retrieved(self):
@@ -228,23 +192,6 @@ class AbsorptionSpecies(AtmosphericQuantity):
 
     def setup(self, ws, i):
         self._wsv_index = i
-
-    def setup_jacobian(self, ws):
-        if not self.jacobian is None:
-            kwargs =  {}
-            if self.jacobian.perturbation:
-                kwargs["dx"] = self.jacobian.perturbation
-            if self.jacobian.p_grid:
-                kwargs["g1"] = self.jacobian.p_grid
-            if self.jacobian.lat_grid:
-                kwargs["g2"] = self.jacobian.lat_grid
-            if self.jacobian.lon_grid:
-                kwargs["g2"] = self.jacobian.lon_grid
-
-            kwargs["unit"] = self.jacobian.unit
-            kwargs["for_species_tag"] = self.jacobian.for_species_tag
-
-            ws.jacobianAddAbsSpecies(**kwargs)
 
     def get_data(self, ws, provider, *args, **kwargs):
 

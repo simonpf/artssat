@@ -54,7 +54,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 
-from parts.arts_object import ArtsObjectReplacement, ArtsObject, arts_property
+from parts.arts_object import ArtsObject, arts_property
 from parts.arts_object import Dimension as dim
 from typhon.arts.types import SingleScatteringData
 from typhon.arts.workspace import Workspace, arts_agenda
@@ -69,7 +69,7 @@ wsm = workspace_methods
 ### Abstract sensor class
 ################################################################################
 
-class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
+class Sensor(ArtsObject):
     """
     Defines an interface and implementes common functionality for
     classes representing ARTS sensors.
@@ -330,7 +330,7 @@ class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
     def stokes_dimension_setter(self, n):
         """
         Specialized setter that overwrites the default from the
-        :code:`ArtsObject` meta class. Makes sure that the stokes
+        :code:`ArtsObject` base class. Makes sure that the stokes
         dimension is 1,2 or 4.
 
         Parameters:
@@ -422,7 +422,7 @@ class Sensor(ArtsObjectReplacement, metaclass = ArtsObject):
 ### Active sensor class
 ################################################################################
 
-class ActiveSensor(Sensor, metaclass = ArtsObject):
+class ActiveSensor(Sensor):
     """
     Specialization of the abstract :code:`Sensor` class that implements
     active sensors (Radar).
@@ -597,7 +597,7 @@ class ActiveSensor(Sensor, metaclass = ArtsObject):
         super().setup(ws, scattering)
         self._wsvs["iy_transmitter_agenda"].value = self.iy_transmitter_agenda
 
-class PassiveSensor(Sensor, metaclass = ArtsObject):
+class PassiveSensor(Sensor):
     """
     Specialization of the abstract Sensor class for passive sensors.
     """

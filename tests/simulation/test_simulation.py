@@ -15,6 +15,11 @@ import matplotlib.pyplot as plt
 
 scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 
+#from IPython import get_ipython
+#ip = get_ipython()
+#ip.magic("%load_ext autoreload")
+#ip.magic("%autoreload 2")
+
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               surface = Tessem())
@@ -49,7 +54,7 @@ def test_simulation_scattering(scattering_solver):
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI(stokes_dimension = 1, channels = [1, 19])
+    ici = ICI(stokes_dimension = 1, channels = [1, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -73,7 +78,7 @@ def test_simulation_scattering_jacobian():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI()
+    ici = ICI(channels = [1, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -132,7 +137,7 @@ def test_simulation_scattering_combined(scattering_solver):
     ice.psd.t_min = 0.0
     ice.psd.t_max = 275.0
 
-    ici = ICI(stokes_dimension = 1)
+    ici = ICI(channels = [0, -1], stokes_dimension = 1)
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -203,7 +208,7 @@ def test_simulation_absorption_jacobian():
                               surface = Tessem())
     o2, n2, h2o = atmosphere.absorbers
 
-    ici = ICI()
+    ici = ICI(channels = [0, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 

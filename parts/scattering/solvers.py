@@ -14,7 +14,6 @@ Reference
 """
 import numpy as np
 from abc import ABCMeta, abstractproperty, abstractmethod
-from parts.arts_object import ArtsObject
 from typhon.arts.workspace.methods import workspace_methods
 from typhon.arts.workspace.variables import workspace_variables
 
@@ -35,10 +34,11 @@ class ScatteringSolver(metaclass = ABCMeta):
     @abstractmethod
     def make_solver_call(self, sensor):
         """
-        This method should return a function :code:`run(ws)` that runs the scattering solver
-        on a given workspace :code:`ws`. This function is called for each sensor before
-        the corresponding pencil beam calculations are performed. To be used within a
-        retrieval this method must be convertible to an ARTS agenda.
+        This method should return a function :code:`run(ws)` that runs the
+        scattering solver on a given workspace :code:`ws`. This function is
+        called for each sensor before the corresponding pencil beam calculations
+        are performed. To be used within a retrieval this method must be
+        convertible to an ARTS agenda.
         """
         pass
 
@@ -110,7 +110,7 @@ class RT4(ScatteringSolver):
 
         return run_solver
 
-class Disort(ScatteringSolver, metaclass):
+class Disort(ScatteringSolver):
 
     def __init__(self,
                  nstreams = 8,

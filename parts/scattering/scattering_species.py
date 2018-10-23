@@ -2,15 +2,21 @@ import numpy as np
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 from parts.arts_object import add_property
-import parts.dimensions as dim
+
+from parts.jacobian  import JacobianBase
+from parts.retrieval import RetrievalBase, RetrievalQuantity
 
 from typhon.arts.workspace import arts_agenda
 
-class Jacobian:
+################################################################################
+# Jacobian
+################################################################################
 
-    def __init__(self, quantity):
+class Jacobian(JacobianBase):
 
-        self.quantity = quantity
+    def __init__(self, quantity, index):
+        super().__init__(quantity, index)
+
         self.p_grid   = None
         self.lat_grid = None
         self.lon_grid = None
@@ -39,71 +45,25 @@ class Jacobian:
 
         return kwargs
 
-    def setup_jacobian(self, ws):
+    def setup(self, ws):
 
         kwargs = self._make_setup_kwargs(ws)
         ws.jacobianAddScatSpecies(**kwargs)
 
-class Retrieval(Jacobian):
+################################################################################
+# Retrieval
+################################################################################
 
-    def __init__(self, quantity):
-        from parts.jacobian import Identity
+class Retrieval(RetrievalBase, Jacobian):
 
-        super().__init__(quantity)
+    def __init__(self, quantity, index):
+        RetrievalBase.__init__(self)
+        Jacobian.__init__(self, quantity, index)
 
-        add_property(self, "covariance_matrix", (dim.joker, dim.joker),
-                        np.ndarray)
-        add_property(self, "xa", (dim.joker), np.ndarray)
-        add_property(self, "x0", (dim.joker), np.ndarray)
-        add_property(self, "limit_low", (), np.float)
-        add_property(self, "limit_high", (), np.float)
-
-        self.transformation = Identity()
-
-    def setup_retrieval(self, ws, retrieval_provider, *args, **kwargs):
-
-        fname = "get_" + self.quantity.name + "_covariance"
-        covmat_fun = getattr(retrieval_provider, fname)
-        covmat = covmat_fun(*args, **kwargs)
-
-        ws.covmat_block = covmat
-
+    def add(self, ws):
         ws.retrievalAddScatSpecies(**self._make_setup_kwargs(ws))
-        if not self.transformation is None:
-            self.transformation.setup(ws)
 
-        fname = "get_" + self.quantity.name + "_xa"
-        xa_fun = getattr(retrieval_provider, fname)
-        self.xa = xa_fun(*args, **kwargs)
-
-        fname = "get_" + self.quantity.name + "_x0"
-        if hasattr(retrieval_provider, fname):
-            x0_fun = getattr(retrieval_provider, fname)
-            self.x0 = x0_fun(*args, **kwargs)
-
-    def get_iteration_preparations(self, index):
-
-        if self.limit_low is None and self.limit_high is None:
-            return None
-
-        limit_low = -np.inf
-        if self._limit_low.fixed:
-            limit_low = self.transformation(self._limit_low.value)
-
-        print("limit low:", limit_low)
-
-        limit_high = np.inf
-        if self._limit_high.fixed:
-            limit_high = self.transformation(self._limit_high.value)
-
-        print("limit high:", limit_high)
-
-        def agenda(ws):
-            ws.xClip(ijq = index, limit_low = limit_low, limit_high = limit_high)
-
-        return arts_agenda(agenda)
-
-class Moment(AtmosphericQuantity):
+class Moment(AtmosphericQuantity, RetrievalQuantity):
     def __init__(self,
                  species_name,
                  moment_name,
@@ -132,20 +92,16 @@ class Moment(AtmosphericQuantity):
         AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
 
     #
-    # Jacobian
+    # Jacobian & retrieval
     #
 
     @property
-    def jacobian(self):
-        if self._jacobian is None:
-            self._jacobian = Jacobian(self)
-        return self._jacobian
+    def jacobian_class(self):
+        return Jacobian
 
     @property
-    def retrieval(self):
-        if self._retrieval is None:
-            self._retrieval = Retrieval(self)
-        return self._retrieval
+    def retrieval_class(self):
+        return Retrieval
 
     #
     # Properties

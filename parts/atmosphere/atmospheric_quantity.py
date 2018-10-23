@@ -77,10 +77,6 @@ class AtmosphericQuantity(metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def setup_jacobian(self, ws, i):
-        pass
-
-    @abstractmethod
     def get_data(self, ws, provider, *args, **kwargs):
         dimensions = ws.t_field.value.shape
         f = provider.__getattribute__("get_" + self.name)

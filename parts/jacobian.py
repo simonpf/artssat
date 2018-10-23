@@ -1,16 +1,72 @@
+"""
+parts.jacobian
+-----------------
+
+The :code:`jacobian` module handles calculations of Jacobians in ARTS.
+Functionality for computing Jacobians in ARTS is implemented through
+three classes:
+
+1. :class:`JacobianCalculation` handles the actual calculation of
+   Jacobians through the ARTS workspace
+
+2. :class:`JacobianQuantity` defines the general interface for quantities
+   for which a Jacobian can be calculated and how to toggle the calculation.
+
+3. :class:`Jacobian` handles quantity-specific settings and results. This
+   class must be defined for each Jacobian quantity separately.
+
+Calculating Jacobians
+=====================
+
+To trigger the calculation of the Jacobian of a quantity :code:`q` it suffices
+to add it to the `jacobian` of a given :class:`ArtsSimulation`:
+
+    simulation.jacobian.add(q)
+
+This will add the quantity :code:`q` to the quantities for which a Jacobian
+should be computed. Moreover it will instantiate the :class:`Jacobian` class
+of the quantity :code:`q` and set the :code:`q.jacobian` property of :code:`q`.
+
+It is important to note that :code:`simulation.jacobian` and :code:`q.jacobian`
+are of different types: :code:`simulation.jacobian` is of type
+:code:`JacobianCalculation` and handles the calculation of the Jacobian for
+multiple quantities whereas :code:`q.jacobian` holds the settings and results
+of the Jacobian calculation for :code:`q`.
+
+Reference
+=========
+"""
+
 import scipy as sp
 import numpy as np
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
-from typhon.arts.workspace import arts_agenda
-from typhon.arts.workspace.agendas import Agenda
 from parts.sensor import ActiveSensor, PassiveSensor
-from typhon.arts.workspace.methods import workspace_methods
 
-wsm = workspace_methods
+################################################################################
+# Transformations
+################################################################################
 
 class Transformation(metaclass = ABCMeta):
+    """
+    Abstract base class for transformations of Jacobian quantities.
+
+    ARTS allows the calculation of certain transformations of Jacobian
+    quantities. In parts, these transformations are represented by subclasses
+    of the :class:`Transformation` class, which defines the general interface
+    for transformations of Jacobian quantities.
+
+    The interface consists of two functions:
+
+    - :code:`setup`: When the :code:`setup` function is called the
+      transformation object is expected to call the appropriate workspace
+      function so that the transformation is added to the most recently added
+      JacobianQuantity.
+
+    - :code:`__call__`: Transformation objects should be callable and calling
+      them should apply the transformation to a given numeric argument.
+    """
     def __init__(self):
         pass
 
@@ -23,6 +79,9 @@ class Transformation(metaclass = ABCMeta):
         pass
 
 class Log10(Transformation):
+    """
+    The decadal logarithm transformation $f(x) = \log_{10}(x)$.
+    """
     def __init__(self):
         pass
 
@@ -33,6 +92,9 @@ class Log10(Transformation):
         return np.log10(x)
 
 class Log(Transformation):
+    """
+    The natural logarithm transformation $f(x) = \log_{10}(x)$.
+    """
     def __init__(self):
         pass
 
@@ -43,6 +105,9 @@ class Log(Transformation):
         return np.log10(x)
 
 class Identity(Transformation):
+    """
+    The identity transformation $f(x) = x$.
+    """
     def __init__(self):
         pass
 
@@ -52,152 +117,129 @@ class Identity(Transformation):
     def __call__(self, x):
         return x
 
-class Jacobian:
-    """
-    The :class:`Jacobian` class tracks quantities for which to compute
-    the Jacbian within an ARTS sim
+################################################################################
+# JacobianCalculation
+################################################################################
 
+class JacobianCalculation:
+    """
+    The :class:`JacobianCalculation` keeps track of the quantities for which
+    to compute a Jacobian and coordinates their setup.
     """
     def __init__(self):
+        """
+        Initialize an empty Jacobian calculation.
+        """
         self.jacobian_quantities = []
 
     def add(self, jq):
-        self.jacobian_quantities += [jq.jacobian]
+        """
+        Add a quantity to list of quantities for which the Jacobian should
+        be computed.
+
+        Arguments:
+
+            jq(:class:`JacobianQuantity`): Add Jacobian calculation for the given
+            quantity. The quantity :code:`jq` must be an instance of the
+            :class:`JacobianQuantity` abstract base class.
+        """
+        jq.jacobian = jq.jacobian_class(jq, len(self.jacobian_quantities))
+        self.jacobian_quantities += [jq]
 
     def setup(self, ws):
+        """
+        Setup the Jacobian calculations on the given workspace.
 
+        Initializes the definition of the Jacobian on the given workspace
+        :code:`ws` by calling the :code:`jacobianInit` WSV on the given
+        workspace. Calls the setup method for all quantities for which
+        a Jacobian should be computed and finalizes the definition of
+        the Jacobian by calling the :code:`jacobianClose` WSM.
+
+        Arguments:
+
+            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+            on which to setup the Jacobian calculation.
+
+        """
         if not self.jacobian_quantities:
             ws.jacobianOff()
         else:
             ws.jacobianInit()
             for jq in self.jacobian_quantities:
-                jq.setup_jacobian(ws)
+                jq.jacobian.setup(ws)
+                jq.jacobian.transformation.setup(ws)
             ws.jacobianClose()
 
-class Retrieval:
+
+################################################################################
+# JacobianQuantity
+################################################################################
+
+class JacobianQuantity(metaclass = ABCMeta):
     """
-    The :class:`Retrieval` takes care of the book-keeping around retrieval
-    quantities in an ARTS simulation.
+    Abstract interface for quantities for which a Jacobian can be computed.
+
+    Quantities for which a Jacobian can be computed must expose a
+    :code:`jacobian_class` which holds all quantity-specific WSM calls and
+    settings required to compute its Jacobian.
+
+    After a quantity has been added to the Jacobian quantities of a simulation,
+    the :code:`jacobian_class` object representing the settings and results of
+    the Jacobian calculation for this specific object can be accessed through
+    its :code:`jacobian` property.
     """
+
     def __init__(self):
+        self._jacobian = None
 
-        self.retrieval_quantities = []
-        self.y = None
+    @abstractproperty
+    def jacobian_class(self):
+        """
+        Return the class object that holds the actual implementation of the
+        Jacobian calculation.
+        """
+        pass
 
-        self.settings = {"method" : "lm",
-                         "max_start_cost" : np.inf,
-                         "x_norm" : np.zeros(0),
-                         "max_iter" : 10,
-                         "stop_dx" : 0.1,
-                         "lm_ga_settings" : np.array([100.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
-                         "clear_matrices" : 0,
-                         "display_progress" : 1}
+    @property
+    def jacobian(self):
+        """
+        The :code:`jacobian_class` object holding the quantity-specific settings
+        and actual results of the Jacobian calculations for this quantity.
+        """
+        return self._jacobian
 
-    def add(self, rq):
-        self.retrieval_quantities += [rq.retrieval]
+    @jacobian.setter
+    def jacobian(self, j):
+        if not isinstance(j, self.jacobian_class):
+           #not isinstance(j, JacobianBase):
+            raise ValueError("The jacobian property of a JacobianQuantity"\
+                             " can only be set to an instance of the objects"\
+                             "own jacobian_class.")
+        else:
+            self._jacobian = j
 
-    def setup(self, ws, sensors, scattering_solver, scattering,
-              retrieval_provider, *args, **kwargs):
+################################################################################
+# JacobianBase
+################################################################################
 
-        if not self.retrieval_quantities:
-            return None
+class JacobianBase(metaclass = ABCMeta):
+    """
+    Abstract base class for the Jacobian classes that encapsulate the
+    quantity-specific calls and settings of the Jacobian. This class
+    muss be inherited by the :code:`jacobian_class` of each
+    :code:`JacobianQuantity` object.
+    """
+    def __init__(self, quantity, index):
 
-        xa = []
-        x0 = []
+        self.quantity = quantity
+        self.index    = index
+        self.transformation = Identity()
 
-        ws.retrievalDefInit()
-
-        for rt in self.retrieval_quantities:
-            rt.setup_retrieval(ws, retrieval_provider, *args, **kwargs)
-
-            xa += [rt.xa]
-
-            if rt.x0 is None:
-                x0 += [rt.xa]
-            else:
-                x0 += [rt.x0]
-
-
-        ws.retrievalDefClose()
-
-        print(xa)
-        print(x0)
-        xa = np.concatenate(xa)
-        x0 = np.concatenate(x0)
-
-        ws.x = x0
-        ws.xa = xa
-
-        s = sensors[0]
-        ws.Copy(ws.sensor_los,  s._wsvs["sensor_los"])
-        ws.Copy(ws.sensor_pos,  s._wsvs["sensor_pos"])
-        ws.Copy(ws.sensor_time, s._wsvs["sensor_time"])
-
-        #
-        # Setup inversion iterate agenda
-        #
-
-        agenda = Agenda.create("inversion_iterate_agenda")
-
-        @arts_agenda
-        def debug_print(ws):
-            ws.Print(ws.x, 0)
-
-        agenda.append(debug_print)
-
-        for i, rq in enumerate(self.retrieval_quantities):
-            preps = rq.get_iteration_preparations(i)
-            if not preps is None:
-                agenda.append(preps)
-
-        arg_list = sensors[0].get_wsm_args(wsm["x2artsStandard"])
-        agenda.add_method(ws, wsm["x2artsStandard"], *arg_list)
-
-        if scattering:
-            agenda.add_method(ws, wsm["pnd_fieldCalcFromParticleBulkProps"])
-        #agenda = Agenda.create("inversion_iterate_agenda")
-
-        i_active = []
-        i_passive = []
-        for i,s in enumerate(sensors):
-            if isinstance(s, ActiveSensor):
-                i_active += [i]
-            if isinstance(s, PassiveSensor):
-                i_passive += [i]
-
-        i = 0
-        y_index = 0
-
-        # Active sensor
-        if len(i_active) > 0:
-            s = sensors[i_active[0]]
-
-            agenda.append(arts_agenda(s.make_y_calc_function(append = False)))
-
-            i += 1
-
-        # Passive sensor
-        for s in [sensors[i] for i in i_passive]:
-
-            # Scattering solver call
-            if scattering:
-                agenda.append(arts_agenda(scattering_solver.make_solver_call(s)))
-
-            agenda.append(arts_agenda(
-                s.make_y_calc_function(append = i > 0,
-                                       scattering = scattering)
-            ))
-            i += 1
-
-
-        def iteration_finalize(ws):
-            ws.Ignore(ws.inversion_iteration_counter)
-
-            ws.Copy(ws.yf, ws.y)
-            ws.jacobianAdjustAndTransform()
-
-        agenda.append(arts_agenda(iteration_finalize))
-
-        ws.inversion_iterate_agenda = agenda
-
-
+    @abstractmethod
+    def setup(self, ws):
+        """
+        This method should call the :code:`jacobianAdd...` method corresponding to
+        the quantity on the given workspace :code:`ws`.
+        """
+        pass

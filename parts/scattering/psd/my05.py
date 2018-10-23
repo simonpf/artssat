@@ -29,13 +29,12 @@ import numpy as np
 import scipy as sp
 from scipy.special import gamma
 from parts import dimensions as dim
-from parts.arts_object import ArtsObject
 from parts.scattering.psd.modified_gamma     import ModifiedGamma
 from parts.scattering.psd.data.psd_data      import D_max
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData
 
-class MY05(ArtsPSD, metaclass = ArtsObject):
+class MY05(ArtsPSD):
     r"""
     The :class:`MY05` class describes the size distributions of particles
     in an atmosphere using the number density :math:`\rho_n` and mass
