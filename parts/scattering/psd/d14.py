@@ -397,18 +397,26 @@ class D14N(ArtsPSD):
 
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
-        size_parameter = D_eq(rho)
+        new_psd = D14N(alpha, beta, rho)
+        new_psd.convert_from(psd)
+        return new_psd
+
+    def convert_from(self, psd):
 
         md = psd.get_mass_density()
 
-        m4 = psd.get_moment(4.0, reference_size_parameter = size_parameter)
-        m3 = psd.get_moment(3.0, reference_size_parameter = size_parameter)
+        m4 = psd.get_moment(4.0, reference_size_parameter = self.size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter = self.size_parameter)
 
         dm = m4 / m3
         dm[m3 == 0.0] = 0.0
+        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4
+        n0[m3 == 0.0] = 0.0
 
-        n0 = 4.0 ** 4 / (np.pi * rho) * md / dm ** 4
-        return D14N(alpha, beta, rho, n0, dm)
+        self.mass_density = md
+        self.intercept_parameter = n0
+        self.mass_weighted_diameter = dm
+
 
     def __init__(self, alpha, beta, rho = 917.0,
                  intercept_parameter = None,
@@ -463,7 +471,7 @@ class D14N(ArtsPSD):
         def pnd_call(ws):
             ws.psdD14(n0Star = np.nan,
                       Dm     = np.nan,
-                      iwc    = -999.0,
+                      iwc    = np.nan,
                       rho    = self.rho,
                       alpha  = self.alpha,
                       beta   = self.beta,

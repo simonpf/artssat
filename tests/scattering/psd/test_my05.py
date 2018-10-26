@@ -18,7 +18,7 @@ def random_my05_psd():
     b     = np.random.uniform(2, 3, size = (10, 1))
     m     = 10.0 ** np.random.uniform(-8, -4, size = (10, 1))
     n     = 10.0 ** np.random.uniform(5, 8, size = (10, 1))
-    return MY05(mu, nu, a, b, n, m)
+    return MY05(mu, nu, a, b, None, n, m)
 
 ################################################################################
 # Tests
@@ -38,7 +38,7 @@ def test_moments(random_my05_psd):
     m0     = psd.get_moment(0)
     m0_ref = psd_data.get_moment(0)
 
-    assert np.all(np.isclose(m0.ravel(), m0_ref, rtol = 1e-3))
+    assert np.all(np.isclose(m0.ravel(), m0_ref, rtol = 1e-2))
 
     m1     = psd.get_moment(1)
     m1_ref = psd_data.get_moment(1)

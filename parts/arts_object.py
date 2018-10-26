@@ -302,7 +302,7 @@ def broadcast(shape, obj):
                             " length of the provided shape tuple.")
 
 
-def arts_property(group, shape = (), wsv = None):
+def arts_property(group, shape = None, wsv = None):
     """
     The :code:`arts_property` decorator.
 
@@ -538,6 +538,8 @@ class ArtsProperty:
         who = self.get_name(owner, separator = ".")
         shape = get_shape(value)
 
+        if self.shape is None:
+            return value
 
         # catch inconsistent number of dimensions.
         if not len(shape) == len(self.shape):
@@ -773,6 +775,9 @@ class ArtsObject:
         for _, ap in inspect.getmembers(type(self), is_arts_property):
             ap._setup(self, ws)
 
+    def setup(self, ws):
+        self.setup_arts_properties(ws)
+
     def get_data_arts_properties(self, ws, data_provider, *args, **kwargs):
         """
         Run the :code:`get_data` method for all ARTS properties of this
@@ -794,6 +799,9 @@ class ArtsObject:
         """
         for _, ap in inspect.getmembers(type(self), is_arts_property):
             ap._get_data(self, ws, data_provider, *args, **kwargs)
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
 
     def set_wsv(self, ws, wsv, value):
         """
