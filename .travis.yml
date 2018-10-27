@@ -11,7 +11,7 @@ before_install:
 script:
 - docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts; git pull origin master; git checkout master; pytest; exit $?"
 - docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;"
-- docker_id=$(dock run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;")
+- docker_id=$(docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;")
 - docker cp ${docker_id}:/app/parts/doc/_build/html .
 
 deploy:
