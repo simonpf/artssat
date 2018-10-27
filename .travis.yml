@@ -7,10 +7,10 @@ services:
 
 before_install:
 - docker pull spfrnd/parts_test:latest
-- docker run -d spfrnd/parts_test:latest /bin/sh -c "git pull; pytest; cd doc; ./run_apidoc.sh; make clean; make html;"
 
 script:
-- docker cp $(docker ps | grep parts_test | awk '{print $1;}'):/app/parts/doc/_build/html .
+- docker_id=$(docker run -d spfrnd/parts_test:latest /bin/sh -c "cd /app/parts; git pull; pytest; cd doc; ./run_apidoc.sh; make clean; make html;")
+- docker cp ${docker_id}:/app/parts/doc/_build/html .
 
 deploy:
   provider: pages
