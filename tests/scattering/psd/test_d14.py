@@ -1,23 +1,35 @@
 import numpy as np
 import pytest
 
-from parts.scattering.psd import D14, D14N
+from parts.scattering.psd import D14, D14N, D14MN
 from parts.scattering.psd import MY05
 
 ################################################################################
 # Fixtures
 ################################################################################
 
-@pytest.fixture(scope = "module", params = [(-8, -4, D14), (8, 10, D14N)])
+@pytest.fixture(scope = "module", params = [D14, D14N, D14MN])
 def random_d14_psd(request):
     """
     Create a random instance of the D14 PSD.
     """
-    low, high, cls = request.param
+
+    boundaries = {"intercept_parameter" : (6, 12),
+                  "mass_weighted_diameter" : (-2, -4),
+                  "mass_density" : (-12, -2)}
+
+    cls = request.param
+    psd = cls(1.0, 1.0, 917.0)
+
+    low, high = boundaries[psd.moment_names[0]]
     m1 = 10 ** np.random.uniform(low, high, size = (10, 1))
-    m2 = 1e-6 * np.random.uniform(100, 200, size = (10, 1))
+
+    low, high = boundaries[psd.moment_names[1]]
+    m2 = 10 ** np.random.uniform(low, high, size = (10, 1))
+
     alpha = np.random.uniform(-1, 1)
     beta  = np.random.uniform(1, 3)
+
     return cls(alpha, beta, 917.0, m1, m2)
 
 ################################################################################
@@ -30,11 +42,14 @@ def test_d14(random_d14_psd):
     formulas and once using numeric PSD data.
     """
     psd = random_d14_psd
-    x = np.logspace(-8, -3, 100000)
+    x = np.logspace(-10, -1, 100000)
     psd_data = psd.evaluate(x)
 
     m     = psd.get_mass_density()
     m_ref = psd_data.get_mass_density()
+
+    print(m)
+    print(m_ref)
 
     assert np.all(np.isclose(m, m_ref, rtol = 1e-3))
 

@@ -313,7 +313,7 @@ class Atmosphere:
     def run_checks(self, ws):
 
         ws.atmgeom_checkedCalc()
-        ws.atmfields_checkedCalc()
+        ws.atmfields_checkedCalc(bad_partition_functions_ok = 1)
         ws.propmat_clearsky_agenda_checkedCalc()
         ws.propmat_clearsky_agenda_checkedCalc()
         ws.abs_xsec_agenda_checkedCalc()

@@ -42,7 +42,8 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from parts.sensor import ActiveSensor, PassiveSensor
+from parts.sensor      import ActiveSensor, PassiveSensor
+from parts.arts_object import ArtsObject, arts_property
 
 ################################################################################
 # Transformations
@@ -83,7 +84,7 @@ class Log10(Transformation):
     The decadal logarithm transformation $f(x) = \log_{10}(x)$.
     """
     def __init__(self):
-        pass
+        Transformation.__init__(self)
 
     def setup(self, ws):
         ws.jacobianSetFuncTransformation(transformation_func = "log10")
@@ -103,6 +104,33 @@ class Log(Transformation):
 
     def __call__(self, x):
         return np.log10(x)
+
+class Atanh(Transformation):
+
+    def __init__(self):
+        Transformation.__init__(self)
+        ArtsObject.__init__(self)
+
+        self.z_min = 0.0
+        self.z_max = 1.0
+
+    @arts_property("Numeric")
+    def z_min(self):
+        return 0.0
+
+    @arts_property("Numeric")
+    def z_max(self):
+        return 1.2
+
+    def setup(self, ws):
+        ws.jacobianSetFuncTransformation(transformation_func = "atanh",
+                                         z_min = self.z_min,
+                                         z_max = self.z_max)
+
+    def __call__(self, x):
+        return np.arctanh(2.0 * (x - self.z_min) / (self.z_max - self.z_min) - 1)
+
+
 
 class Identity(Transformation):
     """

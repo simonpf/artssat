@@ -178,6 +178,9 @@ class Dimension:
             dimension as well as a :code:`string` :code:`who` indicating
             the variable from which the dimensions has been deduced
         """
+        if dim is Dimension.Joker:
+            return None
+
         if dim in self.dimensions:
             return self.dimensions[dim]
         else:
@@ -202,6 +205,9 @@ class Dimension:
                 deduced.
 
         """
+        if dim is Dimension.Joker:
+            return None
+
         if dim in self.dimensions:
             other, _ = self.dimensions[dim]
             if not other == value:
@@ -605,6 +611,9 @@ class ArtsProperty:
         ph.fixed = True
         ph.value = value
 
+        if not ph.workspace is None:
+            owner.set_wsv(ph.workspace, self.wsv, value)
+
     def _setup(self, *args, **kwargs):
         """
         Run the default or customized :code:`setup` method of the
@@ -644,6 +653,7 @@ class ArtsProperty:
             setup.
         """
         ph = owner.__dict__["_" + self.name]
+        ph.workspace = ws
         if self.wsv and ph.fixed:
             owner.set_wsv(ws, self.wsv, ph.value)
 
@@ -717,6 +727,7 @@ class PlaceHolder:
         """
         self.fixed = False
         self.value = None
+        self.workspace = None
 
 def add_property(obj, name, dims, t):
     """
@@ -824,6 +835,24 @@ class ArtsObject:
             self._wsvs[wsv.name].value = value
         else:
             setattr(ws, wsv.name, value)
+
+    def update_wsv(self, wsv, value):
+        """
+        Updates the value of a given WSV considering private WSVs of the owner.
+        This requires that the variable has already been set to a value during
+        so that is contains a reference to the workspace in which it is used.
+
+        Parameters:
+
+            wsv(typhon.arts.workspace.variables.WorkspaceVariable): The
+            variable to set.
+
+            value(obj): The value to set the WSV :code:`wsv` to.
+        """
+        if wsv.name in self._wsvs:
+            self._wsvs[wsv.name].value = value
+        else:
+            wsv.value = value
 
     def call_wsm(self, ws, wsm):
         """

@@ -49,7 +49,7 @@ from typhon.arts.workspace.agendas import Agenda
 from typhon.arts.workspace.methods import workspace_methods
 wsm = workspace_methods
 
-from parts.jacobian    import JacobianBase, JacobianQuantity
+from parts.jacobian    import JacobianBase, JacobianQuantity, Transformation
 from parts.arts_object import ArtsObject, arts_property
 from parts.arts_object import Dimension as dim
 from parts.sensor      import ActiveSensor, PassiveSensor
@@ -95,15 +95,17 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         if hasattr(data_provider, fname):
             x0_fun = getattr(data_provider, fname)
             self.x0 = x0_fun(*args, **kwargs)
+        else:
+            self.x0 = np.copy(self.xa)
 
         fname = "get_" + self.quantity.name + "_covariance"
         covmat_fun = getattr(data_provider, fname)
         covmat = covmat_fun(*args, **kwargs)
 
-
         ws.covmat_block = covmat
 
         self.add(ws)
+        self.quantity.transformation.setup(ws)
 
     def get_iteration_preparations(self, index):
 
@@ -139,7 +141,20 @@ class RetrievalQuantity(JacobianQuantity):
     """
 
     def __init__(self):
+        self._transformation = None
         super().__init__()
+
+    @property
+    def transformation(self):
+        return self._transformation
+
+    @transformation.setter
+    def transformation(self, t):
+        if not isinstance(t, Transformation):
+            raise TypeError("The transformation of a retrieval quantity must"\
+                            "of type Transformation.")
+        else:
+            self._transformation = t
 
     @abstractproperty
     def retrieval_class(self):

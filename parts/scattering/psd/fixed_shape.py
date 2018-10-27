@@ -50,6 +50,7 @@ class FixedShape(ArtsPSD, ArtsObjectReplacement):
             ws.Copy(ws.psd_size_grid, self._wsvs["x"])
             ws.Copy(ws.pnd_size_grid, self._wsvs["x"])
             ws.Copy(ws.psd_data, self._wsvs["data"])
+            ws.Print(self._wsvs["data"])
             ws.Touch(ws.dpsd_data_dx)
 
         return pnd_call

@@ -141,12 +141,6 @@ class D14(ArtsPSD):
     the mass-weighted mean diamter :math:`D_m` as free parameters.
 
     """
-    properties = [("mass_density", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("mass_weighted_diameter", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("alpha", (), np.float),
-                  ("beta", (), np.float),
-                  ("dm_min", (), np.float),
-                  ("rho", (), np.float)]
 
     @classmethod
     def from_psd_data(self, psd, alpha, beta, rho):
@@ -373,15 +367,9 @@ class D14N(ArtsPSD):
     and the mass-weighted mean diamter :math:`D_m` as free parameters.
 
     """
-    properties = [("intercept_parameter", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("mass_weighted_diameter", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("alpha", (), np.float),
-                  ("beta", (), np.float),
-                  ("rho", (), np.float),
-                  ("dm_min", (), np.float)]
 
     @classmethod
-    def from_psd_data(self, psd, alpha, beta, rho):
+    def from_psd_data(cls, psd, alpha, beta, rho):
         """
         Create an instance of the D14 PSD from existing PSD data.
 
@@ -397,7 +385,7 @@ class D14N(ArtsPSD):
 
             rho(:code:`numpy.float`): The density to use for the D14 PSD
         """
-        new_psd = D14N(alpha, beta, rho)
+        new_psd = cls(alpha, beta, rho)
         new_psd.convert_from(psd)
         return new_psd
 
@@ -608,4 +596,127 @@ class D14N(ArtsPSD):
                             " set,  before the PSD can be evaluated.")
 
         y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
+        return PSDData(x, y, D_eq(self.rho))
+
+class D14MN(D14N):
+    """
+
+    Implementation of the D14 PSD that uses mass density $m$ and intercept
+    parameter :math:`N_0^*` as free parameters.
+
+    """
+    def __init__(self, alpha, beta, rho = 917.0,
+                 mass_density = None,
+                 intercept_parameter = None):
+        """
+        Parameters:
+
+            alpha(numpy.float): The value of the :math:`alpha` parameter for
+                the PSD
+
+            beta(numpy.float): The value of the :math:`beta` parameter for
+                the PSD
+
+            rho(numpy.float): The particle density to use for the conversion
+                to mass density.
+
+            mass_density(numpy.array): If provided, this can be used to fix
+                the mass density which will then not be queried from the data
+                provider.
+
+            intercept_parameter(numpy.array): If provided, this can be used to fix
+                the value of the intercept parameter $N_0^*$ which will then not
+                be queried from the data provider.
+
+        """
+        from parts.scattering.psd.data.psd_data import D_eq
+
+        if (not mass_density is None) and (not intercept_parameter is None):
+            self.mass_density = mass_density
+            dm = (4.0 ** 4 / np.pi / rho * mass_density / intercept_parameter) ** (1 / 4.0)
+        else:
+            dm = None
+
+        super().__init__(alpha, beta, rho, intercept_parameter, dm)
+
+    @property
+    def moment_names(self):
+        return ["mass_density", "intercept_parameter"]
+
+    @property
+    def moments(self):
+        return [self.mass_density, self.intercept_parameter]
+
+    @property
+    def pnd_call_agenda(self):
+        @arts_agenda
+        def pnd_call(ws):
+            ws.psdD14(n0Star = np.nan,
+                      Dm     = -999.0,
+                      iwc    = np.nan,
+                      rho    = self.rho,
+                      alpha  = self.alpha,
+                      beta   = self.beta,
+                      t_min  = self.t_min,
+                      Dm_min = self.dm_min,
+                      t_max  = self.t_max)
+        return pnd_call
+
+    def _get_parameters(self):
+
+        md = self.mass_density
+        if md is None:
+            raise Exception("The 'intercept_parameter' data needs to be set to "
+                            " use this function.")
+        shape = md.shape
+
+        n0 = self.intercept_parameter
+        if n0 is None:
+            raise Exception("The 'intercept_parameter' data needs to be set to "
+                            " use this function.")
+
+        dm = (4.0 ** 4 / np.pi / self.rho * md / n0) ** 0.25
+
+
+        try:
+            alpha = np.broadcast_to(self.alpha, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'alpha' "
+                            " parameter  into the shape the mass density data.")
+
+        try:
+            beta = np.broadcast_to(self.beta, shape)
+        except:
+            raise Exception("Could not broadcast the data for the 'beta' "
+                            " parameter  into the shape the mass density data.")
+
+        return n0, dm, alpha, beta
+
+
+    def get_mass_density(self):
+        """
+        Returns:
+            Array containing the mass density for all the bulk volumes described
+            by this PSD.
+        """
+        return self.mass_density
+
+    def evaluate(self, x):
+        """
+        Compute value of the particle size distribution for given values of the
+        size parameter.
+
+        Parameters:
+            x(numpy.array): Array containing the values of :math:`D_eq` at which to
+                compute the number density.
+
+        Returns:
+
+            Array :code:`dNdD_eq` containing the computed values of the PSD. The first
+            dimensions of :code:`dNdD_eq` correspond to the shape of the :code:`n0`
+            parameter and the last dimension to the size parameter.
+
+        """
+        n0, dm, alpha, beta = self._get_parameters()
+        y =  evaluate_d14(x, n0, dm, alpha, beta)
         return PSDData(x, y, D_eq(self.rho))
