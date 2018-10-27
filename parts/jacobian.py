@@ -262,7 +262,7 @@ class JacobianBase(metaclass = ABCMeta):
 
         self.quantity = quantity
         self.index    = index
-        self.transformation = Identity()
+        self.quantity.transformation = Identity()
 
     @abstractmethod
     def setup(self, ws):
