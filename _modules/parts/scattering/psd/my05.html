@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.scattering.psd.my05 &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../generated/parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>parts.scattering.psd.my05</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for parts.scattering.psd.my05</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The Milbrandt-Yau (2005) PSD</span>
+<span class="sd">============================</span>
+
+<span class="sd">The Milbrandt-Yau (2005) PSD used in the GEM model uses a modified</span>
+<span class="sd">gamma distribution of the form:</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    N(D_{max}) = N_0 D_{max}^\nu \exp(- \lambda D_{max} ^ \mu)</span>
+
+<span class="sd">In this two-moment scheme, the number density :math:`\rho_n` and mass</span>
+<span class="sd">density :math:`\rho_m`  are used as predictive moments. They can be related</span>
+<span class="sd">to the :math:`N_0` and :math:`\lambda` parameters of the PSD using</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    \rho_n = \frac{N_0}{\mu} \lambda^{\frac{\nu}{\mu}}</span>
+<span class="sd">             \Gamma (\frac{\nu + 1}{\mu})</span>
+
+<span class="sd">    \rho_m = a\frac{N_0}{\mu} \lambda^{\frac{\nu + b}{\mu}}</span>
+<span class="sd">             \Gamma ( \frac{\nu + 1 + b}{\mu} ),</span>
+
+<span class="sd">where :math:`a, b` are the parameters of the mass-size relationship</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    M(D) = a \cdot D_{max}^b.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">gamma</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace</span> <span class="k">import</span> <span class="n">arts_agenda</span>
+
+<span class="kn">from</span> <span class="nn">parts</span> <span class="k">import</span> <span class="n">dimensions</span> <span class="k">as</span> <span class="n">dim</span>
+<span class="kn">from</span> <span class="nn">parts.scattering.psd.modified_gamma</span>     <span class="k">import</span> <span class="n">ModifiedGamma</span>
+<span class="kn">from</span> <span class="nn">parts.scattering.psd.data.psd_data</span>      <span class="k">import</span> <span class="n">D_max</span>
+<span class="kn">from</span> <span class="nn">parts.scattering.psd.arts.arts_psd</span> <span class="k">import</span> <span class="n">ArtsPSD</span>
+<span class="kn">from</span> <span class="nn">parts.scattering.psd.data.psd_data</span> <span class="k">import</span> <span class="n">PSDData</span>
+
+<div class="viewcode-block" id="MY05"><a class="viewcode-back" href="../../../../generated/parts.scattering.psd.my05.html#parts.scattering.psd.my05.MY05">[docs]</a><span class="k">class</span> <span class="nc">MY05</span><span class="p">(</span><span class="n">ArtsPSD</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The :class:`MY05` class describes the size distributions of particles</span>
+<span class="sd">    in an atmosphere using the number density :math:`\rho_n` and mass</span>
+<span class="sd">    density :math:`\rho_m` as predictive moments.</span>
+
+<span class="sd">    The :math:`\nu` and :math:`\mu` parameters take on fixed values depending</span>
+<span class="sd">    on the hydrometeor type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;number_density&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">lon</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span>
+                  <span class="p">(</span><span class="s2">&quot;mass_density&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">lon</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span>
+                  <span class="p">(</span><span class="s2">&quot;nu&quot;</span><span class="p">,</span> <span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                  <span class="p">(</span><span class="s2">&quot;mu&quot;</span><span class="p">,</span> <span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="MY05.from_psd_data"><a class="viewcode-back" href="../../../../generated/parts.scattering.psd.my05.html#parts.scattering.psd.my05.MY05.from_psd_data">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_psd_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psd</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a MY05 PSD from given psd data.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            psd(PSDData or other PSD): PSD data from which to create the MY05</span>
+<span class="sd">            representation.</span>
+
+<span class="sd">            nu(:code:`float`): :math:`\nu` parameter of MY05 PSD</span>
+
+<span class="sd">            mu(:code:`float`): :math:`\mu` parameter of MY05 PSD</span>
+
+<span class="sd">            a(:code:`float`): :math:`a` coefficient of the mass-size relationship</span>
+
+<span class="sd">            b(:code:`float`): :math:`b` coefficient of the mass-size relationship</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size_parameter</span> <span class="o">=</span> <span class="n">D_max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">number_density</span> <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">get_moment</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">mass_density</span>   <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">get_mass_density</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">MY05</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">number_density</span><span class="p">,</span> <span class="n">mass_density</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span>
+                 <span class="n">hydrometeor_type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">number_density</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">mass_density</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            nu(:code:`numpy.float`): The :math:`\nu` parameter of the PSD</span>
+
+<span class="sd">            mu(:code:`numpy.float`): The :math:`\mu` parameter of the PSD</span>
+
+<span class="sd">            a(:code:`numpy.float`): The :math:`a` coefficient of the</span>
+<span class="sd">            mass-size realtionship.</span>
+
+<span class="sd">            b(:code:`numpy.float`): The :math:`b` coefficient of the</span>
+<span class="sd">            mass-size realtionship.</span>
+
+<span class="sd">            number_density(:code:`numpy.ndarray`): Array containing</span>
+<span class="sd">            the number density for a given set of volume elements in an</span>
+<span class="sd">            atmosphere.</span>
+
+<span class="sd">            mass_density(:code:`numpy.ndarray`): Array containing</span>
+<span class="sd">            the mass density for a given set of volume elements in an</span>
+<span class="sd">            atmosphere.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">nu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hydrometeor_type</span> <span class="o">=</span> <span class="n">hydrometeor_type</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">number_density</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_density</span> <span class="o">=</span> <span class="n">number_density</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mass_density</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mass_density</span> <span class="o">=</span> <span class="n">mass_density</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">D_max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if parameters of the PSD are available and tries to broadcast</span>
+<span class="sd">        them to the shape of the number density data. Converts the mass density</span>
+<span class="sd">        and number density data to the :math:`N_0` and :math:`\lambda`</span>
+<span class="sd">        parameters of the PSD function.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            :code:`tuple(n0, lmbd, mu, nu)` containing the four parameters of</span>
+<span class="sd">            the PSD function.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">            An exception if any of the parameters is not set or cannot be</span>
+<span class="sd">            broadcasted into the shape of the number density data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Number density</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_density</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The number density needs to be set to use&quot;</span>
+                            <span class="s2">&quot; this function.&quot;</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Mass density</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_density</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+           <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The mass density needs to be set to use&quot;</span>
+                            <span class="s2">&quot; this function.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not broadcast mass density to the shape&quot;</span>
+                            <span class="s2">&quot;of the provided intercept parameter N.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Alpha parameter</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not broadcast alpha paramter to the shape&quot;</span>
+                            <span class="s2">&quot;of the provided intercept parameter N.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Nu parameter</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Could not broadcast nu paramter to the shape&quot;</span>
+                            <span class="s2">&quot;of the provided intercept parameter N.&quot;</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">a</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">b</span>
+
+        <span class="n">lmbd</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">m</span> \
+               <span class="o">*</span> <span class="n">gamma</span><span class="p">((</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span> \
+               <span class="o">/</span> <span class="n">gamma</span><span class="p">((</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="n">lmbd</span> <span class="o">=</span> <span class="n">lmbd</span> <span class="o">**</span> <span class="p">(</span><span class="n">mu</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">m</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">lmbd</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">n0</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">lmbd</span> <span class="o">**</span> <span class="p">((</span><span class="n">nu</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">gamma</span><span class="p">((</span><span class="n">nu</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="n">n0</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">return</span> <span class="n">n0</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">nu</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">moment_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The names of the predictive moments of the PSD.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;number_density&quot;</span><span class="p">,</span> <span class="s2">&quot;mass_density&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pnd_call_agenda</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ARTS WSM implementing the MY05 PSD.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nd">@arts_agenda</span>
+        <span class="k">def</span> <span class="nf">pnd_call</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">psdMY05</span><span class="p">(</span><span class="n">hydrometeor_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrometeor_type</span><span class="p">,</span>
+                       <span class="n">t_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_min</span><span class="p">,</span>
+                       <span class="n">t_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pnd_call</span>
+
+<div class="viewcode-block" id="MY05.get_moment"><a class="viewcode-back" href="../../../../generated/parts.scattering.psd.my05.html#parts.scattering.psd.my05.MY05.get_moment">[docs]</a>    <span class="k">def</span> <span class="nf">get_moment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">reference_size_parameter</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analytically computes the :math:`p` th moment :maht:`M(p)` of the PSD</span>
+<span class="sd">        using</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            M(p) = \frac{N_0}{\mu} \lambda ^{-\frac{\nu + p + 1}{\mu}}</span>
+<span class="sd">                   \Gamma ( \frac{\nu + p + 1}{\mu})</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            p(:code:`float`): Which moment of the distribution to compute.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            :code:`numpy.ndarray` containing the :math:`p` th moment for</span>
+<span class="sd">            all volume elements described by the PSD.</span>
+
+<span class="sd">            reference_size_parameter(:class: `SizeParameter`): Size parameter</span>
+<span class="sd">            with respect to which the moment should be computed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reference_size_parameter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">a</span>
+            <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">b</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="n">reference_size_parameter</span><span class="o">.</span><span class="n">a</span>
+            <span class="n">b2</span> <span class="o">=</span> <span class="n">reference_size_parameter</span><span class="o">.</span><span class="n">b</span>
+
+            <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">a1</span> <span class="o">/</span> <span class="n">a2</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">b2</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">b1</span> <span class="o">/</span> <span class="n">b2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="n">n0</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">nu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameters</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">n0</span> <span class="o">/</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">lmbd</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">((</span><span class="n">nu</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span>
+
+        <span class="n">m</span><span class="p">[</span><span class="n">lmbd</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="MY05.get_mass_density"><a class="viewcode-back" href="../../../../generated/parts.scattering.psd.my05.html#parts.scattering.psd.my05.MY05.get_mass_density">[docs]</a>    <span class="k">def</span> <span class="nf">get_mass_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">             The :code:`numpy.ndarray` containing the mass density data of</span>
+<span class="sd">             the PSD.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">a</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_moment</span><span class="p">(</span><span class="n">b</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MY05.evaluate"><a class="viewcode-back" href="../../../../generated/parts.scattering.psd.my05.html#parts.scattering.psd.my05.MY05.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute a numeric representation of the PSD data.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            x(:code:`numpy.ndarray`): Array containing the values of the size</span>
+<span class="sd">            parameter at which to evaluate the PSD.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            :code:`PSDData` object containing the numeric PSD data corresponding</span>
+<span class="sd">            to this PSD.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n0</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">nu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameters</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">n0</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="n">nu</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">lmbd</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PSDData</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_parameter</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

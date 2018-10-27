@@ -1,0 +1,9 @@
+parts.sensor
+============
+
+.. automodule:: parts.sensor
+    :members:
+    :show-inheritance:
+
+   parts.sensor.sensor
+

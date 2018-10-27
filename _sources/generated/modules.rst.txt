@@ -1,0 +1,7 @@
+parts
+=====
+
+.. toctree::
+   :maxdepth: 4
+
+   parts

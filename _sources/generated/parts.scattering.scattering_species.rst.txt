@@ -1,0 +1,3 @@
+.. automodule:: parts.scattering.scattering_species
+    :members:
+    :show-inheritance:

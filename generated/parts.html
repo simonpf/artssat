@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="parts.atmosphere" href="parts.atmosphere.html" />
+    <link rel="prev" title="parts" href="../index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">parts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interaction-and-data-workflow">Interaction and data workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>parts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-parts">
+<span id="parts"></span><h1>parts<a class="headerlink" href="#module-parts" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">parts</span></code> package provides a modular framework for
+radiative transfer simulations. It does so by defining a general
+computing workflow that allows hiding away much of the complexity
+of ARTS behind physically-motivated Python classes.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> class provides the main user interface
+of the <code class="code docutils literal notranslate"><span class="pre">parts</span></code> package. As the name suggests, it represents
+an ARTS simulation, which may be a simple forward simulation, a
+Jacobian calculation or a retrieval calculation.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">atmosphere</span></code> attribute of an <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object
+represents the model atmosphere that is underlying the radiative transfer
+simulation. What kind of radiative transfer simulations are performed on the
+model atmosphere is defined by the <code class="code docutils literal notranslate"><span class="pre">sensors</span></code> attribute of the simulation.
+These are the main components that describe the general simulation <em>setup</em>.</p>
+<p>It is important to note that a <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object represents only
+an abstract description of the simulation scenario. That means it doesn’t hold
+any data describing a specific atmospheric state, such as for example the
+temperature field. The rationale for this design decision is to separate the
+simulation setup from the data source, so that these two can be exchanged more
+easily.</p>
+<p>The data describing a concrete atmsopheric state to be simulated is expected
+to be provided by a <strong>data provider</strong>. The data providers task is to provide
+get methods for all data required for the simulation. These get methods may
+be parametrized to allow the simulation of several different states. When
+the <code class="code docutils literal notranslate"><span class="pre">run(*args,</span> <span class="pre">**kwargs)</span></code> method of the <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> is
+called, it forwards its arguments to the getter methods of the data provider.
+For a more detailed description of the data flow see the section below.</p>
+<p>The image below illustrates the general semantic model used to describe a
+radiative transfer simulation.</p>
+<img alt="../_images/overview_diagram.svg" src="../_images/overview_diagram.svg" /></div>
+<div class="section" id="interaction-and-data-workflow">
+<h2>Interaction and data workflow<a class="headerlink" href="#interaction-and-data-workflow" title="Permalink to this headline">¶</a></h2>
+<p>The general interaction and data flow for a single simulation is illustrated
+in the figure below.</p>
+<p>After defining the simulation setup, preparatory calculations are performed
+by calling the <code class="code docutils literal notranslate"><span class="pre">setup()</span></code> method of the <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object.
+To then run a simulation, the user calls the <code class="code docutils literal notranslate"><span class="pre">run(...)</span></code> method providing
+as arguments the arguments that should be passed on to the <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code>
+to return the data of the atmospheric state to simulate (Step 1).</p>
+<p>Depending on the simulation setup, the <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object will
+require different data to perform the simulation. These quantities
+are identified by a unique name <code class="code docutils literal notranslate"><span class="pre">name</span></code> and for each of these the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object will call the corresponding <code class="code docutils literal notranslate"><span class="pre">get_&lt;name&gt;</span></code>
+method of the <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code> with the arguments provided by the
+user to the <code class="code docutils literal notranslate"><span class="pre">run</span></code> method (Step 2).</p>
+<p>After receiving the required data from the <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code> (Step 3),
+the <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code> object performs the simulation and returns the
+result to the user (Step 4).</p>
+<img alt="figures/data_flow_diagram.svg" src="figures/data_flow_diagram.svg" /></div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.atmosphere.html" class="btn btn-neutral float-right" title="parts.atmosphere" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral" title="parts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

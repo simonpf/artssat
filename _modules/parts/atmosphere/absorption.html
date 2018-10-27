@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.atmosphere.absorption &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../generated/parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>parts.atmosphere.absorption</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for parts.atmosphere.absorption</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Absorption</span>
+<span class="sd">==========</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">parts.atmosphere.atmospheric_quantity</span> \
+    <span class="kn">import</span> <span class="nn">AtmosphericQuantity</span><span class="o">,</span> <span class="nn">extend_dimensions</span>
+
+<span class="kn">from</span> <span class="nn">parts.arts_object</span> <span class="k">import</span> <span class="n">ArtsObject</span><span class="p">,</span> <span class="n">arts_property</span>
+<span class="kn">from</span> <span class="nn">parts.jacobian</span>    <span class="k">import</span> <span class="n">JacobianBase</span>
+<span class="kn">from</span> <span class="nn">parts.retrieval</span>   <span class="k">import</span> <span class="n">RetrievalBase</span><span class="p">,</span> <span class="n">RetrievalQuantity</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace</span> <span class="k">import</span> <span class="n">arts_agenda</span>
+
+<div class="viewcode-block" id="Jacobian"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Jacobian">[docs]</a><span class="k">class</span> <span class="nc">Jacobian</span><span class="p">(</span><span class="n">JacobianBase</span><span class="p">,</span> <span class="n">ArtsObject</span><span class="p">):</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Numeric&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">perturbation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.01</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+
+        <span class="n">JacobianBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="n">ArtsObject</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>   <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;vmr&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;analytical&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">for_species_tag</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+    <span class="k">def</span> <span class="nf">_make_setup_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g1</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g2</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g3</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g1&quot;</span> <span class="p">:</span> <span class="n">g1</span><span class="p">,</span> <span class="s2">&quot;g2&quot;</span> <span class="p">:</span> <span class="n">g2</span><span class="p">,</span> <span class="s2">&quot;g3&quot;</span> <span class="p">:</span> <span class="n">g3</span><span class="p">,</span>
+                    <span class="s2">&quot;species&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">get_tag_string</span><span class="p">(),</span>
+                    <span class="s2">&quot;method&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                    <span class="s2">&quot;unit&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+                    <span class="s2">&quot;for_species_tag&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">for_species_tag</span><span class="p">,</span>
+                    <span class="s2">&quot;dx&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">kwargs</span>
+
+<div class="viewcode-block" id="Jacobian.setup"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Jacobian.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_setup_kwargs</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">jacobianAddAbsSpecies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Retrieval"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Retrieval">[docs]</a><span class="k">class</span> <span class="nc">Retrieval</span><span class="p">(</span><span class="n">RetrievalBase</span><span class="p">,</span> <span class="n">Jacobian</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">retrievalAddAbsSpecies</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_setup_kwargs</span><span class="p">(</span><span class="n">ws</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="AbsorptionSpecies"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.AbsorptionSpecies">[docs]</a><span class="k">class</span> <span class="nc">AbsorptionSpecies</span><span class="p">(</span><span class="n">AtmosphericQuantity</span><span class="p">,</span> <span class="n">RetrievalQuantity</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">,</span>
+                 <span class="n">catalog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cia</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency_range</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isotopologues</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">on_the_fly</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zeeman</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+
+        <span class="n">AtmosphericQuantity</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                     <span class="n">name</span><span class="p">,</span>
+                                     <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">RetrievalQuantity</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_catalog</span>         <span class="o">=</span> <span class="n">catalog</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cia</span>             <span class="o">=</span> <span class="n">cia</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frequency_range</span> <span class="o">=</span> <span class="n">frequency_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_isotopologues</span>   <span class="o">=</span> <span class="n">isotopologues</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jacobian</span>        <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>           <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_the_fly</span>      <span class="o">=</span> <span class="n">on_the_fly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retrieval</span>       <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zeeman</span>          <span class="o">=</span> <span class="n">zeeman</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Abstract properties</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Properties</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalog</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cia</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cia</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">isotopologues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isotopologues</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frequency_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frequency_range</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">on_the_fly</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_the_fly</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">zeeman</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zeeman</span>
+
+    <span class="k">def</span> <span class="nf">get_tag_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zeeman</span><span class="p">:</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;Z&quot;</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isotopologues</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isotopologues</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">:</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frequency_range</span><span class="p">:</span>
+           <span class="n">ts</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frequency_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+           <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+           <span class="n">ts</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frequency_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">ts</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Jacobian &amp; retrieval</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jacobian_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Jacobian</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">retrieval_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Retrieval</span>
+
+
+    <span class="c1">#</span>
+    <span class="c1"># Retrieval</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">retrieved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retrieval</span> <span class="ow">is</span> <span class="kc">None</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Abstract methods</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span> <span class="o">=</span> <span class="n">i</span>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieved</span><span class="p">:</span>
+
+            <span class="n">dimensions</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">extend_dimensions</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dimensions</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Shape of </span><span class="si">{0}</span><span class="s2"> field is inconsistent with &quot;</span>
+                                <span class="s2">&quot;the dimensions of the atmosphere.&quot;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+            <span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="H2O"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.H2O">[docs]</a><span class="k">class</span> <span class="nc">H2O</span><span class="p">(</span><span class="n">AbsorptionSpecies</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">catalog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cia</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency_range</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isotopologues</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">on_the_fly</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zeeman</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;H2O&quot;</span><span class="p">,</span>
+                         <span class="n">catalog</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">,</span>
+                         <span class="n">cia</span> <span class="o">=</span> <span class="n">cia</span><span class="p">,</span>
+                         <span class="n">frequency_range</span> <span class="o">=</span> <span class="n">frequency_range</span><span class="p">,</span>
+                         <span class="n">isotopologues</span> <span class="o">=</span> <span class="n">isotopologues</span><span class="p">,</span>
+                         <span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;PWR98&quot;</span><span class="p">,</span>
+                         <span class="n">on_the_fly</span> <span class="o">=</span> <span class="n">on_the_fly</span><span class="p">,</span>
+                         <span class="n">zeeman</span> <span class="o">=</span> <span class="n">zeeman</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="N2"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.N2">[docs]</a><span class="k">class</span> <span class="nc">N2</span><span class="p">(</span><span class="n">AbsorptionSpecies</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">catalog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cia</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency_range</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isotopologues</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;SelfContStandardType&quot;</span><span class="p">,</span>
+                 <span class="n">on_the_fly</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zeeman</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;N2&quot;</span><span class="p">,</span>
+                         <span class="n">catalog</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">,</span>
+                         <span class="n">cia</span> <span class="o">=</span> <span class="n">cia</span><span class="p">,</span>
+                         <span class="n">frequency_range</span> <span class="o">=</span> <span class="n">frequency_range</span><span class="p">,</span>
+                         <span class="n">isotopologues</span> <span class="o">=</span> <span class="n">isotopologues</span><span class="p">,</span>
+                         <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+                         <span class="n">on_the_fly</span> <span class="o">=</span> <span class="n">on_the_fly</span><span class="p">,</span>
+                         <span class="n">zeeman</span> <span class="o">=</span> <span class="n">zeeman</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="O2"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.O2">[docs]</a><span class="k">class</span> <span class="nc">O2</span><span class="p">(</span><span class="n">AbsorptionSpecies</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">catalog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cia</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency_range</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isotopologues</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;PWR93&quot;</span><span class="p">,</span>
+                 <span class="n">on_the_fly</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zeeman</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;O2&quot;</span><span class="p">,</span>
+                         <span class="n">catalog</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">,</span>
+                         <span class="n">cia</span> <span class="o">=</span> <span class="n">cia</span><span class="p">,</span>
+                         <span class="n">frequency_range</span> <span class="o">=</span> <span class="n">frequency_range</span><span class="p">,</span>
+                         <span class="n">isotopologues</span> <span class="o">=</span> <span class="n">isotopologues</span><span class="p">,</span>
+                         <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+                         <span class="n">on_the_fly</span> <span class="o">=</span> <span class="n">on_the_fly</span><span class="p">,</span>
+                         <span class="n">zeeman</span> <span class="o">=</span> <span class="n">zeeman</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

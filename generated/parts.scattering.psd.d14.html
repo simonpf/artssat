@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The Delanoë (2014) PSD &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="parts.scattering.psd.fixed_shape.html" />
+    <link rel="prev" title="parts.scattering.psd.data" href="parts.scattering.psd.data.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="parts.html">parts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parts.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="parts.scattering.html">parts.scattering</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="parts.scattering.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="parts.html">parts</a> &raquo;</li>
+        
+          <li><a href="parts.scattering.html">parts.scattering</a> &raquo;</li>
+        
+          <li><a href="parts.scattering.psd.html">parts.scattering.psd</a> &raquo;</li>
+        
+      <li>The Delanoë (2014) PSD</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.scattering.psd.d14.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.scattering.psd.d14"></span><div class="section" id="the-delanoe-2014-psd">
+<h1>The Delanoë (2014) PSD<a class="headerlink" href="#the-delanoe-2014-psd" title="Permalink to this headline">¶</a></h1>
+<p>The D14 particle size distribution as proposed by Delanoë in [delanoe2014]
+uses a normalized form of the modified gamma distribution, parametrized
+as follows:</p>
+<div class="math notranslate nohighlight">
+\[\frac{dN(X)}{dX} = N_0^* \beta \frac{\Gamma(4)}{4^4}
+       \frac{\Gamma(\frac{\alpha + 5}{\beta})^{(4 + \alpha)}}
+            {\Gamma(\frac{\alpha + 4}{\beta})^{(5 + \alpha)}}
+X^\alpha \exp \left \{- \left (X \frac{\Gamma(\frac{\alpha + 5}{\beta})}
+                                    {\Gamma(\frac{\alpha + 4}{\beta})}
+                               \right )^\beta \right \},\]</div>
+<p>The parameter X is defined as  the volume equivalent sphere diameter
+<span class="math notranslate nohighlight">\(D_{eq}\)</span> normalized by the mass-weighted mean diameter:</p>
+<div class="math notranslate nohighlight">
+\[X = \frac{D_{eq}}{D_m}\]</div>
+<dl class="docutils">
+<dt>The PSD is thus parametrized by four parameters:</dt>
+<dd><ul class="first last simple">
+<li><span class="math notranslate nohighlight">\(N_0^*\)</span>, here called the <em>intercept parameter</em></li>
+<li><span class="math notranslate nohighlight">\(D_m\)</span>, the <em>mass-weighted mean diameter</em></li>
+<li>the shape parameters <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span></li>
+</ul>
+</dd>
+</dl>
+<p>Of these, <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are assumed constant, while
+<span class="math notranslate nohighlight">\(N_0\)</span> and <span class="math notranslate nohighlight">\(D_m\)</span> are the free parameters that descibe
+the particles throughout the atmosphere.</p>
+<p>The particle mass density <span class="math notranslate nohighlight">\(\rho_m\)</span> per bulk volume can be computed
+from <span class="math notranslate nohighlight">\(N_0\)</span> and <span class="math notranslate nohighlight">\(D_m\)</span> using:</p>
+<div class="math notranslate nohighlight">
+\[\rho_m = \frac{\Gamma(4)}{4^4}\frac{\pi \rho}{6}N_0^*D_m^4\]</div>
+<p>In this module, two implementations of the D14 PSD are provided:</p>
+<ul class="simple">
+<li>the <a class="reference internal" href="#parts.scattering.psd.d14.D14" title="parts.scattering.psd.d14.D14"><code class="xref py py-class docutils literal notranslate"><span class="pre">D14</span></code></a> class that uses the mass-density and <span class="math notranslate nohighlight">\(D_m\)</span> as
+moments of the PSD</li>
+<li>the <a class="reference internal" href="#parts.scattering.psd.d14.D14N" title="parts.scattering.psd.d14.D14N"><code class="xref py py-class docutils literal notranslate"><span class="pre">D14N</span></code></a> :class that uses the intercept parameter <span class="math notranslate nohighlight">\(N_0^*\)</span>
+and <span class="math notranslate nohighlight">\(D_m\)</span> as moments of the PSD</li>
+</ul>
+<dl class="class">
+<dt id="parts.scattering.psd.d14.D14">
+<em class="property">class </em><code class="descclassname">parts.scattering.psd.d14.</code><code class="descname">D14</code><span class="sig-paren">(</span><em>alpha</em>, <em>beta</em>, <em>rho=917.0</em>, <em>mass_density=None</em>, <em>mass_weighted_diameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.scattering.psd.arts.arts_psd.html#parts.scattering.psd.arts.arts_psd.ArtsPSD" title="parts.scattering.psd.arts.arts_psd.ArtsPSD"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.psd.arts.arts_psd.ArtsPSD</span></code></a></p>
+<blockquote>
+<div>Implementation of the D14 PSD that uses mass density :math:<a href="#id2"><span class="problematic" id="id3">`</span></a></div></blockquote>
+<dl class="docutils">
+<dt>ho_m`  and</dt>
+<dd>the mass-weighted mean diamter <span class="math notranslate nohighlight">\(D_m\)</span> as free parameters.</dd>
+</dl>
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute value of the particle size distribution for given values of the
+size parameter.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>x(numpy.array): Array containing the values of <span class="math notranslate nohighlight">\(D_eq\)</span> at which to</dt>
+<dd>compute the number density.</dd>
+</dl>
+</dd>
+</dl>
+<p>Returns:</p>
+<blockquote>
+<div>Array <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> containing the computed values of the PSD. The first
+dimensions of <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> correspond to the shape of the <code class="code docutils literal notranslate"><span class="pre">n0</span></code>
+parameter and the last dimension to the size parameter.</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="parts.scattering.psd.d14.D14.from_psd_data">
+<em class="property">classmethod </em><code class="descname">from_psd_data</code><span class="sig-paren">(</span><em>psd</em>, <em>alpha</em>, <em>beta</em>, <em>rho</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14.from_psd_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14.from_psd_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of the D14 PSD from existing PSD data.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">psd</span></code>: A numeric or analytic representation of</dt>
+<dd>a PSD.</dd>
+</dl>
+<p>alpha(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): The <span class="math notranslate nohighlight">\(alpha\)</span> parameter of
+the to use for the D14 PSD.</p>
+<p>beta(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): The <span class="math notranslate nohighlight">\(beta\)</span> parameter of
+the to use for the D14 PSD.</p>
+<p class="last">rho(<code class="code docutils literal notranslate"><span class="pre">numpy.float</span></code>): The density to use for the D14 PSD</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14.get_mass_density">
+<code class="descname">get_mass_density</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14.get_mass_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14.get_mass_density" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns:</dt>
+<dd>Array containing the mass density for all the bulk volumes described
+by this PSD.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14.get_moment">
+<code class="descname">get_moment</code><span class="sig-paren">(</span><em>p</em>, <em>reference_size_parameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14.get_moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14.get_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the moments of the PSD analytically.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>p(<code class="code docutils literal notranslate"><span class="pre">numpy.float</span></code>): Wich moment of the PSD to compute</p>
+<p>reference_size_parameter(<code class="xref py py-class docutils literal notranslate"><span class="pre">SizeParameter</span></code>): Size parameter
+with respect to which the moment should be computed.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>Array containing the <span class="math notranslate nohighlight">\(p\)</span> th moment of the PSD.</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14.moment_names">
+<code class="descname">moment_names</code><a class="headerlink" href="#parts.scattering.psd.d14.D14.moment_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of strings that contains the names of the moments of the PSD.
+This is used in the ARTS <code class="code docutils literal notranslate"><span class="pre">particle_bulkrprop_names</span></code> and as
+name for the data requested from the data provider.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14.pnd_call_agenda">
+<code class="descname">pnd_call_agenda</code><a class="headerlink" href="#parts.scattering.psd.d14.D14.pnd_call_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The WSM call that is used to compute the PSD in ARTS.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.scattering.psd.d14.D14MN">
+<em class="property">class </em><code class="descclassname">parts.scattering.psd.d14.</code><code class="descname">D14MN</code><span class="sig-paren">(</span><em>alpha</em>, <em>beta</em>, <em>rho=917.0</em>, <em>mass_density=None</em>, <em>intercept_parameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14MN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14MN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.scattering.psd.d14.D14N" title="parts.scattering.psd.d14.D14N"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.psd.d14.D14N</span></code></a></p>
+<p>Implementation of the D14 PSD that uses mass density $m$ and intercept
+parameter <span class="math notranslate nohighlight">\(N_0^*\)</span> as free parameters.</p>
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14MN.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14MN.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14MN.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute value of the particle size distribution for given values of the
+size parameter.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>x(numpy.array): Array containing the values of <span class="math notranslate nohighlight">\(D_eq\)</span> at which to</dt>
+<dd>compute the number density.</dd>
+</dl>
+</dd>
+</dl>
+<p>Returns:</p>
+<blockquote>
+<div>Array <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> containing the computed values of the PSD. The first
+dimensions of <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> correspond to the shape of the <code class="code docutils literal notranslate"><span class="pre">n0</span></code>
+parameter and the last dimension to the size parameter.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14MN.get_mass_density">
+<code class="descname">get_mass_density</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14MN.get_mass_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14MN.get_mass_density" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns:</dt>
+<dd>Array containing the mass density for all the bulk volumes described
+by this PSD.</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14MN.moment_names">
+<code class="descname">moment_names</code><a class="headerlink" href="#parts.scattering.psd.d14.D14MN.moment_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of strings that contains the names of the moments of the PSD.
+This is used in the ARTS <code class="code docutils literal notranslate"><span class="pre">particle_bulkrprop_names</span></code> and as
+name for the data requested from the data provider.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14MN.pnd_call_agenda">
+<code class="descname">pnd_call_agenda</code><a class="headerlink" href="#parts.scattering.psd.d14.D14MN.pnd_call_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The WSM call that is used to compute the PSD in ARTS.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.scattering.psd.d14.D14N">
+<em class="property">class </em><code class="descclassname">parts.scattering.psd.d14.</code><code class="descname">D14N</code><span class="sig-paren">(</span><em>alpha</em>, <em>beta</em>, <em>rho=917.0</em>, <em>intercept_parameter=None</em>, <em>mass_weighted_diameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14N"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14N" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.scattering.psd.arts.arts_psd.html#parts.scattering.psd.arts.arts_psd.ArtsPSD" title="parts.scattering.psd.arts.arts_psd.ArtsPSD"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.psd.arts.arts_psd.ArtsPSD</span></code></a></p>
+<p>Implementation of the D14 PSD that uses the intercept parameter <span class="math notranslate nohighlight">\(N_0^*\)</span>
+and the mass-weighted mean diamter <span class="math notranslate nohighlight">\(D_m\)</span> as free parameters.</p>
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14N.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14N.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14N.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute value of the particle size distribution for given values of the
+size parameter.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>x(numpy.array): Array containing the values of <span class="math notranslate nohighlight">\(D_eq\)</span> at which to</dt>
+<dd>compute the number density.</dd>
+</dl>
+</dd>
+</dl>
+<p>Returns:</p>
+<blockquote>
+<div>Array <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> containing the computed values of the PSD. The first
+dimensions of <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> correspond to the shape of the <code class="code docutils literal notranslate"><span class="pre">n0</span></code>
+parameter and the last dimension to the size parameter.</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="parts.scattering.psd.d14.D14N.from_psd_data">
+<em class="property">classmethod </em><code class="descname">from_psd_data</code><span class="sig-paren">(</span><em>psd</em>, <em>alpha</em>, <em>beta</em>, <em>rho</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14N.from_psd_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14N.from_psd_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of the D14 PSD from existing PSD data.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">psd</span></code>: A numeric or analytic representation of</dt>
+<dd>a PSD.</dd>
+</dl>
+<p>alpha(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): The <span class="math notranslate nohighlight">\(alpha\)</span> parameter of
+the to use for the D14 PSD.</p>
+<p>beta(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): The <span class="math notranslate nohighlight">\(beta\)</span> parameter of
+the to use for the D14 PSD.</p>
+<p class="last">rho(<code class="code docutils literal notranslate"><span class="pre">numpy.float</span></code>): The density to use for the D14 PSD</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14N.get_mass_density">
+<code class="descname">get_mass_density</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14N.get_mass_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14N.get_mass_density" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns:</dt>
+<dd>Array containing the mass density for all the bulk volumes described
+by this PSD.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.d14.D14N.get_moment">
+<code class="descname">get_moment</code><span class="sig-paren">(</span><em>p</em>, <em>reference_size_parameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#D14N.get_moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.D14N.get_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the moments of the PSD analytically.</p>
+<p>The physical significance of a moment of a PSD depends on the size
+parameter. So in general, the moments of the same PSD given w.r.t.
+different size parameters differ. If the
+<code class="code docutils literal notranslate"><span class="pre">reference_size_parameter</span></code> argument is given then the
+computed moment will correspond to the Moment of the PSD w.r.t. to
+the given size parameter.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>p(<code class="code docutils literal notranslate"><span class="pre">numpy.float</span></code>): Wich moment of the PSD to compute</p>
+<p>reference_size_parameter(SizeParameter): Size parameter with
+respect to which the moment should be computed.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>Array containing the <span class="math notranslate nohighlight">\(p\)</span> th moment of the PSD.</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14N.moment_names">
+<code class="descname">moment_names</code><a class="headerlink" href="#parts.scattering.psd.d14.D14N.moment_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of strings that contains the names of the moments of the PSD.
+This is used in the ARTS <code class="code docutils literal notranslate"><span class="pre">particle_bulkrprop_names</span></code> and as
+name for the data requested from the data provider.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.d14.D14N.pnd_call_agenda">
+<code class="descname">pnd_call_agenda</code><a class="headerlink" href="#parts.scattering.psd.d14.D14N.pnd_call_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The WSM call that is used to compute the PSD in ARTS.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="parts.scattering.psd.d14.evaluate_d14">
+<code class="descclassname">parts.scattering.psd.d14.</code><code class="descname">evaluate_d14</code><span class="sig-paren">(</span><em>x</em>, <em>n0</em>, <em>dm</em>, <em>alpha</em>, <em>beta</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/d14.html#evaluate_d14"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.d14.evaluate_d14" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the particle size distribution of the D14 PSD.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>x(numpy.array): 1D array containing the values of the size parameter</dt>
+<dd><span class="math notranslate nohighlight">\(D_{eq}\)</span> at which to evaluate the PSD. If <code class="code docutils literal notranslate"><span class="pre">x</span></code> is not
+1D it will be flattened.</dd>
+<dt>n0(numpy.array or scalar): Array containing the values of the</dt>
+<dd>intercept parameter for which the PSD should be evaluated.</dd>
+<dt>dm(numpy.array or scalar): Array containing the values of the mass</dt>
+<dd>weighted mean diameter at which to evaluate the PSD. Must be
+broadcastable to the shape of <code class="code docutils literal notranslate"><span class="pre">n0</span></code></dd>
+<dt>alpha(numpy.array or scalar): Array containing the values of the</dt>
+<dd><span class="math notranslate nohighlight">\(alpha\)</span> parameter a which to evaulate the PSD. Must be
+broadcastable to the shape of :code: <cite>n0</cite></dd>
+<dt>beta(numpy.array or scalar): Array containing the values of the</dt>
+<dd><span class="math notranslate nohighlight">\(beta\)</span> parameter a which to evaulate the PSD. Must be
+broadcastable to the shape of :code: <cite>n0</cite></dd>
+</dl>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>Array <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> containing the computed values of the PSD. The first
+dimensions of <code class="code docutils literal notranslate"><span class="pre">dNdD_eq</span></code> correspond to the shape of the <code class="code docutils literal notranslate"><span class="pre">n0</span></code>
+parameter and the last dimension to the size parameter.</div></blockquote>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.scattering.psd.fixed_shape.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parts.scattering.psd.data.html" class="btn btn-neutral" title="parts.scattering.psd.data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

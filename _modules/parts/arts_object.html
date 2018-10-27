@@ -1,0 +1,1131 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.arts_object &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../generated/parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>parts.arts_object</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for parts.arts_object</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">parts.arts_object</span>
+<span class="sd">-----------------</span>
+
+<span class="sd">The :code:`arts_object` module provides meta-programming functionality</span>
+<span class="sd">that aims to simplify unified treatment of relevant ARTS variables.</span>
+<span class="sd">The basic idea is to provide so called *ARTS properties*, which are</span>
+<span class="sd">similar in concept to Python properties but extend their functionality to</span>
+<span class="sd">simplify handling of variables that should be passed to the ARTS workspace.</span>
+
+<span class="sd">Concept</span>
+<span class="sd">=======</span>
+
+<span class="sd">From the user perspective, the purpose of ARTS properties is to provide</span>
+<span class="sd">a simple interface to set ARTS parameters using attributes of Python</span>
+<span class="sd">objects, hiding away boilerplate code related to the management of</span>
+<span class="sd">these parameters. From the developer perspective they provide a unified</span>
+<span class="sd">way to treat these variables as well as default methods for the</span>
+<span class="sd">interaction with the ARTS workspace. The implementation of ARTS properties</span>
+<span class="sd">is based on the</span>
+<span class="sd">`Descriptor &lt;https://docs.python.org/3.7/howto/descriptor.html&gt;`_ protocol.</span>
+
+<span class="sd">Usecase</span>
+<span class="sd">~~~~~~~</span>
+
+<span class="sd">The typical usage scenario is that a Python class is used to represent</span>
+<span class="sd">a conceptual unit grouping together various ARTS functionality and</span>
+<span class="sd">variables. An example of this is for example the :class:`Sensor` class.</span>
+<span class="sd">In ARTS, the sensor is described through a set of WSVs. ARTS properties</span>
+<span class="sd">can then for example be used to expose the :code:`f_grid` WSV as an</span>
+<span class="sd">attributes of the :code:`Sensor` class.</span>
+
+<span class="sd">::</span>
+
+<span class="sd">    class Sensor:</span>
+<span class="sd">        @arts_property</span>
+<span class="sd">        def f_grid(group = &quot;Vector&quot;, shape = (Dimension.Frq), wsv = f_grid):</span>
+<span class="sd">             return None # No default value</span>
+
+<span class="sd">User perspective</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Seen from the user perspective, ARTS properties provide the following</span>
+<span class="sd">functionality:</span>
+
+<span class="sd">1. Provision of default values</span>
+<span class="sd">2. A unified protocol for the setting of simulation parameters</span>
+
+<span class="sd">ARTS properties can be set using Python assignment syntax, i.e.</span>
+
+<span class="sd">::</span>
+
+<span class="sd">    sensor.f_grid = np.array([1.0, 2.0, 3.0])</span>
+
+<span class="sd">or they may be obtained from the :code:`data_provider` using the</span>
+<span class="sd">appropriate get method when a concrete simulation is run. ARTS</span>
+<span class="sd">properties impelement the required functionality to provide this</span>
+<span class="sd">functionality to the user in an opaque manner.</span>
+
+<span class="sd">Developer perspective</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">For the developer, the purpose of ARTS properties is to provide</span>
+<span class="sd">meta-programming functionality to simplify the handling of ARTS-related</span>
+<span class="sd">variables. It provides default methods for the setting of ARTS properties</span>
+<span class="sd">as well as default :code:`setup` and :code:`get_data` methods.</span>
+
+<span class="sd">Additionally, the :code:`arts_object` provides functionality for</span>
+<span class="sd">the propagation of dimension information throughout :code:`parts`. This</span>
+<span class="sd">is important to enable testing consistency of user-provided data.</span>
+
+<span class="sd">Reference</span>
+<span class="sd">=========</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace.variables</span> <span class="k">import</span> <span class="n">WorkspaceVariable</span><span class="p">,</span> <span class="n">group_names</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace.variables</span> <span class="k">import</span> <span class="n">workspace_variables</span> <span class="k">as</span> <span class="n">wsv</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace</span> <span class="k">import</span> <span class="n">Workspace</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1"># The Dimension class</span>
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="Dimension"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension">[docs]</a><span class="k">class</span> <span class="nc">Dimension</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Service class to keep track of related dimensions throughout an ARTS</span>
+<span class="sd">    simulation.</span>
+
+<span class="sd">    A consistent ARTS simulation setup requires provided data to have the</span>
+<span class="sd">    same sizes along related dimensions. The :code:`Dimensions` class</span>
+<span class="sd">    provides a symbolic representation of these dimensions and provides</span>
+<span class="sd">    functionality to propagate information on the values of these dimensions</span>
+<span class="sd">    as data is provided by the user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Singleton classes describing dimensions</span>
+    <span class="c1">#</span>
+<div class="viewcode-block" id="Dimension.P"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.P">[docs]</a>    <span class="k">class</span> <span class="nc">P</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Singleton class representing the pressure dimension.&quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;pressure&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Lat"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Lat">[docs]</a>    <span class="k">class</span> <span class="nc">Lat</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Singleton class representing the latitude dimension.&quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;latitude&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Lon"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Lon">[docs]</a>    <span class="k">class</span> <span class="nc">Lon</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Singleton class representing the longitude dimension.&quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;longitude&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Atm"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Atm">[docs]</a>    <span class="k">class</span> <span class="nc">Atm</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Singleton class representing the number of dimensions of the</span>
+<span class="sd">        Atmosphere.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;atmosphere&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Los"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Los">[docs]</a>    <span class="k">class</span> <span class="nc">Los</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Singleton class representing the line-of-sight dimension. &quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;line-of-sight&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Obs"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Obs">[docs]</a>    <span class="k">class</span> <span class="nc">Obs</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Singleton dimension representing the number of measurement</span>
+<span class="sd">        blocks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;measurement block&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Frq"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Frq">[docs]</a>    <span class="k">class</span> <span class="nc">Frq</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Singleton class representing the number of frequencies.&quot;&quot;&quot;</span>
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;frequency&quot;</span></div>
+
+<div class="viewcode-block" id="Dimension.Joker"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.Joker">[docs]</a>    <span class="k">class</span> <span class="nc">Joker</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Singleton class representing dimensions that can take an</span>
+<span class="sd">        arbitrary value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="p">,</span> <span class="n">Lat</span><span class="p">,</span> <span class="n">Lon</span><span class="p">,</span> <span class="n">Atm</span><span class="p">,</span> <span class="n">Los</span><span class="p">,</span> <span class="n">Obs</span><span class="p">,</span> <span class="n">Frq</span><span class="p">,</span> <span class="n">Joker</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a dimensions object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Dimension.infer"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.infer">[docs]</a>    <span class="k">def</span> <span class="nf">infer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Infer the value of a dimension.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            dim: Singleton class representing the dimension to lookup.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            None if no value has been deduced for the requested dimension.</span>
+
+<span class="sd">            Otherwise a tuple :code:`(value, who)` consisting of an integer</span>
+<span class="sd">            value :code:`value` representing the deduced value of the requested</span>
+<span class="sd">            dimension as well as a :code:`string` :code:`who` indicating</span>
+<span class="sd">            the variable from which the dimensions has been deduced</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="n">Dimension</span><span class="o">.</span><span class="n">Joker</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Dimension.deduce"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.deduce">[docs]</a>    <span class="k">def</span> <span class="nf">deduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">who</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a deduction of a value of a given dimension.</span>
+
+<span class="sd">        This function should be called when data has been provided by the</span>
+<span class="sd">        user that allows the deduction of the size of a given dimension</span>
+<span class="sd">        if no previous such value has been deduced, i.e. the :code:`infer`</span>
+<span class="sd">        method for the same dimension returns :code:`None`</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            dim: Singleton class representing the dimension to lookup.</span>
+
+<span class="sd">            value(int): The value of the dimension that could be deduced.</span>
+
+<span class="sd">            who(str): Name of the variable from which the value has been</span>
+<span class="sd">                deduced.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="n">Dimension</span><span class="o">.</span><span class="n">Joker</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+            <span class="n">other</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">other</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;A conflicting value for dimension </span><span class="si">{0}</span><span class="s2"> has &quot;</span>\
+                                <span class="s2">&quot;aready been deduced.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">who</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dimension.link"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.Dimension.link">[docs]</a>    <span class="k">def</span> <span class="nf">link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Link to :code:`Dimension` objects.</span>
+
+<span class="sd">        This registers the :code:`self` :code:`Dimension` object as master of the</span>
+<span class="sd">        :code:`other` :code:`Dimensions` object. Deduced dimensions values from</span>
+<span class="sd">        the *master* dimension are propagated to the *slave* dimensions but not</span>
+<span class="sd">        vice versa. This allows having dimensions with different values in the</span>
+<span class="sd">        *slave* objects while still ensuring consistency with the *master* object.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            other(:code:`Dimensions`): The *slave* dimension to link to this</span>
+<span class="sd">            dimension.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check consistency of dimension objects.</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+                <span class="n">v1</span><span class="p">,</span> <span class="n">who1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">v2</span><span class="p">,</span> <span class="n">who2</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">v1</span> <span class="o">==</span> <span class="n">v2</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="n">v1</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">v2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">s</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;Contradictory dimensions deduced for dimension </span><span class="si">{0}</span><span class="s2">:&quot;</span> \
+                    <span class="s2">&quot;</span><span class="si">{1}</span><span class="s2"> deduced from </span><span class="si">{2}</span><span class="s2"> and </span><span class="si">{3}</span><span class="s2"> deduced from </span><span class="si">{4}</span><span class="s2">.&quot;</span>\
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">who1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="n">who2</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">other</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">dimensions</span></div></div>
+
+<span class="c1">################################################################################</span>
+<span class="c1"># ARTS properties</span>
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="get_shape"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.get_shape">[docs]</a><span class="k">def</span> <span class="nf">get_shape</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the shape of a :code:&#39;numpy.ndarray&#39; or of a nested list.</span>
+
+<span class="sd">    Parameters(obj):</span>
+<span class="sd">       obj: The object of which to determine the shape.</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        A tuple describing the shape of the :code:`ndarray` or the</span>
+<span class="sd">        nested list or :code:`(1,)`` if obj is not an instance of either</span>
+<span class="sd">        of these types.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">),)</span> <span class="o">+</span> <span class="n">get_shape</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">()</span></div>
+
+<div class="viewcode-block" id="broadcast"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.broadcast">[docs]</a><span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Broadcast an array or a list to a provided shape.</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">        shape(tuple): Tuple of :code:`int` describing the shape to broadcast</span>
+<span class="sd">        the provided object to.</span>
+
+<span class="sd">        obj(object): The object to broadcast to the provided shape. Either a</span>
+<span class="sd">        numpy array or a (nested) list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="n">broadcast</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">obj</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">broadcast</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">nested</span><span class="p">)</span> <span class="k">for</span> <span class="n">nested</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Degree of nesting of list is inconsitent with&quot;</span>\
+                            <span class="s2">&quot; length of the provided shape tuple.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="arts_property"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.arts_property">[docs]</a><span class="k">def</span> <span class="nf">arts_property</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wsv</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The :code:`arts_property` decorator.</span>
+
+<span class="sd">    This decorator turns a function defintion into an ARTS property. Its useage</span>
+<span class="sd">    is similar to the :code:`@property` decorator in Python. The ARTS property</span>
+<span class="sd">    decorator provides default getter, setter, :code:`setup` and :code:`get_data`</span>
+<span class="sd">    methods. The setter as well as the :code:`setup` and :code:`get_data` methods</span>
+<span class="sd">    can be overwritten to allow specializing the handling of specific variables.</span>
+<span class="sd">    For more details see the :class:`ArtsProperty` class.</span>
+<span class="sd">    ::</span>
+<span class="sd">        @arts_property</span>
+<span class="sd">        def f_grid:</span>
+<span class="sd">            return np.array([187e9]) # The default value</span>
+
+<span class="sd">        @f_grid.setter</span>
+<span class="sd">        def set_f_grid(self, value):</span>
+<span class="sd">            print(&quot;Setting the f_grid.&quot;)</span>
+<span class="sd">            self.value = value</span>
+
+<span class="sd">        @f_grid.setter</span>
+<span class="sd">        def set_f_grid(self, value):</span>
+<span class="sd">            print(&quot;Setting the f_grid.&quot;)</span>
+<span class="sd">            self.value = value</span>
+
+<span class="sd">        @f_grid.setup</span>
+<span class="sd">        def setup_f_grid(self, value):</span>
+<span class="sd">            print(&quot;Customg setup method.&quot;)</span>
+
+<span class="sd">        @f_grid.get_data</span>
+<span class="sd">        def get_data_f_grid(self, value):</span>
+<span class="sd">            print(&quot;Customg setup method.&quot;)</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">        group(str): The ARTS group to which the variable should belong.</span>
+
+<span class="sd">        shape(tuple): Tuple describing the expected shape of the variable.</span>
+
+<span class="sd">        wsv(typhon.arts.workspace.WorkspaceVariable): The workspace variable</span>
+<span class="sd">        corresponding to the ARTS property.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">ArtsPropertySpecialization</span><span class="p">(</span><span class="n">ArtsProperty</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fdefault</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ArtsPropertySpecialization</span></div>
+
+<span class="n">ws</span> <span class="o">=</span> <span class="n">Workspace</span><span class="p">(</span><span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArtsProperty"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty">[docs]</a><span class="k">class</span> <span class="nc">ArtsProperty</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The :code:`ArtsProperty` class that implements the main functionality of</span>
+<span class="sd">    ARTS properties.</span>
+
+<span class="sd">    An ARTS property is an abstract representation of a parameter of an ARTS</span>
+<span class="sd">    simulation. This parameter can be set to a fixed value by the user during</span>
+<span class="sd">    the setting up of the simulation. In this case the property is said to</span>
+<span class="sd">    be *fixed*. Otherwise, and if no default value for the parameter is set,</span>
+<span class="sd">    the value will be requested from the data provider.</span>
+
+<span class="sd">    The :code: `ArtsProperty` class implements the follwing functionality:</span>
+
+<span class="sd">        1. Provide a default setter, that checks consistency with expected ARTS</span>
+<span class="sd">        group and shape.</span>
+
+<span class="sd">        2. Provide a default setup method that sets the value of the</span>
+<span class="sd">        corresponding ARTS WSV if the value of the property is set to fixed.</span>
+
+
+<span class="sd">    The :code:`ArtsProperty` class is to be used through the :code:</span>
+<span class="sd">    `arts_property` decorator, which returns a subclass of this class that</span>
+<span class="sd">    fixes the :code:`group, shape` and :code:`wsv` values of the :code:`__init__`</span>
+<span class="sd">    method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a :code:`ArtsProperty` instance.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            fdefault: Default value for the ARTS Property or :code:`None` if no</span>
+<span class="sd">            reasonable default value can be provided.</span>
+
+<span class="sd">            group(str): Name of the ARTS group the value belongs to.</span>
+
+<span class="sd">            shape(tuple): Tuple describing the expected shape of the variable.</span>
+<span class="sd">            Set to :code:`None` if no reasonable expected shape can be</span>
+<span class="sd">            specified.</span>
+
+<span class="sd">            wsv(typhon.arts.workspace.WorkspaceVariable): Workspace variable</span>
+<span class="sd">            corresponding to this ARTS property or :code:`None` if no such</span>
+<span class="sd">            WSV exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">wsv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">wsv</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsv</span><span class="p">):</span>
+                    <span class="n">wsv</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsv</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Workspace variable </span><span class="si">{0}</span><span class="s2"> associated with&quot;</span>\
+                                    <span class="s2">&quot; ARTS property </span><span class="si">{1}</span><span class="s2"> does not exist.&quot;</span>\
+                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wsv</span><span class="p">,</span> <span class="n">fdefault</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsetup</span>    <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fget_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fset</span>      <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span>  <span class="o">=</span> <span class="n">fdefault</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fdefault</span> <span class="o">=</span> <span class="n">fdefault</span>
+
+<div class="viewcode-block" id="ArtsProperty.get_name"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a qualified name of the ARTS property.</span>
+
+<span class="sd">        This return a name of the ARTS property prefixed by the name of the</span>
+<span class="sd">        owner is this object possesses a :code:`name` attribute.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            owner: The object instance that this ARTS property belongs</span>
+<span class="sd">            to.</span>
+
+<span class="sd">            separator(str): Char to use to separater the owners name and</span>
+<span class="sd">            the name of the ARTS property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">separator</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="ArtsProperty.setup"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fsetup</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator to set the setup method of the ARTS property. The expected</span>
+<span class="sd">        call signature of the setup method is :code:`setup(self, obj, ws)`</span>
+<span class="sd">        where :code:`obj` is the owner of the ARTS property. Providing of the</span>
+<span class="sd">        :code:`obj` argument of the :code:`setup` method is currently necessary</span>
+<span class="sd">        to allow the checking of dimensions.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            fsetup(function): The customized setup function to use for this</span>
+<span class="sd">            ARTS property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsetup</span> <span class="o">=</span> <span class="n">setup</span></div>
+
+<div class="viewcode-block" id="ArtsProperty.get_data"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fget_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator to set the :code:`get_data` method of the ARTS property.</span>
+<span class="sd">        The expected call signature of the :code:`get_data` method is</span>
+<span class="sd">        :code:`get(self, obj, ws, *args, **args)` where :code:`obj` is</span>
+<span class="sd">        the owner of the ARTS property. Providing of the :code:`obj` argument</span>
+<span class="sd">        of the :code:`setup` method is currently necessary to allow the checking</span>
+<span class="sd">        of dimensions.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            fsetup(function): The customized :code:`get_data` method to use for</span>
+<span class="sd">            this ARTS property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fget_data</span> <span class="o">=</span> <span class="n">fget_data</span></div>
+
+<div class="viewcode-block" id="ArtsProperty.setter"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.setter">[docs]</a>    <span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator to set the setter to set the value of this ARTS property.</span>
+<span class="sd">        The expected call signature is :code:`set(self, value)` and should</span>
+<span class="sd">        set the :code:`value` attribute of the :code:`ArtsProperty` object</span>
+<span class="sd">        :code:`self`.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            fset(function): The customized setter to use for this</span>
+<span class="sd">            :code:`ArtsPorperty`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fset</span> <span class="o">=</span> <span class="n">fset</span></div>
+
+<div class="viewcode-block" id="ArtsProperty.check_and_convert"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.check_and_convert">[docs]</a>    <span class="k">def</span> <span class="nf">check_and_convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks type of :code:`value` against the group specification of this</span>
+<span class="sd">        ARTS property contained in :code:`self.group`.</span>
+
+<span class="sd">        The group specification can be a single string in which case this</span>
+<span class="sd">        function will try to convert the provided value to the given group</span>
+<span class="sd">        using the :code:`convert` class method of</span>
+<span class="sd">        :class:`typhon.arts.workspace.WorkspaceVariable`.</span>
+
+<span class="sd">        It is also possible to specify a list of groups for the expected</span>
+<span class="sd">        value. In this case this function simply checks whether the group</span>
+<span class="sd">        inferred by :code:`WorkspaceVariable.get_group_id`</span>
+<span class="sd">        group of the :code:``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">converted</span> <span class="o">=</span> <span class="n">WorkspaceVariable</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">converted</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Provided value of type </span><span class="si">{0}</span><span class="s2"> cannot be converted&quot;</span>
+                                <span class="s2">&quot; to ARTS group </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+                                                            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">))</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">converted</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">g_i</span> <span class="o">=</span> <span class="n">WorkspaceVariable</span><span class="o">.</span><span class="n">get_group_id</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">group_names</span><span class="p">[</span><span class="n">g_i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Provided value of type </span><span class="si">{0}</span><span class="s2"> is not of any of &quot;</span>
+                                <span class="s2">&quot; the expected ARTS groups </span><span class="si">{1}</span><span class="s2">.&quot;</span>\
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="ArtsProperty.check_and_broadcast"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsProperty.check_and_broadcast">[docs]</a>    <span class="k">def</span> <span class="nf">check_and_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        check the shape of a given variable against a symbolic shape specification.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            value(array or list): the object of which to check the shape.</span>
+
+<span class="sd">            who(str): name of the variable of which the shape is checked.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">            Exception if the shape of :code:`value` is inconsitent with the shape</span>
+<span class="sd">            specification the ARTS property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">who</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">get_shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+
+        <span class="c1"># catch inconsistent number of dimensions.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;The provided value for </span><span class="si">{0}</span><span class="s2"> has </span><span class="si">{1}</span><span class="s2"> dimensions but </span><span class="si">{2}</span><span class="s2"> were&quot;</span>\
+                <span class="s2">&quot; expected.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">who</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># deduce and compare dimensions.</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;The provided value has dimension </span><span class="si">{1}</span><span class="s2"> along axis </span><span class="si">{0}</span><span class="s2"> but </span><span class="si">{2}</span><span class="s2">&quot;</span> \
+                <span class="s2">&quot;were expected.&quot;</span>
+
+        <span class="n">deduced</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
+
+            <span class="c1"># Fixed dimension</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="n">deduced</span> <span class="o">+=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],)</span>
+                <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+            <span class="c1"># Symbolic dimension</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">Dimension</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">dimensions</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">owner</span><span class="o">.</span><span class="n">dimensions</span><span class="o">.</span><span class="n">deduce</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">who</span><span class="p">)</span>
+                    <span class="n">deduced</span> <span class="o">+=</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">,</span> <span class="n">who2</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="n">deduced</span> <span class="o">+=</span> <span class="p">(</span><span class="n">n</span><span class="p">,)</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;The value provided for the </span><span class="si">{0}</span><span class="s2"> property was expected&quot;</span>\
+                        <span class="s2">&quot; to match the </span><span class="si">{1}</span><span class="s2"> dimension of the simulation  along&quot;</span>\
+                        <span class="s2">&quot; axis </span><span class="si">{2}</span><span class="s2"> but this is not the case. The value of the&quot;</span>\
+                        <span class="s2">&quot; </span><span class="si">{1}</span><span class="s2"> dimension has been deduced to be to be </span><span class="si">{3}</span><span class="s2">&quot;</span>\
+                        <span class="s2">&quot; from the value of the </span><span class="si">{4}</span><span class="s2"> property.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">who</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">who2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Shape specification should consist of either&quot;</span>\
+                                <span class="s2">&quot; integers or symbolic dimensions.&quot;</span><span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">broadcast</span><span class="p">(</span><span class="n">deduced</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">objtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">return</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_and_convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_and_broadcast</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">workspace</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">workspace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the default or customized :code:`setup` method of the</span>
+<span class="sd">        :code:`ArtsProperty` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsetup</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_setup</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fsetup</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the default or customized :code:`get_data` method of the</span>
+<span class="sd">        :code:`ArtsProperty` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fget_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_get_data</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span>
+                                   <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fget_data</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span>
+                           <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_default_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The default :code:`setup` method of the :code:`ArtsProperty`.</span>
+<span class="sd">        This method simply checked whether the value of the :code:`ArtsProperty`</span>
+<span class="sd">        was set to a fixed value. If this is the case and the :code:`wsv`</span>
+<span class="sd">        attribute contains an associated WSV, the WSVs value in the</span>
+<span class="sd">        given workspace :code:`ws` is set.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            owner(obj): The object that this :code:`ArtsProperty` belongs</span>
+<span class="sd">            to.</span>
+
+<span class="sd">            ws(arts.typhon.workspace.Workspace): Ths workspace which to</span>
+<span class="sd">            setup.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">ph</span><span class="o">.</span><span class="n">workspace</span> <span class="o">=</span> <span class="n">ws</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span> <span class="ow">and</span> <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
+            <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_default_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The default :code:`get_data` method. It performs the following steps:</span>
+
+<span class="sd">            1. Check if the :code:`data_provider` provides a get method for the</span>
+<span class="sd">            :code:`ArtsProperty`. If so, then set the associated WSV to this</span>
+<span class="sd">            value (if given).</span>
+
+<span class="sd">            2. Check if the value of the :code:`ArtsProperty` is fixed. In this</span>
+<span class="sd">            case it has been set already during setup, so no additional action</span>
+<span class="sd">            is required.</span>
+
+<span class="sd">            3. Check if a default value has been provided for the</span>
+<span class="sd">            :code:`ArtsProperty`. In this case use this value.</span>
+
+<span class="sd">            4. Throw an exception if all of the previous steps were unsuccessful</span>
+<span class="sd">            in determining the value of the :code:`ArtsProperty`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
+            <span class="n">getter_name</span> <span class="o">=</span> <span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+            <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdefault</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+
+            <span class="c1"># Try to get value from provider.</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">getter_name</span><span class="p">):</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_provider</span><span class="p">,</span> <span class="n">getter_name</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_and_convert</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_and_broadcast</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+                    <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                    <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="c1"># Check if there&#39;s a default value.</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+            <span class="c1"># No value - throw exception</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Neither a default value nor a get method &quot;</span>
+                                <span class="s2">&quot; has been provided for the ARTS property&quot;</span>
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PlaceHolder"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.PlaceHolder">[docs]</a><span class="k">class</span> <span class="nc">PlaceHolder</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data that is required for an ARTS simulation and can be set</span>
+<span class="sd">    either to a fixed value, or taken from a data provider.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a PlaceHolder object representing the property</span>
+<span class="sd">        :code:`name` with expected dimensions :code:`dimensions` and</span>
+<span class="sd">        expected type :code:`expected_type`.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            name(str): The name of the property for which this object</span>
+<span class="sd">                is the placeholder.</span>
+<span class="sd">            dimensions(tuple): A tuple of :code:`Dimension` objects</span>
+<span class="sd">                describing the expected dimensions of the corresponding</span>
+<span class="sd">                property.</span>
+<span class="sd">            expected_type(type): The expected type for the corresponding</span>
+<span class="sd">                property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workspace</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="add_property"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.add_property">[docs]</a><span class="k">def</span> <span class="nf">add_property</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add an ARTS property to an existing object.</span>
+
+<span class="sd">    Parameters:</span>
+
+<span class="sd">        obj(:code:`object`): The object to add the property to.</span>
+
+<span class="sd">        name(:code: `str`): Name of the property to create</span>
+
+<span class="sd">        dims(:code:`tuple`): Tuple describing the expected dimensions</span>
+<span class="sd">        of the property.</span>
+
+<span class="sd">        t(:code:`type`): The expected type of the property.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">getter</span> <span class="o">=</span> <span class="n">make_getter</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">setter</span> <span class="o">=</span> <span class="n">make_setter</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">prop</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">getter</span><span class="p">,</span> <span class="n">setter</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">PlaceHolder</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">ph</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">is_arts_property</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ArtsProperty</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArtsObject"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject">[docs]</a><span class="k">class</span> <span class="nc">ArtsObject</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The :ArtsObject: class provides a base class for objects that bundle</span>
+<span class="sd">    ARTS workspace variables and functionality into a conceptual unit. The</span>
+<span class="sd">    class provides service functions that automate the handling of ARTS</span>
+<span class="sd">    properties.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an :code:`ArtsObject` instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span>      <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ap</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">is_arts_property</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">ap</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">PlaceHolder</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ArtsObject.setup_arts_properties"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.setup_arts_properties">[docs]</a>    <span class="k">def</span> <span class="nf">setup_arts_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the :code:`setup` method for all ARTS properties of the class.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ws(typhon.arts.workspace): The workspace for which to setup</span>
+<span class="sd">            the simulation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ap</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">is_arts_property</span><span class="p">):</span>
+            <span class="n">ap</span><span class="o">.</span><span class="n">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_arts_properties</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArtsObject.get_data_arts_properties"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.get_data_arts_properties">[docs]</a>    <span class="k">def</span> <span class="nf">get_data_arts_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the :code:`get_data` method for all ARTS properties of this</span>
+<span class="sd">        object.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ws(typhon.arts.workspace): The workspace for which to setup</span>
+<span class="sd">            the simulation.</span>
+
+<span class="sd">            data_provider(obj): The :code:`data_provider` providing the</span>
+<span class="sd">            data for the simulation.</span>
+
+<span class="sd">            *args: Additional parameters to be passed on to the data</span>
+<span class="sd">            provider.</span>
+
+<span class="sd">            **kwargs: Additional keyword arguments to be passed to the data</span>
+<span class="sd">            provider.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ap</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">is_arts_property</span><span class="p">):</span>
+            <span class="n">ap</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_data_arts_properties</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ArtsObject.set_wsv"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.set_wsv">[docs]</a>    <span class="k">def</span> <span class="nf">set_wsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the given private WSV :code:`wsv` of the object or if the</span>
+<span class="sd">        object doesn&#39;t have a private copy of :code:`wsv` then sets :code:`wsv`</span>
+<span class="sd">        on the workspace :code:`ws`.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ws(typhon.arts.workspace.Workspace): The workspace in which to set</span>
+<span class="sd">            the WSV.</span>
+
+<span class="sd">            wsv(typhon.arts.workspace.variables.WorkspaceVariable): The</span>
+<span class="sd">            variable to set.</span>
+
+<span class="sd">            value(obj): The value to set the WSV :code:`wsv` to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">wsv</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">wsv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">ws</span>    <span class="o">=</span> <span class="n">ws</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">wsv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsv</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArtsObject.update_wsv"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.update_wsv">[docs]</a>    <span class="k">def</span> <span class="nf">update_wsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the value of a given WSV considering private WSVs of the owner.</span>
+<span class="sd">        This requires that the variable has already been set to a value during</span>
+<span class="sd">        so that is contains a reference to the workspace in which it is used.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            wsv(typhon.arts.workspace.variables.WorkspaceVariable): The</span>
+<span class="sd">            variable to set.</span>
+
+<span class="sd">            value(obj): The value to set the WSV :code:`wsv` to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">wsv</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">wsv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wsv</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="ArtsObject.call_wsm"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.call_wsm">[docs]</a>    <span class="k">def</span> <span class="nf">call_wsm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call workspace method on the given workspace.</span>
+
+<span class="sd">        This method replaces inputs of the workspace variable with the private</span>
+<span class="sd">        WSMs of the object. After execution of the method the results are</span>
+<span class="sd">        copied to the private WSMs of the object.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ws(typhon.arts.workspace.Workspace): The workspace on which to</span>
+<span class="sd">            execute the method.</span>
+
+<span class="sd">            wsm(typhon.arts.workspace.WorkspaceMethod): The workspace method</span>
+<span class="sd">            to execute.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">)</span>
+        <span class="n">wsm</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c1"># Copy output</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">wsm</span><span class="o">.</span><span class="n">outs</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">WorkspaceVariable</span><span class="o">.</span><span class="n">get_variable_name</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">wsm</span><span class="o">.</span><span class="n">ins</span><span class="p">:</span>
+                <span class="n">ws</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">wsv</span><span class="p">[</span><span class="n">name</span><span class="p">])</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_private_wsvs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create private copies of given WSV names.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ws(:code:`typhon.arts.workspace.Workspace`): A workspace instance</span>
+<span class="sd">            on which to create the workspace variables.</span>
+
+<span class="sd">            names(list): List of strings containing the names of the workspace</span>
+<span class="sd">            variables to create.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">wsv</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">wsv_private</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">create_variable</span><span class="p">(</span><span class="n">wsv</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">wsv_private</span>
+
+<div class="viewcode-block" id="ArtsObject.get_wsm_args"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.ArtsObject.get_wsm_args">[docs]</a>    <span class="k">def</span> <span class="nf">get_wsm_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wsm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a list of arguments to the given ARTS workspace method</span>
+<span class="sd">        :code:`wsm` for which the sensor related input parameters are</span>
+<span class="sd">        replace by the ones of this sensor. This is done by checking</span>
+<span class="sd">        whether the input argument name is in the sensors :code:`_wsv`</span>
+<span class="sd">        dictionary and if so replacing the argument.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">           wsm(typhon.arts.workspace.methods.Workspacemethod): The ARTS</span>
+<span class="sd">               workspace method object for which to generate the input</span>
+<span class="sd">               argument list.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            The list of input arguments with sensor specific input arguments</span>
+<span class="sd">            replaced by the corresponding WSVs of the sensor.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">wsm</span><span class="o">.</span><span class="n">ins</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">WorkspaceVariable</span><span class="o">.</span><span class="n">get_variable_name</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">name</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">+=</span> <span class="p">[</span><span class="n">wsv</span><span class="p">[</span><span class="n">name</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">args</span></div></div>
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

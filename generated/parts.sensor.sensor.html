@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.sensor.sensor.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.sensor.sensor"></span><p>ARTS Sensors</p>
+<p>Class hierarchy that represents the different types of sensors
+in ARTS. The purpose of this hierarchy is to encapsulate all
+required settings and configurations related to the sensor
+in an ARTS simulation.</p>
+<p>An ARTS simulation contains one or more sensors. The interaction
+between ARTS simulation and sensor object is structured as follows:</p>
+<ol class="arabic simple">
+<li>Setup: During the setup phase the ARTS simulation calls the
+setup method of each sensor object. During this call the sensor
+is expected to setup all necessary workspace variables on
+the provided workspace and perform all necessary preparatory
+calculations, such as calculating absorption and scattering
+data.</li>
+<li>Run: During the run phase, the simulation calls the get_data(…)
+method of the sensor during which the sensor is supposed to
+request all necessary data, that hasn’t been set in advance.</li>
+</ol>
+<p>In addition to that, the simulation needs to know which WSMs
+to call to compute the measurement vector. To this end, each
+sensor needs to provide the following factory methods:</p>
+<ol class="arabic simple">
+<li>make_preparation_function: This function should generate
+a function that runs all necessary preparations on a
+provided workspace. Currently, this requires setting
+only the stokes dimension (because of an inconsistency in ARTS).</li>
+<li>make_y_calc_function: This function should generate a
+functions that runs the necessary workspace methods
+to simulate the measurements on a given workspace.</li>
+</ol>
+<p>Both of these factory methods must produce functions that
+can be converted into an ARTS agenda, so that they can be
+used also within the inversion iterate agenda for retrievals.</p>
+<p>In general, sensors should store important within their own,
+anonymous workspace variables, which should then just be
+used to replace the input WSV in all sensor-related WSM
+calls. Due to the inconsistency metioned abover, however, this
+principle does not work for the stokes dimension as it is
+not consistently passed to the surface agenda.</p>
+<p>Attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>wsm(dict): Alias for the :code:’workspace_methods’ dictionary</dt>
+<dd>from ‘typhon.arts.workspace.methods’</dd>
+<dt>wsv(dict): Alias for the <code class="code docutils literal notranslate"><span class="pre">workspace_variables</span></code> dictionary</dt>
+<dd>from <code class="code docutils literal notranslate"><span class="pre">typhon.arts.workspace.variables</span></code></dd>
+</dl>
+</div></blockquote>
+<dl class="class">
+<dt id="parts.sensor.sensor.ActiveSensor">
+<em class="property">class </em><code class="descclassname">parts.sensor.sensor.</code><code class="descname">ActiveSensor</code><span class="sig-paren">(</span><em>name</em>, <em>f_grid</em>, <em>stokes_dimension</em>, <em>range_bins=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ActiveSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.sensor.sensor.Sensor" title="parts.sensor.sensor.Sensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.sensor.sensor.Sensor</span></code></a></p>
+<p>Specialization of the abstract <code class="code docutils literal notranslate"><span class="pre">Sensor</span></code> class that implements
+active sensors (Radar).</p>
+<dl class="attribute">
+<dt id="parts.sensor.sensor.ActiveSensor.iy_transmitter_agenda">
+<code class="descname">iy_transmitter_agenda</code><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor.iy_transmitter_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="code docutils literal notranslate"><span class="pre">iy_transmitter_agenda</span></code> which is required for active
+sensors. Input arguments of <code class="code docutils literal notranslate"><span class="pre">iy_transmitter_agenda</span></code> are
+replaced by the private workspace variables of the sensor.</p>
+<p>Returns:</p>
+<blockquote>
+<div>The iy_transmitter_agenda for the active sensor.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.ActiveSensor.make_iy_main_agenda">
+<code class="descname">make_iy_main_agenda</code><span class="sig-paren">(</span><em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ActiveSensor.make_iy_main_agenda"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor.make_iy_main_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The :code: <cite>iy_main_agenda</cite> for active sensor. Currently uses
+the single scattering radar module, but might be extended
+at some point.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.ActiveSensor.make_preparation_function">
+<code class="descname">make_preparation_function</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ActiveSensor.make_preparation_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor.make_preparation_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the workspace preparation function, which prepares
+a workspace for simulating the signal recorded by the sensor.</p>
+<p>Returns:</p>
+<blockquote>
+<div>The function to prepare the workspace.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.ActiveSensor.make_y_calc_function">
+<code class="descname">make_y_calc_function</code><span class="sig-paren">(</span><em>append=False</em>, <em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ActiveSensor.make_y_calc_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor.make_y_calc_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns y_calc function, which computes the radar signal
+on an accordingly prepared workspace. This function can
+be converted into an ARTS agenda and thus included in
+the other agendas using the INCLUDE statement.</p>
+<p>Returns:</p>
+<blockquote>
+<div>The function to compute the radar signal.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.ActiveSensor.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>ws</em>, <em>scattering=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ActiveSensor.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ActiveSensor.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>General setup for an ARTS sensor.</p>
+<p>This method performs the following steps to setup the sensor:</p>
+<ul class="simple">
+<li>Copy the <cite>iy_main_agenda</cite> of the sensor into a private workspace
+variable in the workspace</li>
+<li>Copy the <cite>f_grid</cite> into a private workspace variable</li>
+<li>Compute and check <cite>scat_data</cite> and copy results into private
+workspace variables.</li>
+<li>Copy <cite>iy_aux_vars</cite> and <cite>iy_unit</cite> to the workspace and store
+in prive workspace variables.</li>
+</ul>
+<p>Paremters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(typhon.arts.workspace.Workspace): The workspace on which</dt>
+<dd>to perform the setup of the sensor.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.sensor.sensor.CloudSat">
+<em class="property">class </em><code class="descclassname">parts.sensor.sensor.</code><code class="descname">CloudSat</code><span class="sig-paren">(</span><em>name='cloud_sat'</em>, <em>range_bins=array([  500.</em>, <em>1000.</em>, <em>1500.</em>, <em>2000.</em>, <em>2500.</em>, <em>3000.</em>, <em>3500.</em>, <em>4000.</em>, <em>4500.</em>, <em>5000.</em>, <em>5500.</em>, <em>6000.</em>, <em>6500.</em>, <em>7000.</em>, <em>7500.</em>, <em>8000.</em>, <em>8500.</em>, <em>9000.</em>, <em>9500.</em>, <em>10000.</em>, <em>10500.</em>, <em>11000.</em>, <em>11500.</em>, <em>12000.</em>, <em>12500.</em>, <em>13000.</em>, <em>13500.</em>, <em>14000.</em>, <em>14500.</em>, <em>15000.</em>, <em>15500.</em>, <em>16000.</em>, <em>16500.</em>, <em>17000.</em>, <em>17500.</em>, <em>18000.</em>, <em>18500.</em>, <em>19000.</em>, <em>19500.])</em>, <em>stokes_dimension=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#CloudSat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.CloudSat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.sensor.sensor.ActiveSensor" title="parts.sensor.sensor.ActiveSensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.sensor.sensor.ActiveSensor</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.sensor.sensor.ICI">
+<em class="property">class </em><code class="descclassname">parts.sensor.sensor.</code><code class="descname">ICI</code><span class="sig-paren">(</span><em>name='ici'</em>, <em>channels=None</em>, <em>stokes_dimension=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#ICI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.ICI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.sensor.sensor.PassiveSensor" title="parts.sensor.sensor.PassiveSensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.sensor.sensor.PassiveSensor</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.sensor.sensor.PassiveSensor">
+<em class="property">class </em><code class="descclassname">parts.sensor.sensor.</code><code class="descname">PassiveSensor</code><span class="sig-paren">(</span><em>name</em>, <em>f_grid</em>, <em>stokes_dimension=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.sensor.sensor.Sensor" title="parts.sensor.sensor.Sensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.sensor.sensor.Sensor</span></code></a></p>
+<p>Specialization of the abstract Sensor class for passive sensors.</p>
+<dl class="method">
+<dt id="parts.sensor.sensor.PassiveSensor.iy_aux_vars_setter">
+<code class="descname">iy_aux_vars_setter</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor.iy_aux_vars_setter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor.iy_aux_vars_setter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom setter for <code class="code docutils literal notranslate"><span class="pre">iy_aux_vars</span></code> for passive sensors. Checks
+that the argument <code class="code docutils literal notranslate"><span class="pre">v</span></code> has a valid value for passive simulations.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>u(str): The <code class="code docutils literal notranslate"><span class="pre">iy_aux_vars</span></code> to use for passive simulations. Must</dt>
+<dd>be a list containing any of <code class="code docutils literal notranslate"><span class="pre">[&quot;Radiative</span> <span class="pre">background&quot;,</span>
+<span class="pre">&quot;Optical</span> <span class="pre">depth]</span></code></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.PassiveSensor.iy_unit_setter">
+<code class="descname">iy_unit_setter</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor.iy_unit_setter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor.iy_unit_setter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom setter for <code class="code docutils literal notranslate"><span class="pre">iy_unit</span></code> for passive sensors. Checks
+that the argument <code class="code docutils literal notranslate"><span class="pre">u</span></code> has a valid value for passive simulations.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>u(str): The <code class="code docutils literal notranslate"><span class="pre">iy_unit</span></code> to use for passive simulations. Must</dt>
+<dd>be one of <code class="code docutils literal notranslate"><span class="pre">[&quot;1&quot;,</span> <span class="pre">&quot;RJBT&quot;,</span> <span class="pre">&quot;PlackBT&quot;,</span> <span class="pre">&quot;W(m^2</span> <span class="pre">m</span> <span class="pre">sr)&quot;,</span>
+<span class="pre">&quot;W/(m^2</span> <span class="pre">m-1</span> <span class="pre">sr)&quot;]</span></code></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.PassiveSensor.make_iy_main_agenda">
+<code class="descname">make_iy_main_agenda</code><span class="sig-paren">(</span><em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor.make_iy_main_agenda"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor.make_iy_main_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory property that returns the <code class="code docutils literal notranslate"><span class="pre">iy_main_agenda</span></code> that has to be used
+for passive sensors.</p>
+<p>Return:</p>
+<blockquote>
+<div>The ARTS <code class="code docutils literal notranslate"><span class="pre">iy_main_agenda</span></code></div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.PassiveSensor.make_preparation_function">
+<code class="descname">make_preparation_function</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor.make_preparation_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor.make_preparation_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the workspace preparation function, which prepares
+a workspace for simulating the signal recorded by the sensor.</p>
+<p>Returns:</p>
+<blockquote>
+<div>The function to prepare the workspace.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.PassiveSensor.make_y_calc_function">
+<code class="descname">make_y_calc_function</code><span class="sig-paren">(</span><em>append=False</em>, <em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#PassiveSensor.make_y_calc_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.PassiveSensor.make_y_calc_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory function that produces a function that simulates a passive
+measurement with the given sensor on an accordingly prepared workspace.</p>
+<p>If <code class="code docutils literal notranslate"><span class="pre">append</span></code> is <code class="code docutils literal notranslate"><span class="pre">False</span></code> the returned function will use
+the <code class="code docutils literal notranslate"><span class="pre">yCalc</span></code> WSV to simulate the measurement. Otherwise
+<code class="code docutils literal notranslate"><span class="pre">yCalcAppend</span></code> will be used.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>append(bool): If <code class="code docutils literal notranslate"><span class="pre">True</span></code> the produced function will use</dt>
+<dd><cite>yCalcAppend</cite> to calculate the measured signal.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.sensor.sensor.Sensor">
+<em class="property">class </em><code class="descclassname">parts.sensor.sensor.</code><code class="descname">Sensor</code><span class="sig-paren">(</span><em>name</em>, <em>f_grid=None</em>, <em>stokes_dimension=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.arts_object.html#parts.arts_object.ArtsObject" title="parts.arts_object.ArtsObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.arts_object.ArtsObject</span></code></a></p>
+<p>Defines an interface and implementes common functionality for
+classes representing ARTS sensors.</p>
+<p>Declares ARTS properties common to all types of sensors handled
+by ARTS.</p>
+<p>Arts Attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>properties: The ARTS properties that hold the data common to</dt>
+<dd>all sensors in ARTS.</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="parts.sensor.sensor.Sensor.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><em>ws</em>, <em>data_provider</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get required data from data provided.</p>
+<p>This function obtains required data from the data provider
+if it has not been fixed in advance. The data expected
+from the data provider are the following:</p>
+<ul class="simple">
+<li>the line of sight data by calling the <code class="code docutils literal notranslate"><span class="pre">get_line_of_sight</span></code>
+method of the provided data provider.</li>
+<li>the sensor position data by calling the :code: <cite>get_sensor_pos</cite>
+method of the provided data provider.</li>
+<li>the pencil beam offsets by calling the :code:
+<cite>get_line_of_sight_offsets</cite></li>
+</ul>
+<p>This function also checks the sensor data by calling
+<code class="code docutils literal notranslate"><span class="pre">sensor_checkedCalc</span></code> and stores the result in a private
+WSV.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.Sensor.make_iy_main_agenda">
+<code class="descname">make_iy_main_agenda</code><span class="sig-paren">(</span><em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor.make_iy_main_agenda"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor.make_iy_main_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property that takes the role of a factory function that creates
+the <code class="code docutils literal notranslate"><span class="pre">iy_main_agenda</span></code> for the given sensor. This will
+depend on the sensor type and its specific settings, so
+must be implemented by the inhereting classes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.Sensor.make_preparation_function">
+<code class="descname">make_preparation_function</code><span class="sig-paren">(</span><em>append=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor.make_preparation_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor.make_preparation_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory method for a preparation function <code class="code docutils literal notranslate"><span class="pre">f(ws)</span></code> which
+sets all workspace variables that are required before simulating
+a measurement on a given workspace <code class="code docutils literal notranslate"><span class="pre">ws</span></code>.</p>
+<p>The separation into a preparation function and a <code class="code docutils literal notranslate"><span class="pre">y_calc</span></code>
+function is currently necessary as the scattering solver can
+be chosen independently from the sensor, so the simulation object
+must be able to run the scattering solver between the sensor
+preparations and running <code class="code docutils literal notranslate"><span class="pre">y_calc</span></code>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>append(bool): Whether the call should use <code class="code docutils literal notranslate"><span class="pre">yCalcAppend</span></code></dt>
+<dd>or not. Active sensors will probably have to throw an
+exception here.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.Sensor.make_y_calc_function">
+<code class="descname">make_y_calc_function</code><span class="sig-paren">(</span><em>append=False</em>, <em>scattering=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor.make_y_calc_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor.make_y_calc_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory method that should create a function <code class="code docutils literal notranslate"><span class="pre">f</span></code> that runs
+the actual radiative transfer on a provided workspace.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>append(bool): Whether the call should use <code class="code docutils literal notranslate"><span class="pre">yCalcAppend</span></code></dt>
+<dd>or not. Active sensors will probably have to throw an
+exception here.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.sensor.sensor.Sensor.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>ws</em>, <em>scattering=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/sensor/sensor.html#Sensor.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.sensor.sensor.Sensor.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>General setup for an ARTS sensor.</p>
+<p>This method performs the following steps to setup the sensor:</p>
+<ul class="simple">
+<li>Copy the <cite>iy_main_agenda</cite> of the sensor into a private workspace
+variable in the workspace</li>
+<li>Copy the <cite>f_grid</cite> into a private workspace variable</li>
+<li>Compute and check <cite>scat_data</cite> and copy results into private
+workspace variables.</li>
+<li>Copy <cite>iy_aux_vars</cite> and <cite>iy_unit</cite> to the workspace and store
+in prive workspace variables.</li>
+</ul>
+<p>Paremters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(typhon.arts.workspace.Workspace): The workspace on which</dt>
+<dd>to perform the setup of the sensor.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

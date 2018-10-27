@@ -1,0 +1,7 @@
+parts.atmosphere.absorption
+===========================
+
+.. automodule:: parts.atmosphere.absorption
+    :members:
+    :show-inheritance:
+

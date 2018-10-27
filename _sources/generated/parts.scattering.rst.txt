@@ -1,0 +1,18 @@
+parts.scattering
+================
+
+.. automodule:: parts.scattering
+    :members:
+    :show-inheritance:
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   parts.scattering.psd
+
+   parts.scattering.scattering_species
+   parts.scattering.solvers
+

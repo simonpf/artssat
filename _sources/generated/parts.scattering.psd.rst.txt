@@ -1,0 +1,21 @@
+parts.scattering.psd
+====================
+
+.. automodule:: parts.scattering.psd
+    :members:
+    :show-inheritance:
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   parts.scattering.psd.arts
+   parts.scattering.psd.data
+
+   parts.scattering.psd.d14
+   parts.scattering.psd.fixed_shape
+   parts.scattering.psd.modified_gamma
+   parts.scattering.psd.my05
+

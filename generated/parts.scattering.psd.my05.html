@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The Milbrandt-Yau (2005) PSD &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="parts.scattering.scattering_species.html" />
+    <link rel="prev" title="The modified gamma distribution PSD" href="parts.scattering.psd.modified_gamma.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="parts.html">parts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parts.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="parts.scattering.html">parts.scattering</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="parts.scattering.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="parts.html">parts</a> &raquo;</li>
+        
+          <li><a href="parts.scattering.html">parts.scattering</a> &raquo;</li>
+        
+          <li><a href="parts.scattering.psd.html">parts.scattering.psd</a> &raquo;</li>
+        
+      <li>The Milbrandt-Yau (2005) PSD</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.scattering.psd.my05.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.scattering.psd.my05"></span><div class="section" id="the-milbrandt-yau-2005-psd">
+<h1>The Milbrandt-Yau (2005) PSD<a class="headerlink" href="#the-milbrandt-yau-2005-psd" title="Permalink to this headline">¶</a></h1>
+<p>The Milbrandt-Yau (2005) PSD used in the GEM model uses a modified
+gamma distribution of the form:</p>
+<div class="math notranslate nohighlight">
+\[N(D_{max}) = N_0 D_{max}^\nu \exp(- \lambda D_{max} ^ \mu)\]</div>
+<p>In this two-moment scheme, the number density <span class="math notranslate nohighlight">\(\rho_n\)</span> and mass
+density <span class="math notranslate nohighlight">\(\rho_m\)</span>  are used as predictive moments. They can be related
+to the <span class="math notranslate nohighlight">\(N_0\)</span> and <span class="math notranslate nohighlight">\(\lambda\)</span> parameters of the PSD using</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\rho_n = \frac{N_0}{\mu} \lambda^{\frac{\nu}{\mu}}
+         \Gamma (\frac{\nu + 1}{\mu})\\\rho_m = a\frac{N_0}{\mu} \lambda^{\frac{\nu + b}{\mu}}
+         \Gamma ( \frac{\nu + 1 + b}{\mu} ),\end{aligned}\end{align} \]</div>
+<p>where <span class="math notranslate nohighlight">\(a, b\)</span> are the parameters of the mass-size relationship</p>
+<div class="math notranslate nohighlight">
+\[M(D) = a \cdot D_{max}^b.\]</div>
+<dl class="class">
+<dt id="parts.scattering.psd.my05.MY05">
+<em class="property">class </em><code class="descclassname">parts.scattering.psd.my05.</code><code class="descname">MY05</code><span class="sig-paren">(</span><em>nu</em>, <em>mu</em>, <em>a</em>, <em>b</em>, <em>hydrometeor_type=None</em>, <em>number_density=None</em>, <em>mass_density=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/my05.html#MY05"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.my05.MY05" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.scattering.psd.arts.arts_psd.html#parts.scattering.psd.arts.arts_psd.ArtsPSD" title="parts.scattering.psd.arts.arts_psd.ArtsPSD"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.psd.arts.arts_psd.ArtsPSD</span></code></a></p>
+<p>The <a class="reference internal" href="#parts.scattering.psd.my05.MY05" title="parts.scattering.psd.my05.MY05"><code class="xref py py-class docutils literal notranslate"><span class="pre">MY05</span></code></a> class describes the size distributions of particles
+in an atmosphere using the number density <span class="math notranslate nohighlight">\(\rho_n\)</span> and mass
+density <span class="math notranslate nohighlight">\(\rho_m\)</span> as predictive moments.</p>
+<p>The <span class="math notranslate nohighlight">\(\nu\)</span> and <span class="math notranslate nohighlight">\(\mu\)</span> parameters take on fixed values depending
+on the hydrometeor type.</p>
+<dl class="method">
+<dt id="parts.scattering.psd.my05.MY05.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/my05.html#MY05.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.my05.MY05.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a numeric representation of the PSD data.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>x(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Array containing the values of the size
+parameter at which to evaluate the PSD.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><code class="code docutils literal notranslate"><span class="pre">PSDData</span></code> object containing the numeric PSD data corresponding
+to this PSD.</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="parts.scattering.psd.my05.MY05.from_psd_data">
+<em class="property">classmethod </em><code class="descname">from_psd_data</code><span class="sig-paren">(</span><em>psd</em>, <em>nu</em>, <em>mu</em>, <em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/my05.html#MY05.from_psd_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.my05.MY05.from_psd_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a MY05 PSD from given psd data.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>psd(PSDData or other PSD): PSD data from which to create the MY05
+representation.</p>
+<p>nu(<code class="code docutils literal notranslate"><span class="pre">float</span></code>): <span class="math notranslate nohighlight">\(\nu\)</span> parameter of MY05 PSD</p>
+<p>mu(<code class="code docutils literal notranslate"><span class="pre">float</span></code>): <span class="math notranslate nohighlight">\(\mu\)</span> parameter of MY05 PSD</p>
+<p>a(<code class="code docutils literal notranslate"><span class="pre">float</span></code>): <span class="math notranslate nohighlight">\(a\)</span> coefficient of the mass-size relationship</p>
+<p>b(<code class="code docutils literal notranslate"><span class="pre">float</span></code>): <span class="math notranslate nohighlight">\(b\)</span> coefficient of the mass-size relationship</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.my05.MY05.get_mass_density">
+<code class="descname">get_mass_density</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/my05.html#MY05.get_mass_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.my05.MY05.get_mass_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns:</p>
+<blockquote>
+<div>The <code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> containing the mass density data of
+the PSD.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.scattering.psd.my05.MY05.get_moment">
+<code class="descname">get_moment</code><span class="sig-paren">(</span><em>p</em>, <em>reference_size_parameter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/psd/my05.html#MY05.get_moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.psd.my05.MY05.get_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analytically computes the <span class="math notranslate nohighlight">\(p\)</span> th moment <a href="#id1"><span class="problematic" id="id2">:maht:`M(p)`</span></a> of the PSD
+using</p>
+<div class="math notranslate nohighlight">
+\[M(p) = \frac{N_0}{\mu} \lambda ^{-\frac{\nu + p + 1}{\mu}}
+       \Gamma ( \frac{\nu + p + 1}{\mu})\]</div>
+<p>Parameters:</p>
+<blockquote>
+<div>p(<code class="code docutils literal notranslate"><span class="pre">float</span></code>): Which moment of the distribution to compute.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><p><code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> containing the <span class="math notranslate nohighlight">\(p\)</span> th moment for
+all volume elements described by the PSD.</p>
+<p>reference_size_parameter(:class: <cite>SizeParameter</cite>): Size parameter
+with respect to which the moment should be computed.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.my05.MY05.moment_names">
+<code class="descname">moment_names</code><a class="headerlink" href="#parts.scattering.psd.my05.MY05.moment_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>The names of the predictive moments of the PSD.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.scattering.psd.my05.MY05.pnd_call_agenda">
+<code class="descname">pnd_call_agenda</code><a class="headerlink" href="#parts.scattering.psd.my05.MY05.pnd_call_agenda" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ARTS WSM implementing the MY05 PSD.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.scattering.scattering_species.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parts.scattering.psd.modified_gamma.html" class="btn btn-neutral" title="The modified gamma distribution PSD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="parts.jacobian" href="parts.jacobian.html" />
+    <link rel="prev" title="parts.arts_object" href="parts.arts_object.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="parts.html">parts</a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.dimensions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.dimensions"></span><p>Dimensions</p>
+<p>The Dimensions class keeps track of the different dimensions in
+an ARTS atmosphere. The purpose of this class is to allow the inferral
+of dimensions from the provided data, but at the same time to be able
+to identify inconsistencies.</p>
+<p>Attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>p(Dimension): Dimension object representing the size of the</dt>
+<dd>ARTS pressure grid</dd>
+<dt>lat(Dimension) Dimension object representing the size of the</dt>
+<dd>latitude grid</dd>
+<dt>lon(Dimension) Dimension object representing the size of the</dt>
+<dd>longitude grid</dd>
+<dt>joker(Joker) Dimension object representing a dimensions that</dt>
+<dd>can take an arbitrary value.</dd>
+</dl>
+</div></blockquote>
+<dl class="class">
+<dt id="parts.dimensions.Dimension">
+<em class="property">class </em><code class="descclassname">parts.dimensions.</code><code class="descname">Dimension</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Dimensions of data arrays in ARTS.</p>
+<p>The required dimensions of most array data used in an ARTS
+simulation are fixed by the dimensions of the atmosphere.
+The Dimension class provides a symbolic representation of
+these dimensions in an ARTS simulation, so that these can
+be inferred and checked for consistency.</p>
+<p>Dimension objects are used to define the dimensions of
+ARTS data and keep track of the different values inferred
+from user-provided data.</p>
+<dl class="method">
+<dt id="parts.dimensions.Dimension.add_deduction">
+<code class="descname">add_deduction</code><span class="sig-paren">(</span><em>ws</em>, <em>value</em>, <em>who</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Dimension.add_deduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Dimension.add_deduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a value of a dimension becomes apparent from data it
+should be signaled to the <code class="code docutils literal notranslate"><span class="pre">Dimension</span></code> object. The
+dimension object keeps track of these “deductions” for
+each workspace separately.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(typhon.arts.workspace.Workspace): Workspace object</dt>
+<dd>for which the dimension was deduced.</dd>
+</dl>
+<p>value(Int): The deduced dimenions</p>
+<dl class="docutils">
+<dt>who(str): The name of the variable from which this</dt>
+<dd>value was deduced.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.dimensions.Dimension.check">
+<code class="descname">check</code><span class="sig-paren">(</span><em>ws</em>, <em>n</em>, <em>who</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Dimension.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Dimension.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check given value for consistency.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(typhon.arts.workspace.Workspace): The workspace for which</dt>
+<dd>to check the deduction.</dd>
+</dl>
+<p>n(int): The value which to check against previous deduced values.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>True if this is the first deduction or is previous deuctions agree
+with the current value. False otherwise.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.dimensions.Dimension.get_value">
+<code class="descname">get_value</code><span class="sig-paren">(</span><em>ws</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Dimension.get_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Dimension.get_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the deduced value of the dimension.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(typhon.arts.workspace.Workspace) The workspace object for</dt>
+<dd>which the value of the dimension should be deduced.</dd>
+</dl>
+</div></blockquote>
+<p>Raises:</p>
+<blockquote>
+<div>Exception: If no or inconsistent values have been deduced.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.dimensions.Joker">
+<em class="property">class </em><code class="descclassname">parts.dimensions.</code><code class="descname">Joker</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Joker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Joker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.dimensions.Dimension" title="parts.dimensions.Dimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.dimensions.Dimension</span></code></a></p>
+<p>A dimension that can take an arbitrary value.</p>
+<dl class="method">
+<dt id="parts.dimensions.Joker.add_deduction">
+<code class="descname">add_deduction</code><span class="sig-paren">(</span><em>ws</em>, <em>value</em>, <em>who</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Joker.add_deduction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Joker.add_deduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.dimensions.Joker.check">
+<code class="descname">check</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Joker.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Joker.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.dimensions.Joker.get_value">
+<code class="descname">get_value</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dimensions.html#Joker.get_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dimensions.Joker.get_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises an exception because it doesn’t make sense to try
+an get a value from a joker dimension.</p>
+<p>Raises:</p>
+<blockquote>
+<div>Exception: If no or inconsistent values have been deduced.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.jacobian.html" class="btn btn-neutral float-right" title="parts.jacobian" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parts.arts_object.html" class="btn btn-neutral" title="parts.arts_object" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

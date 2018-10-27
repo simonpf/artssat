@@ -1,0 +1,20 @@
+parts.atmosphere
+================
+
+.. automodule:: parts.atmosphere
+    :members:
+    :show-inheritance:
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 1
+
+   parts.atmosphere.absorption
+   parts.atmosphere.surface
+
+   parts.atmosphere.atmosphere
+   parts.atmosphere.atmospheric_quantity
+   parts.atmosphere.cloud_box
+

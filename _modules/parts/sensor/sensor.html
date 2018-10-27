@@ -1,0 +1,1012 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.sensor.sensor &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../generated/parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>parts.sensor.sensor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for parts.sensor.sensor</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; ARTS Sensors</span>
+
+<span class="sd">Class hierarchy that represents the different types of sensors</span>
+<span class="sd">in ARTS. The purpose of this hierarchy is to encapsulate all</span>
+<span class="sd">required settings and configurations related to the sensor</span>
+<span class="sd">in an ARTS simulation.</span>
+
+<span class="sd">An ARTS simulation contains one or more sensors. The interaction</span>
+<span class="sd">between ARTS simulation and sensor object is structured as follows:</span>
+
+<span class="sd">1. Setup: During the setup phase the ARTS simulation calls the</span>
+<span class="sd">   setup method of each sensor object. During this call the sensor</span>
+<span class="sd">   is expected to setup all necessary workspace variables on</span>
+<span class="sd">   the provided workspace and perform all necessary preparatory</span>
+<span class="sd">   calculations, such as calculating absorption and scattering</span>
+<span class="sd">   data.</span>
+
+<span class="sd">2. Run: During the run phase, the simulation calls the get_data(...)</span>
+<span class="sd">   method of the sensor during which the sensor is supposed to</span>
+<span class="sd">   request all necessary data, that hasn&#39;t been set in advance.</span>
+
+<span class="sd">In addition to that, the simulation needs to know which WSMs</span>
+<span class="sd">to call to compute the measurement vector. To this end, each</span>
+<span class="sd">sensor needs to provide the following factory methods:</span>
+
+<span class="sd">1. make_preparation_function: This function should generate</span>
+<span class="sd">   a function that runs all necessary preparations on a</span>
+<span class="sd">   provided workspace. Currently, this requires setting</span>
+<span class="sd">   only the stokes dimension (because of an inconsistency in ARTS).</span>
+
+<span class="sd">2. make_y_calc_function: This function should generate a</span>
+<span class="sd">   functions that runs the necessary workspace methods</span>
+<span class="sd">   to simulate the measurements on a given workspace.</span>
+
+<span class="sd">Both of these factory methods must produce functions that</span>
+<span class="sd">can be converted into an ARTS agenda, so that they can be</span>
+<span class="sd">used also within the inversion iterate agenda for retrievals.</span>
+
+<span class="sd">In general, sensors should store important within their own,</span>
+<span class="sd">anonymous workspace variables, which should then just be</span>
+<span class="sd">used to replace the input WSV in all sensor-related WSM</span>
+<span class="sd">calls. Due to the inconsistency metioned abover, however, this</span>
+<span class="sd">principle does not work for the stokes dimension as it is</span>
+<span class="sd">not consistently passed to the surface agenda.</span>
+
+<span class="sd">Attributes:</span>
+
+<span class="sd">    wsm(dict): Alias for the :code:&#39;workspace_methods&#39; dictionary</span>
+<span class="sd">               from &#39;typhon.arts.workspace.methods&#39;</span>
+<span class="sd">    wsv(dict): Alias for the :code:`workspace_variables` dictionary</span>
+<span class="sd">               from :code:`typhon.arts.workspace.variables`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">parts.arts_object</span> <span class="k">import</span> <span class="n">ArtsObject</span><span class="p">,</span> <span class="n">arts_property</span>
+<span class="kn">from</span> <span class="nn">parts.arts_object</span> <span class="k">import</span> <span class="n">Dimension</span> <span class="k">as</span> <span class="n">dim</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.types</span> <span class="k">import</span> <span class="n">SingleScatteringData</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace</span> <span class="k">import</span> <span class="n">Workspace</span><span class="p">,</span> <span class="n">arts_agenda</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace.methods</span> <span class="k">import</span> <span class="n">workspace_methods</span>
+<span class="kn">from</span> <span class="nn">typhon.arts.workspace.variables</span> <span class="k">import</span> <span class="n">WorkspaceVariable</span><span class="p">,</span> \
+                                            <span class="n">workspace_variables</span>
+
+<span class="n">wsv</span> <span class="o">=</span> <span class="n">workspace_variables</span>
+<span class="n">wsm</span> <span class="o">=</span> <span class="n">workspace_methods</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1">### Abstract sensor class</span>
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor">[docs]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">(</span><span class="n">ArtsObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines an interface and implementes common functionality for</span>
+<span class="sd">    classes representing ARTS sensors.</span>
+
+<span class="sd">    Declares ARTS properties common to all types of sensors handled</span>
+<span class="sd">    by ARTS.</span>
+
+<span class="sd">    Arts Attributes:</span>
+
+<span class="sd">        properties: The ARTS properties that hold the data common to</span>
+<span class="sd">            all sensors in ARTS.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">private_wsvs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;f_grid&quot;</span><span class="p">,</span> <span class="s2">&quot;scat_data&quot;</span><span class="p">,</span> <span class="s2">&quot;scat_data_checked&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;iy_unit&quot;</span><span class="p">,</span> <span class="s2">&quot;iy_aux_vars&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_los&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_pos&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sensor_time&quot;</span><span class="p">,</span> <span class="s2">&quot;mblock_dlos_grid&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_response&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;antenna_dim&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_norm&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_response&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sensor_response_f&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_response_f_grid&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sensor_response_dlos&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_response_dlos_grid&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;sensor_response_pol&quot;</span><span class="p">,</span> <span class="s2">&quot;sensor_response_pol_grid&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;iy_main_agenda&quot;</span><span class="p">]</span>
+
+
+    <span class="c1">############################################################################</span>
+    <span class="c1"># ARTS properties</span>
+    <span class="c1">############################################################################</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Frq</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;f_grid&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The frequency grid of the sensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;String&quot;</span><span class="p">,</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;iy_unit&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">iy_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The unit which to use for the measurement vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;1&quot;</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;ArrayOfString&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;iy_aux_vars&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">iy_aux_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Which auxilliary variables to compute dunring the simulation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Integer&quot;</span><span class="p">,</span> <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;stokes_dim&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">stokes_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Which stokes dimensions to use for the simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Obs</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Atm</span><span class="p">),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_pos&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For which sensor positions ot perform the simulations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Atm</span><span class="p">),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;transmitter_pos&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">transmitter_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Positions of the transmitter for radio link calculations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Obs</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Los</span><span class="p">),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_los&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_line_of_sight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Line of sight for each sensor position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Obs</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Los</span><span class="p">),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;mblock_dlos_grid&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_line_of_sight_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Line of sight offsets for each measurment block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_line_of_sight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The sensor response matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_f&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_f</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The frequencies associated with the rows of the sensor response matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;ArrayOfIndex&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_pol&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_pol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The polarization states associated with the rows of the sensor reponse</span>
+<span class="sd">        matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_dlos&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_dlos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The line-of-sight offsets associates with the rows of the sensor</span>
+<span class="sd">        response matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_f_grid&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The frequency grid associated with sensor response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;ArrayOfInteger&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_pol_grid&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_pol_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The polarization states associated with sensor response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_dlos_grid&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_response_dlos_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The LOS offsets associated with sensor response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_time&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The times associated with each measurment block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor_position</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">,</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_norm&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">sensor_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Flag whether or not to normalize the sensor response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">,</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;antenna_dim&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">antenna_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The dimensionality of the antenna pattern.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="c1">############################################################################</span>
+    <span class="c1"># Class methods</span>
+    <span class="c1">############################################################################</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a sensor with given frequency grid :code:`f_grid` and</span>
+<span class="sd">        stokes dimension :code: `stokes_dimension`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">f_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f_grid</span> <span class="o">=</span> <span class="n">f_grid</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Abstract properties and methods</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="Sensor.make_iy_main_agenda"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor.make_iy_main_agenda">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">make_iy_main_agenda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Property that takes the role of a factory function that creates</span>
+<span class="sd">        the :code:`iy_main_agenda` for the given sensor. This will</span>
+<span class="sd">        depend on the sensor type and its specific settings, so</span>
+<span class="sd">        must be implemented by the inhereting classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Sensor.make_preparation_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor.make_preparation_function">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">make_preparation_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">append</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factory method for a preparation function :code:`f(ws)` which</span>
+<span class="sd">        sets all workspace variables that are required before simulating</span>
+<span class="sd">        a measurement on a given workspace :code:`ws`.</span>
+
+<span class="sd">        The separation into a preparation function and a :code:`y_calc`</span>
+<span class="sd">        function is currently necessary as the scattering solver can</span>
+<span class="sd">        be chosen independently from the sensor, so the simulation object</span>
+<span class="sd">        must be able to run the scattering solver between the sensor</span>
+<span class="sd">        preparations and running :code:`y_calc`.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            append(bool): Whether the call should use :code:`yCalcAppend`</span>
+<span class="sd">                or not. Active sensors will probably have to throw an</span>
+<span class="sd">                exception here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Sensor.make_y_calc_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor.make_y_calc_function">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">make_y_calc_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">append</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                             <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factory method that should create a function :code:`f` that runs</span>
+<span class="sd">        the actual radiative transfer on a provided workspace.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            append(bool): Whether the call should use :code:`yCalcAppend`</span>
+<span class="sd">                or not. Active sensors will probably have to throw an</span>
+<span class="sd">                exception here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1"># Special setters</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@stokes_dimension</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">stokes_dimension_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specialized setter that overwrites the default from the</span>
+<span class="sd">        :code:`ArtsObject` base class. Makes sure that the stokes</span>
+<span class="sd">        dimension is 1,2 or 4.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            n(int): The new stokes dimension</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">            Exception if the new value for the stokes dimension is</span>
+<span class="sd">            not 1, 2 or 4.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Stokes dimension must be 1, 2 or 4.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stokes_dimension</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stokes_dimension</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># General sensor setup</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="Sensor.setup"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">scattering</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        General setup for an ARTS sensor.</span>
+
+<span class="sd">        This method performs the following steps to setup the sensor:</span>
+
+<span class="sd">        - Copy the `iy_main_agenda` of the sensor into a private workspace</span>
+<span class="sd">          variable in the workspace</span>
+<span class="sd">        - Copy the `f_grid` into a private workspace variable</span>
+<span class="sd">        - Compute and check `scat_data` and copy results into private</span>
+<span class="sd">          workspace variables.</span>
+<span class="sd">        - Copy `iy_aux_vars` and `iy_unit` to the workspace and store</span>
+<span class="sd">          in prive workspace variables.</span>
+
+<span class="sd">        Paremters:</span>
+
+<span class="sd">            ws(typhon.arts.workspace.Workspace): The workspace on which</span>
+<span class="sd">                to perform the setup of the sensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_private_wsvs</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">private_wsvs</span><span class="p">)</span>
+        <span class="n">wsvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_arts_properties</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># Scat data</span>
+        <span class="c1">#</span>
+        <span class="k">if</span> <span class="n">ws</span><span class="o">.</span><span class="n">scat_data_raw</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">scat_dataCalc</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">scat_data_raw</span><span class="p">,</span> <span class="n">wsvs</span><span class="p">[</span><span class="s2">&quot;f_grid&quot;</span><span class="p">],</span> <span class="n">interp_order</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">wsvs</span><span class="p">[</span><span class="s2">&quot;scat_data&quot;</span><span class="p">],</span> <span class="n">ws</span><span class="o">.</span><span class="n">scat_data</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;scat_data_checkedCalc&quot;</span><span class="p">])</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">scat_data_checkedCalc</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">wsvs</span><span class="p">[</span><span class="s2">&quot;scat_data_checked&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">scat_data_checked</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># Need to add agendas in the end so that input arguments</span>
+        <span class="c1"># can be replaced by private sensor variables.</span>
+        <span class="c1">#</span>
+        <span class="n">wsvs</span><span class="p">[</span><span class="s2">&quot;iy_main_agenda&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_iy_main_agenda</span><span class="p">(</span><span class="n">scattering</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Sensor.get_data"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.Sensor.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get required data from data provided.</span>
+
+<span class="sd">        This function obtains required data from the data provider</span>
+<span class="sd">        if it has not been fixed in advance. The data expected</span>
+<span class="sd">        from the data provider are the following:</span>
+
+<span class="sd">        - the line of sight data by calling the :code:`get_line_of_sight`</span>
+<span class="sd">          method of the provided data provider.</span>
+<span class="sd">        - the sensor position data by calling the :code: `get_sensor_pos`</span>
+<span class="sd">          method of the provided data provider.</span>
+<span class="sd">        - the pencil beam offsets by calling the :code:</span>
+<span class="sd">          `get_line_of_sight_offsets`</span>
+
+<span class="sd">        This function also checks the sensor data by calling</span>
+<span class="sd">        :code:`sensor_checkedCalc` and stores the result in a private</span>
+<span class="sd">        WSV.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_data_arts_properties</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_wsm</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;sensor_responseInit&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_wsm</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;sensor_checkedCalc&quot;</span><span class="p">])</span></div></div>
+
+
+
+<span class="c1">################################################################################</span>
+<span class="c1">### Active sensor class</span>
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="ActiveSensor"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ActiveSensor">[docs]</a><span class="k">class</span> <span class="nc">ActiveSensor</span><span class="p">(</span><span class="n">Sensor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specialization of the abstract :code:`Sensor` class that implements</span>
+<span class="sd">    active sensors (Radar).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="n">Workspace</span><span class="p">()</span>
+    <span class="n">extinction_scaling</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">create_variable</span><span class="p">(</span><span class="s2">&quot;Numeric&quot;</span><span class="p">,</span> <span class="s2">&quot;extinction_scaling&quot;</span><span class="p">)</span>
+    <span class="n">private_wsvs</span> <span class="o">=</span> <span class="n">Sensor</span><span class="o">.</span><span class="n">private_wsvs</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;range_bins&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;instrument_pol_array&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;instrument_pol&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;iy_transmitter_agenda&quot;</span><span class="p">,</span>
+                                          <span class="s2">&quot;extinction_scaling&quot;</span><span class="p">]</span>
+
+    <span class="c1">############################################################################</span>
+    <span class="c1"># ARTS properties</span>
+    <span class="c1">############################################################################</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Numeric&quot;</span><span class="p">,</span> <span class="n">wsv</span> <span class="o">=</span> <span class="s2">&quot;extinction_scaling&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">extinction_scaling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.0</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Numeric&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">y_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mf">35.0</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span> <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;range_bins&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">range_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;ArrayOfIndex&quot;</span><span class="p">,</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;instrument_pol&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">instrument_pol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;ArrayOfArrayOfIndex&quot;</span><span class="p">,</span>
+                   <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;instrument_pol_array&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">instrument_pol_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span><span class="p">,</span> <span class="n">range_bins</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iy_unit</span> <span class="o">=</span> <span class="s2">&quot;dBZe&quot;</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Agendas</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">iy_transmitter_agenda</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The :code:`iy_transmitter_agenda` which is required for active</span>
+<span class="sd">        sensors. Input arguments of :code:`iy_transmitter_agenda` are</span>
+<span class="sd">        replaced by the private workspace variables of the sensor.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            The iy_transmitter_agenda for the active sensor.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;iy_transmitterSinglePol&quot;</span><span class="p">])</span>
+        <span class="nd">@arts_agenda</span>
+        <span class="k">def</span> <span class="nf">iy_transmitter_agenda</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">rtp_pos</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">rtp_los</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">f_grid</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">iy_transmitterSinglePol</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">iy_transmitter_agenda</span>
+
+<div class="viewcode-block" id="ActiveSensor.make_iy_main_agenda"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ActiveSensor.make_iy_main_agenda">[docs]</a>    <span class="k">def</span> <span class="nf">make_iy_main_agenda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The :code: `iy_main_agenda` for active sensor. Currently uses</span>
+<span class="sd">        the single scattering radar module, but might be extended</span>
+<span class="sd">        at some point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;iyActiveSingleScat&quot;</span><span class="p">])</span>
+
+        <span class="nd">@arts_agenda</span>
+        <span class="k">def</span> <span class="nf">iy_main_agenda</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_id</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">nlte_field</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">rte_pos2</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_unit</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_aux_vars</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">FlagOff</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">ppathCalc</span><span class="p">()</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">FlagOn</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">iyActiveSingleScat</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                                  <span class="n">pext_scaling</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="s2">&quot;extinction_scaling&quot;</span><span class="p">],</span>
+                                  <span class="n">trans_in_jacobian</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">iy_main_agenda</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1"># Specialized setters</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">iy_unit_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;Ze&quot;</span><span class="p">,</span> <span class="s2">&quot;dBZe&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of iy_unit for an active sensor must&quot;</span>
+                            <span class="s2">&quot; be one of [&#39;1&#39;, &#39;Ze&#39;, &#39;dBZe&#39;]&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_unit</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">u</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_unit</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">iy_aux_vars_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Radiative background&quot;</span><span class="p">,</span> <span class="s2">&quot;Backsacttering&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;Optical depth&quot;</span><span class="p">,</span> <span class="s2">&quot;Particle extinction&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of iy_aux_vars for an active sensor must&quot;</span>
+                            <span class="s2">&quot; be a list consisting of the following strings: &quot;</span>
+                            <span class="s2">&quot;[&#39;RadiativeBackground&#39;, &#39;Backscattering&#39;, &quot;</span>
+                            <span class="s2">&quot;&#39;Optical depth&#39;, Particle extinction&#39;].&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_aux_vars</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_aux_vars</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Preparation and y_calc factories.</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="ActiveSensor.make_preparation_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ActiveSensor.make_preparation_function">[docs]</a>    <span class="k">def</span> <span class="nf">make_preparation_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the workspace preparation function, which prepares</span>
+<span class="sd">        a workspace for simulating the signal recorded by the sensor.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            The function to prepare the workspace.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">preparations</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">IndexSet</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">stokes_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span><span class="p">)</span>
+            <span class="c1">#ws.Copy(ws.iy_transmitter_agenda,</span>
+            <span class="c1">#        self._wsvs[&quot;iy_transmitter_agenda&quot;])</span>
+            <span class="c1">#ws.Copy(ws.iy_main_agenda,</span>
+            <span class="c1">#        self._wsvs[&quot;_iy_main_agenda&quot;])</span>
+            <span class="c1">#ws.Copy(ws.instrument_pol, self._wsvs[&quot;instrument_pol&quot;])</span>
+            <span class="c1">#ws.IndexSet(self._wsvs[&quot;_stokes_dim&quot;], self.stokes_dimension)</span>
+            <span class="c1">#ws.IndexSet(ws.stokes_dim, self.stokes_dimension)</span>
+
+        <span class="k">return</span> <span class="n">preparations</span></div>
+
+<div class="viewcode-block" id="ActiveSensor.make_y_calc_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ActiveSensor.make_y_calc_function">[docs]</a>    <span class="k">def</span> <span class="nf">make_y_calc_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">append</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                             <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns y_calc function, which computes the radar signal</span>
+<span class="sd">        on an accordingly prepared workspace. This function can</span>
+<span class="sd">        be converted into an ARTS agenda and thus included in</span>
+<span class="sd">        the other agendas using the INCLUDE statement.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            The function to compute the radar signal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;ARTS doesn&#39;t support appending measurements from&quot;</span>
+                            <span class="s2">&quot; active sensors.&quot;</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;yActive&quot;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_min</span><span class="p">:</span>
+            <span class="n">y_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_min</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y_min</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="k">def</span> <span class="nf">y_calc</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">yActive</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dbze_min</span> <span class="o">=</span> <span class="n">y_min</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y_calc</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1"># Setup</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="ActiveSensor.setup"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ActiveSensor.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">scattering</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">scattering</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="s2">&quot;iy_transmitter_agenda&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iy_transmitter_agenda</span></div></div>
+
+<div class="viewcode-block" id="PassiveSensor"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor">[docs]</a><span class="k">class</span> <span class="nc">PassiveSensor</span><span class="p">(</span><span class="n">Sensor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Specialization of the abstract Sensor class for passive sensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Paramters:</span>
+<span class="sd">            f_grid(numpy.ndarray) The frequency grid of the sensor.</span>
+<span class="sd">            stokes_dimension(int) The stokes dimensions to use for simulating</span>
+<span class="sd">                the sensor measurement. Must be one of [1, 2, 4].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iy_unit</span> <span class="o">=</span> <span class="s2">&quot;PlanckBT&quot;</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Agendas</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="PassiveSensor.make_iy_main_agenda"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor.make_iy_main_agenda">[docs]</a>    <span class="k">def</span> <span class="nf">make_iy_main_agenda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factory property that returns the :code:`iy_main_agenda` that has to be used</span>
+<span class="sd">        for passive sensors.</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            The ARTS :code:`iy_main_agenda`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">iy_main_agenda_scattering</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_id</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">nlte_field</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">rte_pos2</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_unit</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_aux_vars</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">FlagOff</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">ppathCalc</span><span class="p">()</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">FlagOn</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">iyHybrid</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">iy_main_agenda_no_scattering</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_id</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">nlte_field</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">rte_pos2</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_unit</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_aux_vars</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">ppathCalc</span><span class="p">()</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">iyEmissionStandard</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scattering</span><span class="p">:</span>
+            <span class="n">agenda</span> <span class="o">=</span> <span class="n">iy_main_agenda_scattering</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;iyHybrid&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">agenda</span> <span class="o">=</span> <span class="n">iy_main_agenda_no_scattering</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;iyEmissionStandard&quot;</span><span class="p">])</span>
+
+        <span class="n">agenda</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="s2">&quot;iy_main_agenda&quot;</span>
+
+        <span class="k">return</span> <span class="n">arts_agenda</span><span class="p">(</span><span class="n">agenda</span><span class="p">)</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1"># Customized setter</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="PassiveSensor.iy_unit_setter"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor.iy_unit_setter">[docs]</a>    <span class="k">def</span> <span class="nf">iy_unit_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom setter for :code:`iy_unit` for passive sensors. Checks</span>
+<span class="sd">        that the argument :code:`u` has a valid value for passive simulations.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            u(str): The :code:`iy_unit` to use for passive simulations. Must</span>
+<span class="sd">                be one of :code:`[&quot;1&quot;, &quot;RJBT&quot;, &quot;PlackBT&quot;, &quot;W(m^2 m sr)&quot;,</span>
+<span class="sd">                &quot;W/(m^2 m-1 sr)&quot;]`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;RJBT&quot;</span><span class="p">,</span> <span class="s2">&quot;PlanckBT&quot;</span><span class="p">,</span> <span class="s2">&quot;W/(m^2 m sr)&quot;</span><span class="p">,</span> <span class="s2">&quot;W/(m^2 m-1 sr)&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of iy_unit for an active sensor must&quot;</span>
+                            <span class="s2">&quot; be one of </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">valid</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_unit</span> <span class="o">=</span> <span class="n">u</span></div>
+
+<div class="viewcode-block" id="PassiveSensor.iy_aux_vars_setter"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor.iy_aux_vars_setter">[docs]</a>    <span class="k">def</span> <span class="nf">iy_aux_vars_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom setter for :code:`iy_aux_vars` for passive sensors. Checks</span>
+<span class="sd">        that the argument :code:`v` has a valid value for passive simulations.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            u(str): The :code:`iy_aux_vars` to use for passive simulations. Must</span>
+<span class="sd">                be a list containing any of :code:`[&quot;Radiative background&quot;,</span>
+<span class="sd">                &quot;Optical depth]`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Radiative background&quot;</span><span class="p">,</span> <span class="s2">&quot;Optical depth&quot;</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of iy_aux_vars for an active sensor must&quot;</span>
+                            <span class="s2">&quot; be a list consisting of the following strings: &quot;</span>
+                            <span class="s2">&quot;[&#39;RadiativeBackground&#39;, &#39;Optical depth&#39;].&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iy_aux_vars</span> <span class="o">=</span> <span class="n">v</span></div>
+
+    <span class="c1">#</span>
+    <span class="c1"># Preparation and y_calc factory methods</span>
+    <span class="c1">#</span>
+
+<div class="viewcode-block" id="PassiveSensor.make_preparation_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor.make_preparation_function">[docs]</a>    <span class="k">def</span> <span class="nf">make_preparation_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the workspace preparation function, which prepares</span>
+<span class="sd">        a workspace for simulating the signal recorded by the sensor.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            The function to prepare the workspace.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">preparations</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">IndexSet</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">stokes_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">preparations</span></div>
+
+<div class="viewcode-block" id="PassiveSensor.make_y_calc_function"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.PassiveSensor.make_y_calc_function">[docs]</a>    <span class="k">def</span> <span class="nf">make_y_calc_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">append</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                             <span class="n">scattering</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Factory function that produces a function that simulates a passive</span>
+<span class="sd">        measurement with the given sensor on an accordingly prepared workspace.</span>
+
+<span class="sd">        If :code:`append` is :code:`False` the returned function will use</span>
+<span class="sd">        the :code:`yCalc` WSV to simulate the measurement. Otherwise</span>
+<span class="sd">        :code:`yCalcAppend` will be used.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            append(bool): If :code:`True` the produced function will use</span>
+<span class="sd">                `yCalcAppend` to calculate the measured signal.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;yCalcAppend&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wsm_args</span><span class="p">(</span><span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;yCalc&quot;</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">y_calc_append</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">yCalcAppend</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                           <span class="n">jacobian_quantities_copy</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">jacobian_quantities</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">y_calc</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">yCalc</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">append</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">y_calc_append</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">y_calc</span>
+
+        <span class="k">return</span> <span class="n">f</span></div></div>
+
+
+<div class="viewcode-block" id="ICI"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.ICI">[docs]</a><span class="k">class</span> <span class="nc">ICI</span><span class="p">(</span><span class="n">PassiveSensor</span><span class="p">):</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.749100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">1.799100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">1.813100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">1.853100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">1.867100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">1.917100000000000e+11</span><span class="p">,</span>
+                         <span class="mf">2.407000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">2.457000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.156500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.216500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.236500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.266500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.286500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">3.346500000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.408000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.450000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.466000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.494000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.510000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">4.552000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">6.598000000000000e+11</span><span class="p">,</span>
+                         <span class="mf">6.682000000000000e+11</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ici&quot;</span><span class="p">,</span>
+                 <span class="n">channels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">channels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">ICI</span><span class="o">.</span><span class="n">channels</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">ICI</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">channels</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudSat"><a class="viewcode-back" href="../../../generated/parts.sensor.sensor.html#parts.sensor.sensor.CloudSat">[docs]</a><span class="k">class</span> <span class="nc">CloudSat</span><span class="p">(</span><span class="n">ActiveSensor</span><span class="p">):</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">94.0e9</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;cloud_sat&quot;</span><span class="p">,</span>
+                 <span class="n">range_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">500.0</span><span class="p">,</span> <span class="mf">20e3</span><span class="p">,</span> <span class="mf">500.0</span><span class="p">),</span>
+                 <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+                         <span class="n">f_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">94e9</span><span class="p">]),</span>
+                         <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span><span class="p">,</span>
+                         <span class="n">range_bins</span> <span class="o">=</span> <span class="n">range_bins</span><span class="p">)</span></div>
+
+<span class="n">ici</span> <span class="o">=</span> <span class="n">ICI</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.arts_object &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="parts.dimensions.html" />
+    <link rel="prev" title="parts.sensor" href="parts.sensor.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="parts.html">parts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parts.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">parts.arts_object</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reference">Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="parts.html">parts</a> &raquo;</li>
+        
+      <li>parts.arts_object</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.arts_object.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.arts_object"></span><div class="section" id="parts-arts-object">
+<h1>parts.arts_object<a class="headerlink" href="#parts-arts-object" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">arts_object</span></code> module provides meta-programming functionality
+that aims to simplify unified treatment of relevant ARTS variables.
+The basic idea is to provide so called <em>ARTS properties</em>, which are
+similar in concept to Python properties but extend their functionality to
+simplify handling of variables that should be passed to the ARTS workspace.</p>
+<div class="section" id="concept">
+<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
+<p>From the user perspective, the purpose of ARTS properties is to provide
+a simple interface to set ARTS parameters using attributes of Python
+objects, hiding away boilerplate code related to the management of
+these parameters. From the developer perspective they provide a unified
+way to treat these variables as well as default methods for the
+interaction with the ARTS workspace. The implementation of ARTS properties
+is based on the
+<a class="reference external" href="https://docs.python.org/3.7/howto/descriptor.html">Descriptor</a> protocol.</p>
+<div class="section" id="usecase">
+<h3>Usecase<a class="headerlink" href="#usecase" title="Permalink to this headline">¶</a></h3>
+<p>The typical usage scenario is that a Python class is used to represent
+a conceptual unit grouping together various ARTS functionality and
+variables. An example of this is for example the <code class="xref py py-class docutils literal notranslate"><span class="pre">Sensor</span></code> class.
+In ARTS, the sensor is described through a set of WSVs. ARTS properties
+can then for example be used to expose the <code class="code docutils literal notranslate"><span class="pre">f_grid</span></code> WSV as an
+attributes of the <code class="code docutils literal notranslate"><span class="pre">Sensor</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Sensor</span><span class="p">:</span>
+    <span class="nd">@arts_property</span>
+    <span class="k">def</span> <span class="nf">f_grid</span><span class="p">(</span><span class="n">group</span> <span class="o">=</span> <span class="s2">&quot;Vector&quot;</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dimension</span><span class="o">.</span><span class="n">Frq</span><span class="p">),</span> <span class="n">wsv</span> <span class="o">=</span> <span class="n">f_grid</span><span class="p">):</span>
+         <span class="k">return</span> <span class="kc">None</span> <span class="c1"># No default value</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="user-perspective">
+<h3>User perspective<a class="headerlink" href="#user-perspective" title="Permalink to this headline">¶</a></h3>
+<p>Seen from the user perspective, ARTS properties provide the following
+functionality:</p>
+<ol class="arabic simple">
+<li>Provision of default values</li>
+<li>A unified protocol for the setting of simulation parameters</li>
+</ol>
+<p>ARTS properties can be set using Python assignment syntax, i.e.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sensor</span><span class="o">.</span><span class="n">f_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>or they may be obtained from the <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code> using the
+appropriate get method when a concrete simulation is run. ARTS
+properties impelement the required functionality to provide this
+functionality to the user in an opaque manner.</p>
+</div>
+<div class="section" id="developer-perspective">
+<h3>Developer perspective<a class="headerlink" href="#developer-perspective" title="Permalink to this headline">¶</a></h3>
+<p>For the developer, the purpose of ARTS properties is to provide
+meta-programming functionality to simplify the handling of ARTS-related
+variables. It provides default methods for the setting of ARTS properties
+as well as default <code class="code docutils literal notranslate"><span class="pre">setup</span></code> and <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> methods.</p>
+<p>Additionally, the <code class="code docutils literal notranslate"><span class="pre">arts_object</span></code> provides functionality for
+the propagation of dimension information throughout <code class="code docutils literal notranslate"><span class="pre">parts</span></code>. This
+is important to enable testing consistency of user-provided data.</p>
+</div>
+</div>
+<div class="section" id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="parts.arts_object.ArtsObject">
+<em class="property">class </em><code class="descclassname">parts.arts_object.</code><code class="descname">ArtsObject</code><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The :ArtsObject: class provides a base class for objects that bundle
+ARTS workspace variables and functionality into a conceptual unit. The
+class provides service functions that automate the handling of ARTS
+properties.</p>
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.call_wsm">
+<code class="descname">call_wsm</code><span class="sig-paren">(</span><em>ws</em>, <em>wsm</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.call_wsm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.call_wsm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call workspace method on the given workspace.</p>
+<p>This method replaces inputs of the workspace variable with the private
+WSMs of the object. After execution of the method the results are
+copied to the private WSMs of the object.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>ws(typhon.arts.workspace.Workspace): The workspace on which to
+execute the method.</p>
+<p>wsm(typhon.arts.workspace.WorkspaceMethod): The workspace method
+to execute.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.get_data_arts_properties">
+<code class="descname">get_data_arts_properties</code><span class="sig-paren">(</span><em>ws</em>, <em>data_provider</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.get_data_arts_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.get_data_arts_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> method for all ARTS properties of this
+object.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>ws(typhon.arts.workspace): The workspace for which to setup
+the simulation.</p>
+<p>data_provider(obj): The <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code> providing the
+data for the simulation.</p>
+<p><a href="#id1"><span class="problematic" id="id2">*</span></a>args: Additional parameters to be passed on to the data
+provider.</p>
+<p><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Additional keyword arguments to be passed to the data
+provider.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.get_wsm_args">
+<code class="descname">get_wsm_args</code><span class="sig-paren">(</span><em>wsm</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.get_wsm_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.get_wsm_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of arguments to the given ARTS workspace method
+<code class="code docutils literal notranslate"><span class="pre">wsm</span></code> for which the sensor related input parameters are
+replace by the ones of this sensor. This is done by checking
+whether the input argument name is in the sensors <code class="code docutils literal notranslate"><span class="pre">_wsv</span></code>
+dictionary and if so replacing the argument.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>wsm(typhon.arts.workspace.methods.Workspacemethod): The ARTS</dt>
+<dd>workspace method object for which to generate the input
+argument list.</dd>
+</dl>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The list of input arguments with sensor specific input arguments
+replaced by the corresponding WSVs of the sensor.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.set_wsv">
+<code class="descname">set_wsv</code><span class="sig-paren">(</span><em>ws</em>, <em>wsv</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.set_wsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.set_wsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the given private WSV <code class="code docutils literal notranslate"><span class="pre">wsv</span></code> of the object or if the
+object doesn’t have a private copy of <code class="code docutils literal notranslate"><span class="pre">wsv</span></code> then sets <code class="code docutils literal notranslate"><span class="pre">wsv</span></code>
+on the workspace <code class="code docutils literal notranslate"><span class="pre">ws</span></code>.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>ws(typhon.arts.workspace.Workspace): The workspace in which to set
+the WSV.</p>
+<p>wsv(typhon.arts.workspace.variables.WorkspaceVariable): The
+variable to set.</p>
+<p>value(obj): The value to set the WSV <code class="code docutils literal notranslate"><span class="pre">wsv</span></code> to.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.setup_arts_properties">
+<code class="descname">setup_arts_properties</code><span class="sig-paren">(</span><em>ws</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.setup_arts_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.setup_arts_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the <code class="code docutils literal notranslate"><span class="pre">setup</span></code> method for all ARTS properties of the class.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>ws(typhon.arts.workspace): The workspace for which to setup
+the simulation.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsObject.update_wsv">
+<code class="descname">update_wsv</code><span class="sig-paren">(</span><em>wsv</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsObject.update_wsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsObject.update_wsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the value of a given WSV considering private WSVs of the owner.
+This requires that the variable has already been set to a value during
+so that is contains a reference to the workspace in which it is used.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>wsv(typhon.arts.workspace.variables.WorkspaceVariable): The
+variable to set.</p>
+<p>value(obj): The value to set the WSV <code class="code docutils literal notranslate"><span class="pre">wsv</span></code> to.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.ArtsProperty">
+<em class="property">class </em><code class="descclassname">parts.arts_object.</code><code class="descname">ArtsProperty</code><span class="sig-paren">(</span><em>fdefault</em>, <em>group</em>, <em>shape</em>, <em>wsv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">ArtsProperty</span></code> class that implements the main functionality of
+ARTS properties.</p>
+<p>An ARTS property is an abstract representation of a parameter of an ARTS
+simulation. This parameter can be set to a fixed value by the user during
+the setting up of the simulation. In this case the property is said to
+be <em>fixed</em>. Otherwise, and if no default value for the parameter is set,
+the value will be requested from the data provider.</p>
+<p>The :code: <cite>ArtsProperty</cite> class implements the follwing functionality:</p>
+<blockquote>
+<div><p>1. Provide a default setter, that checks consistency with expected ARTS
+group and shape.</p>
+<p>2. Provide a default setup method that sets the value of the
+corresponding ARTS WSV if the value of the property is set to fixed.</p>
+</div></blockquote>
+<p>The <code class="code docutils literal notranslate"><span class="pre">ArtsProperty</span></code> class is to be used through the :code:
+<cite>arts_property</cite> decorator, which returns a subclass of this class that
+fixes the <code class="code docutils literal notranslate"><span class="pre">group,</span> <span class="pre">shape</span></code> and <code class="code docutils literal notranslate"><span class="pre">wsv</span></code> values of the <code class="code docutils literal notranslate"><span class="pre">__init__</span></code>
+method.</p>
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.check_and_broadcast">
+<code class="descname">check_and_broadcast</code><span class="sig-paren">(</span><em>value</em>, <em>owner</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.check_and_broadcast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.check_and_broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>check the shape of a given variable against a symbolic shape specification.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>value(array or list): the object of which to check the shape.</p>
+<p>who(str): name of the variable of which the shape is checked.</p>
+</div></blockquote>
+<p>Raises:</p>
+<blockquote>
+<div>Exception if the shape of <code class="code docutils literal notranslate"><span class="pre">value</span></code> is inconsitent with the shape
+specification the ARTS property.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.check_and_convert">
+<code class="descname">check_and_convert</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.check_and_convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.check_and_convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks type of <code class="code docutils literal notranslate"><span class="pre">value</span></code> against the group specification of this
+ARTS property contained in <code class="code docutils literal notranslate"><span class="pre">self.group</span></code>.</p>
+<p>The group specification can be a single string in which case this
+function will try to convert the provided value to the given group
+using the <code class="code docutils literal notranslate"><span class="pre">convert</span></code> class method of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">typhon.arts.workspace.WorkspaceVariable</span></code>.</p>
+<p>It is also possible to specify a list of groups for the expected
+value. In this case this function simply checks whether the group
+inferred by <code class="code docutils literal notranslate"><span class="pre">WorkspaceVariable.get_group_id</span></code>
+group of the :code:``</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><em>fget_data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to set the <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> method of the ARTS property.
+The expected call signature of the <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> method is
+<code class="code docutils literal notranslate"><span class="pre">get(self,</span> <span class="pre">obj,</span> <span class="pre">ws,</span> <span class="pre">*args,</span> <span class="pre">**args)</span></code> where <code class="code docutils literal notranslate"><span class="pre">obj</span></code> is
+the owner of the ARTS property. Providing of the <code class="code docutils literal notranslate"><span class="pre">obj</span></code> argument
+of the <code class="code docutils literal notranslate"><span class="pre">setup</span></code> method is currently necessary to allow the checking
+of dimensions.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>fsetup(function): The customized <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> method to use for
+this ARTS property.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.get_name">
+<code class="descname">get_name</code><span class="sig-paren">(</span><em>owner</em>, <em>separator='_'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.get_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a qualified name of the ARTS property.</p>
+<p>This return a name of the ARTS property prefixed by the name of the
+owner is this object possesses a <code class="code docutils literal notranslate"><span class="pre">name</span></code> attribute.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>owner: The object instance that this ARTS property belongs
+to.</p>
+<p>separator(str): Char to use to separater the owners name and
+the name of the ARTS property.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.setter">
+<code class="descname">setter</code><span class="sig-paren">(</span><em>fset</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.setter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.setter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to set the setter to set the value of this ARTS property.
+The expected call signature is <code class="code docutils literal notranslate"><span class="pre">set(self,</span> <span class="pre">value)</span></code> and should
+set the <code class="code docutils literal notranslate"><span class="pre">value</span></code> attribute of the <code class="code docutils literal notranslate"><span class="pre">ArtsProperty</span></code> object
+<code class="code docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>fset(function): The customized setter to use for this
+<code class="code docutils literal notranslate"><span class="pre">ArtsPorperty</span></code></div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.ArtsProperty.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>fsetup</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#ArtsProperty.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.ArtsProperty.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to set the setup method of the ARTS property. The expected
+call signature of the setup method is <code class="code docutils literal notranslate"><span class="pre">setup(self,</span> <span class="pre">obj,</span> <span class="pre">ws)</span></code>
+where <code class="code docutils literal notranslate"><span class="pre">obj</span></code> is the owner of the ARTS property. Providing of the
+<code class="code docutils literal notranslate"><span class="pre">obj</span></code> argument of the <code class="code docutils literal notranslate"><span class="pre">setup</span></code> method is currently necessary
+to allow the checking of dimensions.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>fsetup(function): The customized setup function to use for this
+ARTS property.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension">
+<em class="property">class </em><code class="descclassname">parts.arts_object.</code><code class="descname">Dimension</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Service class to keep track of related dimensions throughout an ARTS
+simulation.</p>
+<p>A consistent ARTS simulation setup requires provided data to have the
+same sizes along related dimensions. The <code class="code docutils literal notranslate"><span class="pre">Dimensions</span></code> class
+provides a symbolic representation of these dimensions and provides
+functionality to propagate information on the values of these dimensions
+as data is provided by the user.</p>
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Atm">
+<em class="property">class </em><code class="descname">Atm</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Atm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Atm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the number of dimensions of the
+Atmosphere.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Frq">
+<em class="property">class </em><code class="descname">Frq</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Frq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Frq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the number of frequencies.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Joker">
+<em class="property">class </em><code class="descname">Joker</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Joker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Joker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing dimensions that can take an
+arbitrary value.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Lat">
+<em class="property">class </em><code class="descname">Lat</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Lat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Lat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the latitude dimension.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Lon">
+<em class="property">class </em><code class="descname">Lon</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Lon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Lon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the longitude dimension.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Los">
+<em class="property">class </em><code class="descname">Los</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Los"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Los" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the line-of-sight dimension.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.Obs">
+<em class="property">class </em><code class="descname">Obs</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.Obs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.Obs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton dimension representing the number of measurement
+blocks.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.Dimension.P">
+<em class="property">class </em><code class="descname">P</code><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.P"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.P" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Singleton class representing the pressure dimension.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.Dimension.deduce">
+<code class="descname">deduce</code><span class="sig-paren">(</span><em>dim</em>, <em>value</em>, <em>who</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.deduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.deduce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a deduction of a value of a given dimension.</p>
+<p>This function should be called when data has been provided by the
+user that allows the deduction of the size of a given dimension
+if no previous such value has been deduced, i.e. the <code class="code docutils literal notranslate"><span class="pre">infer</span></code>
+method for the same dimension returns <code class="code docutils literal notranslate"><span class="pre">None</span></code></p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>dim: Singleton class representing the dimension to lookup.</p>
+<p>value(int): The value of the dimension that could be deduced.</p>
+<dl class="docutils">
+<dt>who(str): Name of the variable from which the value has been</dt>
+<dd>deduced.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.Dimension.infer">
+<code class="descname">infer</code><span class="sig-paren">(</span><em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.infer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.infer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infer the value of a dimension.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>dim: Singleton class representing the dimension to lookup.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><p>None if no value has been deduced for the requested dimension.</p>
+<p>Otherwise a tuple <code class="code docutils literal notranslate"><span class="pre">(value,</span> <span class="pre">who)</span></code> consisting of an integer
+value <code class="code docutils literal notranslate"><span class="pre">value</span></code> representing the deduced value of the requested
+dimension as well as a <code class="code docutils literal notranslate"><span class="pre">string</span></code> <code class="code docutils literal notranslate"><span class="pre">who</span></code> indicating
+the variable from which the dimensions has been deduced</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.arts_object.Dimension.link">
+<code class="descname">link</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#Dimension.link"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.Dimension.link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link to <code class="code docutils literal notranslate"><span class="pre">Dimension</span></code> objects.</p>
+<p>This registers the <code class="code docutils literal notranslate"><span class="pre">self</span></code> <code class="code docutils literal notranslate"><span class="pre">Dimension</span></code> object as master of the
+<code class="code docutils literal notranslate"><span class="pre">other</span></code> <code class="code docutils literal notranslate"><span class="pre">Dimensions</span></code> object. Deduced dimensions values from
+the <em>master</em> dimension are propagated to the <em>slave</em> dimensions but not
+vice versa. This allows having dimensions with different values in the
+<em>slave</em> objects while still ensuring consistency with the <em>master</em> object.</p>
+<p>Parameters:</p>
+<blockquote>
+<div>other(<code class="code docutils literal notranslate"><span class="pre">Dimensions</span></code>): The <em>slave</em> dimension to link to this
+dimension.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.arts_object.PlaceHolder">
+<em class="property">class </em><code class="descclassname">parts.arts_object.</code><code class="descname">PlaceHolder</code><a class="reference internal" href="../_modules/parts/arts_object.html#PlaceHolder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.PlaceHolder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data that is required for an ARTS simulation and can be set
+either to a fixed value, or taken from a data provider.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parts.arts_object.add_property">
+<code class="descclassname">parts.arts_object.</code><code class="descname">add_property</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>dims</em>, <em>t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#add_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.add_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an ARTS property to an existing object.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>obj(<code class="code docutils literal notranslate"><span class="pre">object</span></code>): The object to add the property to.</p>
+<p>name(:code: <cite>str</cite>): Name of the property to create</p>
+<p>dims(<code class="code docutils literal notranslate"><span class="pre">tuple</span></code>): Tuple describing the expected dimensions
+of the property.</p>
+<p>t(<code class="code docutils literal notranslate"><span class="pre">type</span></code>): The expected type of the property.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="parts.arts_object.arts_property">
+<code class="descclassname">parts.arts_object.</code><code class="descname">arts_property</code><span class="sig-paren">(</span><em>group</em>, <em>shape=None</em>, <em>wsv=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#arts_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.arts_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="code docutils literal notranslate"><span class="pre">arts_property</span></code> decorator.</p>
+<p>This decorator turns a function defintion into an ARTS property. Its useage
+is similar to the <code class="code docutils literal notranslate"><span class="pre">&#64;property</span></code> decorator in Python. The ARTS property
+decorator provides default getter, setter, <code class="code docutils literal notranslate"><span class="pre">setup</span></code> and <code class="code docutils literal notranslate"><span class="pre">get_data</span></code>
+methods. The setter as well as the <code class="code docutils literal notranslate"><span class="pre">setup</span></code> and <code class="code docutils literal notranslate"><span class="pre">get_data</span></code> methods
+can be overwritten to allow specializing the handling of specific variables.
+For more details see the <a class="reference internal" href="#parts.arts_object.ArtsProperty" title="parts.arts_object.ArtsProperty"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsProperty</span></code></a> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@arts_property</span>
+<span class="k">def</span> <span class="nf">f_grid</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">187e9</span><span class="p">])</span> <span class="c1"># The default value</span>
+
+<span class="nd">@f_grid</span><span class="o">.</span><span class="n">setter</span>
+<span class="k">def</span> <span class="nf">set_f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting the f_grid.&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+<span class="nd">@f_grid</span><span class="o">.</span><span class="n">setter</span>
+<span class="k">def</span> <span class="nf">set_f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting the f_grid.&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+<span class="nd">@f_grid</span><span class="o">.</span><span class="n">setup</span>
+<span class="k">def</span> <span class="nf">setup_f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Customg setup method.&quot;</span><span class="p">)</span>
+
+<span class="nd">@f_grid</span><span class="o">.</span><span class="n">get_data</span>
+<span class="k">def</span> <span class="nf">get_data_f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Customg setup method.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<blockquote>
+<div><p>group(str): The ARTS group to which the variable should belong.</p>
+<p>shape(tuple): Tuple describing the expected shape of the variable.</p>
+<p>wsv(typhon.arts.workspace.WorkspaceVariable): The workspace variable
+corresponding to the ARTS property.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="parts.arts_object.broadcast">
+<code class="descclassname">parts.arts_object.</code><code class="descname">broadcast</code><span class="sig-paren">(</span><em>shape</em>, <em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#broadcast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.broadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Broadcast an array or a list to a provided shape.</p>
+<p>Parameters:</p>
+<blockquote>
+<div><p>shape(tuple): Tuple of <code class="code docutils literal notranslate"><span class="pre">int</span></code> describing the shape to broadcast
+the provided object to.</p>
+<p>obj(object): The object to broadcast to the provided shape. Either a
+numpy array or a (nested) list.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="parts.arts_object.get_shape">
+<code class="descclassname">parts.arts_object.</code><code class="descname">get_shape</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/arts_object.html#get_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.arts_object.get_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the shape of a :code:’numpy.ndarray’ or of a nested list.</p>
+<dl class="docutils">
+<dt>Parameters(obj):</dt>
+<dd>obj: The object of which to determine the shape.</dd>
+</dl>
+<p>Returns:</p>
+<blockquote>
+<div>A tuple describing the shape of the <code class="code docutils literal notranslate"><span class="pre">ndarray</span></code> or the
+nested list or <code class="code docutils literal notranslate"><span class="pre">(1,)`</span></code> if obj is not an instance of either
+of these types.</div></blockquote>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.dimensions.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parts.sensor.html" class="btn btn-neutral" title="parts.sensor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
