@@ -9,7 +9,9 @@ before_install:
 - docker pull spfrnd/parts_test:latest
 
 script:
-- docker_id=$(docker run -d spfrnd/parts_test:latest /bin/sh -c "cd /app/parts; git pull; pytest; cd doc; ./run_apidoc.sh; make clean; make html;")
+- docker run spfrnd/parts_test:latest /bin/sh -c "cd /app/parts; git pull; pytest;"
+- docker run spfrnd/parts_test:latest /bin/sh -c "cd /app/parts/doc; ./run_apidoc.sh; make html;"
+- docker_id=$(spfrnd/parts_test:latest /bin/sh -c "cd /app/parts/doc; ./run_apidoc.sh; make html;")
 - docker cp ${docker_id}:/app/parts/doc/_build/html .
 
 deploy:
