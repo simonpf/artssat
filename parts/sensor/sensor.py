@@ -444,6 +444,10 @@ class ActiveSensor(Sensor):
     def extinction_scaling(self):
         return 1.0
 
+    @arts_property("Numeric")
+    def y_min(self):
+            return -35.0
+
     @arts_property("Vector", shape = (dim.Joker,), wsv = wsv["range_bins"])
     def range_bins(self):
         return []
@@ -590,7 +594,7 @@ class ActiveSensor(Sensor):
             y_min = - np.inf
 
         def y_calc(ws):
-            ws.yActive(*args, dbze_min = self.y_min)
+            ws.yActive(*args, dbze_min = y_min)
 
         return y_calc
 

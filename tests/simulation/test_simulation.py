@@ -8,6 +8,7 @@ from parts.scattering import ScatteringSpecies, D14
 from parts.scattering.solvers import RT4, Disort
 from parts.atmosphere.surface import Tessem
 from parts.sensor import CloudSat, ICI
+from tests.data import scattering_data, scattering_meta
 from examples.data_provider import DataProvider, \
     APrioriProvider, APrioriProviderCombined
 
@@ -19,6 +20,11 @@ scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 #ip = get_ipython()
 #ip.magic("%load_ext autoreload")
 #ip.magic("%autoreload 2")
+import os
+
+test_data_path = os.environ["PARTS_TEST_DATA"]
+scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
+scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
 
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
