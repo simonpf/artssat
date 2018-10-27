@@ -38,6 +38,7 @@ of the retrieval calculation for :code:`q`.
 
 Reference
 =========
+
 """
 
 import numpy as np
