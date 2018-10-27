@@ -196,7 +196,7 @@ class JacobianCalculation:
             ws.jacobianInit()
             for jq in self.jacobian_quantities:
                 jq.jacobian.setup(ws)
-                jq.jacobian.transformation.setup(ws)
+                jq.transformation.setup(ws)
             ws.jacobianClose()
 
 
