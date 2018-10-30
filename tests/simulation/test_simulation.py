@@ -46,8 +46,6 @@ def test_simulation_absorption():
 @scattering_solvers
 def test_simulation_scattering(scattering_solver):
 
-    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
-    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
     ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
                             scattering_data = scattering_data,
                             scattering_meta_data = scattering_meta)
@@ -70,8 +68,6 @@ def test_simulation_scattering(scattering_solver):
 
 def test_simulation_scattering_jacobian():
 
-    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
-    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
     ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
                             scattering_data = scattering_data,
                             scattering_meta_data = scattering_meta)
@@ -96,8 +92,6 @@ def test_simulation_scattering_jacobian():
 
 def test_simulation_scattering_retrieval():
 
-    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
-    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
     ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
                             scattering_data = scattering_data,
                             scattering_meta_data = scattering_meta)
@@ -132,8 +126,6 @@ def test_simulation_scattering_retrieval():
 @scattering_solvers
 def test_simulation_scattering_combined(scattering_solver):
 
-    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
-    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
     ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
                             scattering_data = scattering_data,
                             scattering_meta_data = scattering_meta)
@@ -164,8 +156,6 @@ def test_simulation_scattering_combined(scattering_solver):
 
 def test_simulation_scattering_combined_retrieval():
 
-    scattering_data = "/home/simon/src/parts/tests/data/SectorSnowflake.xml"
-    scattering_meta = "/home/simon/src/parts/tests/data/SectorSnowflake.meta.xml"
     ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
                             scattering_data = scattering_data,
                             scattering_meta_data = scattering_meta)

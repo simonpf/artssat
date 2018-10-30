@@ -1,0 +1,25 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+before_install:
+- docker pull spfrnd/parts_test:latest
+
+script:
+- docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts; git pull origin master; git checkout master; pytest"
+- docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;"
+- docker_id=$(docker run -d spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;")
+- docker cp ${docker_id}:/app/parts/doc/_build/html .
+
+deploy:
+  provider: pages
+  local-dir: html
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  target-branch: gh-pages
+  keep-history: true
+  on:
+    branch: master
