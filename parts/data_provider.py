@@ -1,6 +1,6 @@
 """
 data_provider
-=============
+-------------
 
 The :code:`data_provider` module provides a base class for data provider
 classes. This class provides utility function for the composition of data providers
@@ -29,6 +29,7 @@ class DataProviderBase:
     method from the first that provides such a method is returned.
     """
     def __init__(self):
+        self.owner = None
         self.subproviders = []
 
     def add(self, subprovider):
@@ -47,6 +48,7 @@ class DataProviderBase:
         """
         if not isinstance(subprovider, DataProviderBase):
             raise Exception("Subprovider objects must inherit from DataProviderBase.")
+        subprovider.owner = self
         self.subproviders += [subprovider]
 
     def __getattribute__(self, name):
