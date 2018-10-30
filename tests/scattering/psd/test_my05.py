@@ -32,7 +32,7 @@ def test_moments(random_my05_psd):
     """
     psd = random_my05_psd
 
-    x = np.logspace(-8, -2, 100000)
+    x = np.logspace(-8, -1, 100000)
     psd_data = psd.evaluate(x)
 
     m0     = psd.get_moment(0)
