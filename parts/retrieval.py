@@ -20,9 +20,11 @@ similar to the one used for Jacobians:
 Retrieving quantities
 =====================
 
-To retrieve a quantity is must derive from :class:`RetrievalQuantity`. If this
-is the case it can simply be added to the :code:`retrieval` attribute of a
-given simulation:
+So that a quantity can be retrieved, it must inherit from the
+:class:`RetrievalQuantity` base class. In this case, it can simply be added to
+the :code:`retrieval` attribute of a given simulation:
+
+::
 
     simulation.retrieval.add(q)
 
@@ -32,9 +34,9 @@ Moreover it will instantiate the :class:`retrieval_class` class of the quantity
 
 It is important to note that :code:`simulation.retrieval` and :code:`q.retrieval`
 are of different types: :code:`simulation.retrieval` is of type
-:code:`RetrievalCalculation` and handles the calculation of the Jacobian for
-multiple quantities whereas :code:`q.retrieval` holds the settings and results
-of the retrieval calculation for :code:`q`.
+:code:`RetrievalCalculation` and coordinates the interaction with the ARTS workspace
+required for the retrieval. The attribute :code:`q.retrieval` of the retrieval quantity
+holds the settings and retrieval results specific to the quantity :code:`q`.
 
 Reference
 =========
@@ -60,36 +62,129 @@ from parts.sensor      import ActiveSensor, PassiveSensor
 ################################################################################
 
 class RetrievalBase(ArtsObject, metaclass = ABCMeta):
+    """
+    Base class for quantity-specific retrieval classes.
 
+    The quantity specific retrieval classes are meant to hold settings as well
+    as retrieval results after a calculation.
+
+    In order to retrieve any quantity the following must be given:
+
+        1. The a priori mean state :code:`xa` of the retrieval quantity
+           of the Gaussian distribution representing the a priori assumptions.
+
+        2. A covariance matrix :code:`covariance` or its inverse,
+           a precision matrix :code:`precision`, of the Gaussian
+           distribution representing the a priori assumption on the retrieval
+           quantities. It is also possible to specify both, in which case
+           the user has to make sure that they are consistent.
+
+    In addition the following attributes can be given to customize the
+    behaviour of the retrieval:
+
+        3. An initial state :code:`x0` to start the retrieval iteration.
+
+        4. A lower limit :code:`limit_low` which is used in each iteration
+           as a lower cutoff for the next iteration step $x_i$.
+
+        5. An upper limit :code:`limit_high` which is used in each iteration
+           as a lower cutoff for the next iteration step $x_i$.
+
+    .. note: All numeric values given for a retrieval quantity are assumed
+        to be in the transformed space of the quantity. If a quantity has
+        constant a priori mean :math:`x_a = 10^{-5}` and is
+        :math:`log_{10}`-transformed, :code:`xa` should be given as :code:`-5`.
+
+    """
     @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
     def covariance_matrix(self):
+        """
+        The covariance matrix for the retrieval quantity.
+
+        Each quantity must have at least one of the :code:`covariance_matrix`
+        or the :code:`precision_matrix` attributes set.
+        """
+        return None
+
+    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
+    def precision_matrix(self):
+        """
+        The inverse of the covariance matrix.
+
+        Each quantity must have at least one of the :code:`covariance_matrix`
+        or the :code:`precision_matrix` attributes set.
+        """
         return None
 
     @arts_property("Numeric", shape = (dim.Joker,))
     def xa(self):
+        """
+        The mean of the Gaussian a priori distribution assumed for the
+        quantity.
+        """
         return None
 
     @arts_property("Numeric", shape = (dim.Joker,))
     def x0(self):
+        """
+        Optional start value for the retrieval iteration.
+        """
         return None
 
     @arts_property("Numeric")
     def limit_low(self):
+        """
+        Optional lower cutoff to apply to an iteration state :math:`x_i` before
+        performing the  the forward simulation and also the backward
+        transformation of the retrieval quantity.
+        """
         return None
 
     @arts_property("Numeric")
     def limit_high(self):
+        """
+        Optional upper cutoff to apply to an iteration state :math:`x_i` before
+        performing the  the forward simulation and also the backward
+        transformation of the retrieval quantity.
+        """
         return None
 
     def setup(self, ws, data_provider, *args, **kwargs):
+        """
+        Generic setup method for retrieval quantities.
+
+        This method tries to get the a priori vector :math:`x_a`, the start vector
+        :math:`x_0`, the covariance and the precision matrix from the data
+        provider and sets them in the given workspace.
+
+        If no start vector :math:`x_0` is provided, the a priori state is used
+        as initial state for the retrieval iteration.
+
+        Of the covariance or precision matrices only one must be specified.
+
+        Arguments:
+
+            ws(:class:`typhon.arts.workspace.Workspace`): The ARTS workspace on
+                which to setup the retrieval.
+
+            data_provider: Data provider object to query a priori settings from.
+
+            :code:`*args` and :code:`**kwargs` are forwarded to the data provider.
+        """
 
         #
         # Get a priori and start values.
         #
 
-        fname = "get_" + self.quantity.name + "_xa"
-        xa_fun = getattr(data_provider, fname)
-        self.xa = xa_fun(*args, **kwargs)
+
+        try:
+            fname = "get_" + self.quantity.name + "_xa"
+            xa_fun = getattr(data_provider, fname)
+            self.xa = xa_fun(*args, **kwargs)
+        except:
+            raise Exception("The data provider must provide a get method for "
+                           "the a priori state of retrieval quantity {0}."
+                           .format(self.quantity.name))
 
         fname = "get_" + self.quantity.name + "_x0"
         if hasattr(data_provider, fname):
@@ -98,13 +193,36 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         else:
             self.x0 = np.copy(self.xa)
 
-        fname = "get_" + self.quantity.name + "_covariance"
-        covmat_fun = getattr(data_provider, fname)
-        covmat = covmat_fun(*args, **kwargs)
-
-        ws.covmat_block = covmat
-
         self.add(ws)
+
+        #
+        # Get covariance and precision matrix.
+        #
+
+        fname = "get_" + self.quantity.name + "_covariance"
+        try:
+            covmat_fun = getattr(data_provider, fname)
+            covmat = covmat_fun(*args, **kwargs)
+        except:
+            covmat = None
+
+        fname = "get_" + self.quantity.name + "_precision"
+        try:
+            precmat_fun = getattr(data_provider, fname)
+            precmat = precmat_fun(*args, **kwargs)
+        except:
+            precmat = None
+
+        if covmat is None and precmat is None:
+            raise Exception("The data provider must provide a get method for "
+                            "the covariance or the precision matrix of retrieval"
+                            "quantity {0}." .format(self.quantity.name))
+
+        if not covmat is None:
+            ws.covmat_sxAddBlock(block = covmat)
+        if not precmat is None:
+            ws.covmat_sxAddInvBlock(block = precmat)
+
         self.quantity.transformation.setup(ws)
 
     def get_iteration_preparations(self, index):
@@ -257,7 +375,7 @@ class RetrievalCalculation:
         def debug_print(ws):
             ws.Print(ws.x, 0)
 
-        agenda.append(debug_print)
+        #agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)

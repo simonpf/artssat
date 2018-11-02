@@ -7,10 +7,11 @@ Functionality for computing Jacobians in ARTS is implemented through
 three classes:
 
 1. :class:`JacobianCalculation` handles the actual calculation of
-   Jacobians through the ARTS workspace
+   Jacobians and coordinates the interaction with the ARTS workspace.
 
 2. :class:`JacobianQuantity` defines the general interface for quantities
-   for which a Jacobian can be calculated and how to toggle the calculation.
+   for which a Jacobian can be calculated and how to toggle the calculation
+   of the Jacobian for a given quantity.
 
 3. :class:`Jacobian` handles quantity-specific settings and results. This
    class must be defined for each Jacobian quantity separately.
@@ -18,8 +19,10 @@ three classes:
 Calculating Jacobians
 =====================
 
-To trigger the calculation of the Jacobian of a quantity :code:`q` it suffices
-to add it to the `jacobian` of a given :class:`ArtsSimulation`:
+To calculate the Jacobian of a quantity :code:`q` it suffices
+to add it to the `jacobian` of the :class:`ArtsSimulation`:
+
+::
 
     simulation.jacobian.add(q)
 

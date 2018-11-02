@@ -1,10 +1,12 @@
 import scipy as sp
 import numpy as np
 
-class DataProvider:
+from parts.data_provider import DataProviderBase
+
+class DataProvider(DataProviderBase):
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def get_pressure(self):
         return np.array(
@@ -97,7 +99,7 @@ class DataProvider:
 
     def get_ice_mass_density(self):
         z = self.get_altitude()
-        m = 1e-3 * np.exp(-(z - 10.0e3) ** 2 / 10e3 ** 2)
+        m = 1e-3 * np.exp(-(z - 10.0e3) ** 2 / 1e3 ** 2)
         m[m < 1e-6] = 0.0
         return m
 
@@ -105,58 +107,4 @@ class DataProvider:
         z = self.get_altitude()
         dm = 1e-4 * np.exp(-(z - 10.0e3) ** 2 / 1e3 ** 2)
         dm = np.maximum(dm, 1e-6)
-        print(dm)
         return dm
-
-class APrioriProvider(DataProvider):
-    def __init__(self):
-        super().__init__()
-
-    def get_O2_xa(self):
-        return 0.7 * np.array(
-            [ 0.20914768,  0.20917247,  0.20911265,  0.20919441,  0.20921843,
-              0.20915963,  0.20914215,  0.20918673,  0.20921144,  0.20916823,
-              0.20915074,  0.20918311,  0.20910791,  0.20914558,  0.20908499,
-              0.20913025,  0.20910134,  0.20907593,  0.20910521,  0.2091797 ,
-              0.20917443])
-
-    def get_O2_covariance(self):
-        xa = self.get_O2_xa()
-        return sp.sparse.diags(xa / 10.0) ** 2.0
-
-    def get_ice_mass_density_xa(self):
-        z = self.get_altitude()
-        xa = 1e-6 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
-        return np.maximum(xa, 1e-12)
-
-    def get_ice_mass_density_covariance(self):
-        xa = np.maximum(self.get_ice_mass_density_xa(), 1e-12)
-        return sp.sparse.diags(xa / 0.1) ** 2.0
-
-    def get_observation_error_covariance(self):
-        return np.diag(1.0 * np.ones(22 * 2))
-
-class APrioriProviderCombined(DataProvider):
-    def __init__(self):
-        super().__init__()
-
-    def get_ice_mass_density_xa(self):
-        z = self.get_altitude()
-        xa = 1e-5 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
-        return np.maximum(xa, 1e-12)
-
-    def get_ice_mass_density_covariance(self):
-        xa = np.maximum(self.get_ice_mass_density_xa(), 1e-12)
-        return sp.sparse.diags(xa / 0.2) ** 2.0
-
-    def get_ice_mass_weighted_diameter_xa(self):
-        z = self.get_altitude()
-        xa = 1e-4 * ((z > 5e3).astype(float) * (z < 18e3).astype(float))
-        return np.maximum(xa, 1e-12)
-
-    def get_ice_mass_weighted_diameter_covariance(self):
-        xa = np.maximum(self.get_ice_mass_density_xa(), 1e-12)
-        return sp.sparse.diags(xa / 0.2) ** 2.0
-
-    def get_observation_error_covariance(self):
-        return np.diag(1.0 * np.ones(30 + 22 * 2))
