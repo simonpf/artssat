@@ -1,6 +1,6 @@
-ip = get_ipython()
-ip.magic("load_ext autoreload")
-ip.magic("autoreload 2")
+#ip = get_ipython()
+#ip.magic("load_ext autoreload")
+#ip.magic("autoreload 2")
 
 import numpy as np
 
@@ -22,7 +22,7 @@ from tests.data                  import scattering_data, scattering_meta
 
 import matplotlib.pyplot as plt
 
-from IPython import get_ipython
+#from IPython import get_ipython
 
 #
 # Scatterers
