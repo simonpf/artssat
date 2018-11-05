@@ -63,7 +63,7 @@ def setup_retrieval_simulation(retrieval_type = "passive",
     # Sensors
     #
 
-    ici = ICI()
+    ici = ICI(stokes_dimension = 1)
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -86,6 +86,7 @@ def setup_retrieval_simulation(retrieval_type = "passive",
                               surface = Tessem())
     simulation = ArtsSimulation(atmosphere = atmosphere,
                                 sensors = sensors)
+    simulation.scattering_solver = Disort()
     return simulation
 
 def test_scattering_retrieval_passive():

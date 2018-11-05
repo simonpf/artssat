@@ -308,7 +308,8 @@ class RetrievalQuantity(JacobianQuantity):
 class RetrievalCalculation:
     """
     The :class:`Retrieval` takes care of the book-keeping around retrieval
-    quantities in an ARTS simulation.
+    quantities in an ARTS simulation as well as the execution of the retrieval
+    calculation.
     """
     def __init__(self):
 
@@ -325,11 +326,63 @@ class RetrievalCalculation:
                          "display_progress" : 1}
 
     def add(self, rq):
+        """
+        Add a retrieval quantity to the retrieval calculation.
+
+        This registers an atmospheric quantity as a retrieval quantity,
+        which means that parts will try to retrieve the quantity using ARTS's
+        OEM method instead of querying its value from the data provider.
+
+        While the data provider is not required to provide get methods for
+        the retrieval quantity itself, it must provide values for its a priori
+        mean and covariance matrix.
+
+        Arguments:
+
+            rq(:code:`RetrievalQuantity`): The retrieval quantity for which to
+                compute the retrieval.
+
+        """
         rq.retrieval = rq.retrieval_class(rq, len(self.retrieval_quantities))
         self.retrieval_quantities += [rq]
 
-    def setup(self, ws, sensors, scattering_solver, scattering,
-              retrieval_provider, *args, **kwargs):
+    def setup(self,
+              ws,
+              sensors,
+              scattering_solver,
+              scattering,
+              retrieval_provider,
+              *args,
+              **kwargs):
+        """
+        Setup the retrieval calculation.
+
+        This methods performs the setup necessary to run the retrieval
+        calculations on the given workspace. That means it does:
+
+        1. Gather a priori mean states and covariance matrices for all
+            registered retrieval quantities.
+
+        2. Define the retrieval inside the given ARTS workspace.
+
+        3. Construct the ARTS inversion iterate agenda.
+
+        Arguments:
+
+            ws(:code:`arts`): The :code:`typhon.arts.workspace.Workspace`
+                object which to setup for the retrieval.
+
+            sensors(list): The sensors to use for the retrieval calculation.
+
+            scattering(:code:`bool`): Whether or not to the forward calculations
+                involve scattering.
+
+            retrieval_provider: The data provider providing the a priori data
+                for the retrieval.
+
+            *args, **kwargs: Arguments and keyword arguments that are passed on
+                to the data provider.
+        """
 
         if not self.retrieval_quantities:
             return None
