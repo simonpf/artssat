@@ -12,10 +12,12 @@ Contents
    :maxdepth: 1
 
    parts.atmosphere
+   parts.dashboard
    parts.scattering
    parts.sensor
 
    parts.arts_object
+   parts.data_provider
    parts.dimensions
    parts.jacobian
    parts.retrieval

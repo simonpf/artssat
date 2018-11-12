@@ -1,0 +1,7 @@
+parts.dashboard
+===============
+
+.. automodule:: parts.dashboard
+    :members:
+    :show-inheritance:
+

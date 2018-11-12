@@ -250,6 +250,11 @@
     <span class="k">def</span> <span class="nf">retrieval_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Retrieval</span>
 
+<div class="viewcode-block" id="Moment.set_from_x"><a class="viewcode-back" href="../../../generated/parts.scattering.scattering_species.html#parts.scattering.scattering_species.Moment.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span></div>
+
     <span class="c1">#</span>
     <span class="c1"># Properties</span>
     <span class="c1">#</span>

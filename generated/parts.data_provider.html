@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>data_provider &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="parts.dimensions.html" />
+    <link rel="prev" title="parts.arts_object" href="parts.arts_object.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="parts.html">parts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parts.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">data_provider</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="parts.html">parts</a> &raquo;</li>
+        
+      <li>data_provider</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.data_provider.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.data_provider"></span><div class="section" id="data-provider">
+<h1>data_provider<a class="headerlink" href="#data-provider" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">data_provider</span></code> module provides a base class for data provider
+classes. This class provides utility function for the composition of data providers
+as well as the overriding of get functions.</p>
+<dl class="class">
+<dt id="parts.data_provider.DataProviderBase">
+<em class="property">class </em><code class="descclassname">parts.data_provider.</code><code class="descname">DataProviderBase</code><a class="reference internal" href="../_modules/parts/data_provider.html#DataProviderBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.data_provider.DataProviderBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">DataProviderBase</span></code> implements generic functionality for</p>
+<ul class="simple">
+<li>The overriding of get methods with attributes</li>
+<li>Composition of data providers</li>
+</ul>
+<p>When a data provider inherits from <code class="code docutils literal notranslate"><span class="pre">DataProviderBase</span></code>, the values
+returned from a <code class="code docutils literal notranslate"><span class="pre">get_&lt;attribute&gt;</span></code> can be overriding simply setting
+the attribute with the name <code class="code docutils literal notranslate"><span class="pre">&lt;attribute&gt;</span></code> of the object.</p>
+<p>The DataProviderBase also allows composing data provider by adding sub-
+providers to a data provider object. If a simulation queries a get_method
+from the data provider that the data provider doesn’t provide, the query
+is forwarded to the subproviders in the order they were added. The get
+method from the first that provides such a method is returned.</p>
+<dl class="method">
+<dt id="parts.data_provider.DataProviderBase.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>subprovider</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/data_provider.html#DataProviderBase.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.data_provider.DataProviderBase.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a subprovider to the data provider.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>subprovider: The subprovider to add. Must inherit</dt>
+<dd>from <code class="code docutils literal notranslate"><span class="pre">DataProviderBase</span></code>.</dd>
+</dl>
+</div></blockquote>
+<p>Raises:</p>
+<blockquote>
+<div>Exception: If :code: <cite>subprovider</cite> argument doesn´t inherit
+from <code class="code docutils literal notranslate"><span class="pre">DataProviderBase</span></code>.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.data_provider.FixedApriori">
+<em class="property">class </em><code class="descclassname">parts.data_provider.</code><code class="descname">FixedApriori</code><span class="sig-paren">(</span><em>name</em>, <em>xa</em>, <em>covariance</em>, <em>xr=1e-12</em>, <em>height_mask=None</em>, <em>temperature_mask=None</em>, <em>spatial_correlation=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/data_provider.html#FixedApriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.data_provider.FixedApriori" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.data_provider.DataProviderBase" title="parts.data_provider.DataProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.data_provider.DataProviderBase</span></code></a></p>
+<p>A priori provider for fixed a priori mean and covariance.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">FixedApriori</span></code> class provides get methods for a fixed a priori
+mean and covariance matrix. It is intended to be used as a subprovider
+to a main data provider.</p>
+<dl class="method">
+<dt id="parts.data_provider.FixedApriori.get_covariance">
+<code class="descname">get_covariance</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/data_provider.html#FixedApriori.get_covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.data_provider.FixedApriori.get_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to which the <code class="code docutils literal notranslate"><span class="pre">get_&lt;name&gt;_covariance</span></code> call is forwarded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.data_provider.FixedApriori.get_xa">
+<code class="descname">get_xa</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/data_provider.html#FixedApriori.get_xa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.data_provider.FixedApriori.get_xa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to which the <code class="code docutils literal notranslate"><span class="pre">get_&lt;name&gt;_xa</span></code> call is forwarded.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parts.dimensions.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parts.arts_object.html" class="btn btn-neutral" title="parts.arts_object" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

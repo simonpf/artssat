@@ -154,10 +154,11 @@
 <span class="sd">three classes:</span>
 
 <span class="sd">1. :class:`JacobianCalculation` handles the actual calculation of</span>
-<span class="sd">   Jacobians through the ARTS workspace</span>
+<span class="sd">   Jacobians and coordinates the interaction with the ARTS workspace.</span>
 
 <span class="sd">2. :class:`JacobianQuantity` defines the general interface for quantities</span>
-<span class="sd">   for which a Jacobian can be calculated and how to toggle the calculation.</span>
+<span class="sd">   for which a Jacobian can be calculated and how to toggle the calculation</span>
+<span class="sd">   of the Jacobian for a given quantity.</span>
 
 <span class="sd">3. :class:`Jacobian` handles quantity-specific settings and results. This</span>
 <span class="sd">   class must be defined for each Jacobian quantity separately.</span>
@@ -165,8 +166,10 @@
 <span class="sd">Calculating Jacobians</span>
 <span class="sd">=====================</span>
 
-<span class="sd">To trigger the calculation of the Jacobian of a quantity :code:`q` it suffices</span>
-<span class="sd">to add it to the `jacobian` of a given :class:`ArtsSimulation`:</span>
+<span class="sd">To calculate the Jacobian of a quantity :code:`q` it suffices</span>
+<span class="sd">to add it to the `jacobian` of the :class:`ArtsSimulation`:</span>
+
+<span class="sd">::</span>
 
 <span class="sd">    simulation.jacobian.add(q)</span>
 
@@ -224,6 +227,10 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Log10"><a class="viewcode-back" href="../../generated/parts.jacobian.html#parts.jacobian.Log10">[docs]</a><span class="k">class</span> <span class="nc">Log10</span><span class="p">(</span><span class="n">Transformation</span><span class="p">):</span>
@@ -237,7 +244,10 @@
         <span class="n">ws</span><span class="o">.</span><span class="n">jacobianSetFuncTransformation</span><span class="p">(</span><span class="n">transformation_func</span> <span class="o">=</span> <span class="s2">&quot;log10&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">y</span></div>
 
 <div class="viewcode-block" id="Log"><a class="viewcode-back" href="../../generated/parts.jacobian.html#parts.jacobian.Log">[docs]</a><span class="k">class</span> <span class="nc">Log</span><span class="p">(</span><span class="n">Transformation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -250,7 +260,10 @@
         <span class="n">ws</span><span class="o">.</span><span class="n">jacobianSetFuncTransformation</span><span class="p">(</span><span class="n">transformation_func</span> <span class="o">=</span> <span class="s2">&quot;log&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">y</span></div>
 
 <div class="viewcode-block" id="Atanh"><a class="viewcode-back" href="../../generated/parts.jacobian.html#parts.jacobian.Atanh">[docs]</a><span class="k">class</span> <span class="nc">Atanh</span><span class="p">(</span><span class="n">Transformation</span><span class="p">):</span>
 
@@ -275,9 +288,10 @@
                                          <span class="n">z_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_max</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
-
+    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_min</span></div>
 
 <div class="viewcode-block" id="Identity"><a class="viewcode-back" href="../../generated/parts.jacobian.html#parts.jacobian.Identity">[docs]</a><span class="k">class</span> <span class="nc">Identity</span><span class="p">(</span><span class="n">Transformation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -290,7 +304,10 @@
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">x</span></div>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">y</span></div>
 
 <span class="c1">################################################################################</span>
 <span class="c1"># JacobianCalculation</span>

@@ -245,7 +245,7 @@
     <span class="c1">############################################################################</span>
 
     <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
-                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Frq</span><span class="p">,),</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
                    <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;f_grid&quot;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">f_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -494,6 +494,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_stokes_dimension</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stokes_dimension</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">n</span>
 
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">y_vector_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
     <span class="c1">#</span>
     <span class="c1"># General sensor setup</span>
     <span class="c1">#</span>
@@ -608,6 +612,10 @@
                    <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;instrument_pol_array&quot;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">instrument_pol_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">y_vector_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range_bins</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span><span class="p">,</span> <span class="n">range_bins</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span><span class="p">)</span>
@@ -757,6 +765,10 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Specialization of the abstract Sensor class for passive sensors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">y_vector_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

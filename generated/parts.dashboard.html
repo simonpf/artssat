@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>parts.atmosphere.surface &mdash; pARTS 0.0 documentation</title>
+  <title>parts.dashboard &mdash; pARTS 0.0 documentation</title>
   
 
   
@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The model atmosphere" href="parts.atmosphere.atmosphere.html" />
-    <link rel="prev" title="parts.atmosphere.absorption" href="parts.atmosphere.absorption.html" /> 
+    <link rel="next" title="parts.scattering" href="parts.scattering.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="parts.atmosphere.cloud_box.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -87,12 +87,8 @@
 <li class="toctree-l2"><a class="reference internal" href="parts.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="parts.atmosphere.html#atmosphere">Atmosphere</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="parts.atmosphere.html#contents">Contents</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">parts.dashboard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
@@ -150,15 +146,13 @@
         
           <li><a href="parts.html">parts</a> &raquo;</li>
         
-          <li><a href="parts.atmosphere.html">parts.atmosphere</a> &raquo;</li>
-        
-      <li>parts.atmosphere.surface</li>
+      <li>parts.dashboard</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/generated/parts.atmosphere.surface.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/generated/parts.dashboard.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -171,8 +165,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="parts-atmosphere-surface">
-<h1>parts.atmosphere.surface<a class="headerlink" href="#parts-atmosphere-surface" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-parts.dashboard">
+<span id="parts-dashboard"></span><h1>parts.dashboard<a class="headerlink" href="#module-parts.dashboard" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="parts.dashboard.BokehServer">
+<em class="property">class </em><code class="descclassname">parts.dashboard.</code><code class="descname">BokehServer</code><a class="reference internal" href="../_modules/parts/dashboard.html#BokehServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dashboard.BokehServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Handles the singleton Bokeh server used to serve visualisations
+if no jupyter notebook is open.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.dashboard.ProfilePlot">
+<em class="property">class </em><code class="descclassname">parts.dashboard.</code><code class="descname">ProfilePlot</code><span class="sig-paren">(</span><em>z</em>, <em>p</em>, <em>title</em>, <em>name</em>, <em>width=500</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/dashboard.html#ProfilePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.dashboard.ProfilePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A profile plot displays the height distribution of an atmospheric quantity
+with respect to either altitude or pressure.</p>
+</dd></dl>
+
 </div>
 
 
@@ -183,10 +193,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="parts.atmosphere.atmosphere.html" class="btn btn-neutral float-right" title="The model atmosphere" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="parts.scattering.html" class="btn btn-neutral float-right" title="parts.scattering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="parts.atmosphere.absorption.html" class="btn btn-neutral" title="parts.atmosphere.absorption" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="parts.atmosphere.cloud_box.html" class="btn btn-neutral" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

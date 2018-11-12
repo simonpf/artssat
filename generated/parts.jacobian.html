@@ -88,9 +88,11 @@
 <li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.data_provider.html">data_provider</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">parts.jacobian</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#calculating-jacobians">Calculating Jacobians</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#reference">Reference</a></li>
@@ -174,18 +176,20 @@ Functionality for computing Jacobians in ARTS is implemented through
 three classes:</p>
 <ol class="arabic simple">
 <li><a class="reference internal" href="#parts.jacobian.JacobianCalculation" title="parts.jacobian.JacobianCalculation"><code class="xref py py-class docutils literal notranslate"><span class="pre">JacobianCalculation</span></code></a> handles the actual calculation of
-Jacobians through the ARTS workspace</li>
+Jacobians and coordinates the interaction with the ARTS workspace.</li>
 <li><a class="reference internal" href="#parts.jacobian.JacobianQuantity" title="parts.jacobian.JacobianQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">JacobianQuantity</span></code></a> defines the general interface for quantities
-for which a Jacobian can be calculated and how to toggle the calculation.</li>
+for which a Jacobian can be calculated and how to toggle the calculation
+of the Jacobian for a given quantity.</li>
 <li><code class="xref py py-class docutils literal notranslate"><span class="pre">Jacobian</span></code> handles quantity-specific settings and results. This
 class must be defined for each Jacobian quantity separately.</li>
 </ol>
 <div class="section" id="calculating-jacobians">
 <h2>Calculating Jacobians<a class="headerlink" href="#calculating-jacobians" title="Permalink to this headline">¶</a></h2>
-<p>To trigger the calculation of the Jacobian of a quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code> it suffices
-to add it to the <cite>jacobian</cite> of a given <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code>:</p>
-<blockquote>
-<div>simulation.jacobian.add(q)</div></blockquote>
+<p>To calculate the Jacobian of a quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code> it suffices
+to add it to the <cite>jacobian</cite> of the <code class="xref py py-class docutils literal notranslate"><span class="pre">ArtsSimulation</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span><span class="o">.</span><span class="n">jacobian</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>This will add the quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code> to the quantities for which a Jacobian
 should be computed. Moreover it will instantiate the <code class="xref py py-class docutils literal notranslate"><span class="pre">Jacobian</span></code> class
 of the quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code> and set the <code class="code docutils literal notranslate"><span class="pre">q.jacobian</span></code> property of <code class="code docutils literal notranslate"><span class="pre">q</span></code>.</p>

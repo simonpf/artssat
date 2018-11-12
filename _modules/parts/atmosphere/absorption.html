@@ -324,6 +324,10 @@
     <span class="k">def</span> <span class="nf">retrieval_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Retrieval</span>
 
+<div class="viewcode-block" id="AbsorptionSpecies.set_from_x"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.AbsorptionSpecies.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span></div>
 
     <span class="c1">#</span>
     <span class="c1"># Retrieval</span>
@@ -409,6 +413,35 @@
                          <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
                          <span class="n">on_the_fly</span> <span class="o">=</span> <span class="n">on_the_fly</span><span class="p">,</span>
                          <span class="n">zeeman</span> <span class="o">=</span> <span class="n">zeeman</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudWater"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.CloudWater">[docs]</a><span class="k">class</span> <span class="nc">CloudWater</span><span class="p">(</span><span class="n">AbsorptionSpecies</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">catalog</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">cia</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">frequency_range</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">isotopologues</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;MPM93&quot;</span><span class="p">,</span>
+                 <span class="n">on_the_fly</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zeeman</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;cloud_water&quot;</span><span class="p">,</span>
+                         <span class="n">catalog</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">,</span>
+                         <span class="n">cia</span> <span class="o">=</span> <span class="n">cia</span><span class="p">,</span>
+                         <span class="n">frequency_range</span> <span class="o">=</span> <span class="n">frequency_range</span><span class="p">,</span>
+                         <span class="n">isotopologues</span> <span class="o">=</span> <span class="n">isotopologues</span><span class="p">,</span>
+                         <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+                         <span class="n">on_the_fly</span> <span class="o">=</span> <span class="n">on_the_fly</span><span class="p">,</span>
+                         <span class="n">zeeman</span> <span class="o">=</span> <span class="n">zeeman</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_tag_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="s2">&quot;liquidcloud&quot;</span>
+        <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">:</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+            <span class="n">ts</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+
+        <span class="k">return</span> <span class="n">ts</span></div>
 </pre></div>
 
            </div>

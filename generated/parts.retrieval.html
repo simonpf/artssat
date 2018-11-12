@@ -88,9 +88,11 @@
 <li class="toctree-l2"><a class="reference internal" href="parts.html#interaction-and-data-workflow">Interaction and data workflow</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="parts.html#contents">Contents</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="parts.atmosphere.html">parts.atmosphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.data_provider.html">data_provider</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">parts.retrieval</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#retrieving-quantities">Retrieving quantities</a></li>
@@ -184,19 +186,20 @@ is specific to the given quantity.</li>
 </ol>
 <div class="section" id="retrieving-quantities">
 <h2>Retrieving quantities<a class="headerlink" href="#retrieving-quantities" title="Permalink to this headline">¶</a></h2>
-<p>To retrieve a quantity is must derive from <a class="reference internal" href="#parts.retrieval.RetrievalQuantity" title="parts.retrieval.RetrievalQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">RetrievalQuantity</span></code></a>. If this
-is the case it can simply be added to the <code class="code docutils literal notranslate"><span class="pre">retrieval</span></code> attribute of a
-given simulation:</p>
-<blockquote>
-<div>simulation.retrieval.add(q)</div></blockquote>
+<p>So that a quantity can be retrieved, it must inherit from the
+<a class="reference internal" href="#parts.retrieval.RetrievalQuantity" title="parts.retrieval.RetrievalQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">RetrievalQuantity</span></code></a> base class. In this case, it can simply be added to
+the <code class="code docutils literal notranslate"><span class="pre">retrieval</span></code> attribute of a given simulation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>This will add the quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code> to the quantities which will be retrieved.
 Moreover it will instantiate the <code class="xref py py-class docutils literal notranslate"><span class="pre">retrieval_class</span></code> class of the quantity
 <code class="code docutils literal notranslate"><span class="pre">q</span></code> and set the <code class="code docutils literal notranslate"><span class="pre">q.retrieval</span></code> attribute of <code class="code docutils literal notranslate"><span class="pre">q</span></code>.</p>
 <p>It is important to note that <code class="code docutils literal notranslate"><span class="pre">simulation.retrieval</span></code> and <code class="code docutils literal notranslate"><span class="pre">q.retrieval</span></code>
 are of different types: <code class="code docutils literal notranslate"><span class="pre">simulation.retrieval</span></code> is of type
-<code class="code docutils literal notranslate"><span class="pre">RetrievalCalculation</span></code> and handles the calculation of the Jacobian for
-multiple quantities whereas <code class="code docutils literal notranslate"><span class="pre">q.retrieval</span></code> holds the settings and results
-of the retrieval calculation for <code class="code docutils literal notranslate"><span class="pre">q</span></code>.</p>
+<code class="code docutils literal notranslate"><span class="pre">RetrievalCalculation</span></code> and coordinates the interaction with the ARTS workspace
+required for the retrieval. The attribute <code class="code docutils literal notranslate"><span class="pre">q.retrieval</span></code> of the retrieval quantity
+holds the settings and retrieval results specific to the quantity <code class="code docutils literal notranslate"><span class="pre">q</span></code>.</p>
 </div>
 <div class="section" id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h2>
@@ -204,6 +207,69 @@ of the retrieval calculation for <code class="code docutils literal notranslate"
 <dt id="parts.retrieval.RetrievalBase">
 <em class="property">class </em><code class="descclassname">parts.retrieval.</code><code class="descname">RetrievalBase</code><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="parts.arts_object.html#parts.arts_object.ArtsObject" title="parts.arts_object.ArtsObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.arts_object.ArtsObject</span></code></a></p>
+<p>Base class for quantity-specific retrieval classes.</p>
+<p>The quantity specific retrieval classes are meant to hold settings as well
+as retrieval results after a calculation.</p>
+<p>In order to retrieve any quantity the following must be given:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>The a priori mean state <code class="code docutils literal notranslate"><span class="pre">xa</span></code> of the retrieval quantity
+of the Gaussian distribution representing the a priori assumptions.</li>
+<li>A covariance matrix <code class="code docutils literal notranslate"><span class="pre">covariance</span></code> or its inverse,
+a precision matrix <code class="code docutils literal notranslate"><span class="pre">precision</span></code>, of the Gaussian
+distribution representing the a priori assumption on the retrieval
+quantities. It is also possible to specify both, in which case
+the user has to make sure that they are consistent.</li>
+</ol>
+</div></blockquote>
+<p>In addition the following attributes can be given to customize the
+behaviour of the retrieval:</p>
+<blockquote>
+<div><ol class="arabic simple" start="3">
+<li>An initial state <code class="code docutils literal notranslate"><span class="pre">x0</span></code> to start the retrieval iteration.</li>
+<li>A lower limit <code class="code docutils literal notranslate"><span class="pre">limit_low</span></code> which is used in each iteration
+as a lower cutoff for the next iteration step $x_i$.</li>
+<li>An upper limit <code class="code docutils literal notranslate"><span class="pre">limit_high</span></code> which is used in each iteration
+as a lower cutoff for the next iteration step $x_i$.</li>
+</ol>
+</div></blockquote>
+<dl class="method">
+<dt id="parts.retrieval.RetrievalBase.get_xa">
+<code class="descname">get_xa</code><span class="sig-paren">(</span><em>data_provider</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalBase.get_xa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalBase.get_xa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a priori vector from data provider and set the <code class="code docutils literal notranslate"><span class="pre">xa</span></code>
+attribute this object.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>data_provider: Data provide from which to query a priori</dt>
+<dd>state.</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Arguments and keyword arguments to be passed</dt>
+<dd>on to the data provider.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.retrieval.RetrievalBase.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>ws</em>, <em>data_provider</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalBase.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalBase.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic setup method for retrieval quantities.</p>
+<p>This method tries to get the a priori vector <span class="math notranslate nohighlight">\(x_a\)</span>, the start vector
+<span class="math notranslate nohighlight">\(x_0\)</span>, the covariance and the precision matrix from the data
+provider and sets them in the given workspace.</p>
+<p>If no start vector <span class="math notranslate nohighlight">\(x_0\)</span> is provided, the a priori state is used
+as initial state for the retrieval iteration.</p>
+<p>Of the covariance or precision matrices only one must be specified.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(<code class="xref py py-class docutils literal notranslate"><span class="pre">typhon.arts.workspace.Workspace</span></code>): The ARTS workspace on</dt>
+<dd>which to setup the retrieval.</dd>
+</dl>
+<p>data_provider: Data provider object to query a priori settings from.</p>
+<p><code class="code docutils literal notranslate"><span class="pre">*args</span></code> and <code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> are forwarded to the data provider.</p>
+</div></blockquote>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -211,21 +277,107 @@ of the retrieval calculation for <code class="code docutils literal notranslate"
 <em class="property">class </em><code class="descclassname">parts.retrieval.</code><code class="descname">RetrievalCalculation</code><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalCalculation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalCalculation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Retrieval</span></code> takes care of the book-keeping around retrieval
-quantities in an ARTS simulation.</p>
+quantities in an ARTS simulation as well as the execution of the retrieval
+calculation.</p>
+<dl class="method">
+<dt id="parts.retrieval.RetrievalCalculation.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>rq</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalCalculation.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalCalculation.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a retrieval quantity to the retrieval calculation.</p>
+<p>This registers an atmospheric quantity as a retrieval quantity,
+which means that parts will try to retrieve the quantity using ARTS’s
+OEM method instead of querying its value from the data provider.</p>
+<p>While the data provider is not required to provide get methods for
+the retrieval quantity itself, it must provide values for its a priori
+mean and covariance matrix.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>rq(<code class="code docutils literal notranslate"><span class="pre">RetrievalQuantity</span></code>): The retrieval quantity for which to</dt>
+<dd>compute the retrieval.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.retrieval.RetrievalCalculation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>simulation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalCalculation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalCalculation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the retrieval calculation.</p>
+<p>This methods performs the setup necessary to run the retrieval
+calculations on the given workspace. That means it does:</p>
+<ol class="arabic simple">
+<li><dl class="first docutils">
+<dt>Gather a priori mean states and covariance matrices for all</dt>
+<dd>registered retrieval quantities.</dd>
+</dl>
+</li>
+<li>Define the retrieval inside the given ARTS workspace.</li>
+<li>Construct the ARTS inversion iterate agenda.</li>
+</ol>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(<code class="code docutils literal notranslate"><span class="pre">arts</span></code>): The <code class="code docutils literal notranslate"><span class="pre">typhon.arts.workspace.Workspace</span></code></dt>
+<dd>object which to setup for the retrieval.</dd>
+</dl>
+<p>sensors(list): The sensors to use for the retrieval calculation.</p>
+<dl class="docutils">
+<dt>scattering(<code class="code docutils literal notranslate"><span class="pre">bool</span></code>): Whether or not to the forward calculations</dt>
+<dd>involve scattering.</dd>
+<dt>retrieval_provider: The data provider providing the a priori data</dt>
+<dd>for the retrieval.</dd>
+<dt><a href="#id5"><span class="problematic" id="id6">*</span></a>args, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs: Arguments and keyword arguments that are passed on</dt>
+<dd>to the data provider.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="parts.retrieval.RetrievalQuantity">
 <em class="property">class </em><code class="descclassname">parts.retrieval.</code><code class="descname">RetrievalQuantity</code><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalQuantity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalQuantity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="parts.jacobian.html#parts.jacobian.JacobianQuantity" title="parts.jacobian.JacobianQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.jacobian.JacobianQuantity</span></code></a></p>
-<p>Abstract interface for quantities for which a Jacobian can be computed.</p>
-<p>Quantities for which a Jacobian can be computed must expose a
-<code class="code docutils literal notranslate"><span class="pre">jacobian_class</span></code> which holds all quantity-specific WSM calls and
-settings required to compute its Jacobian.</p>
-<p>After a quantity has been added to the Jacobian quantities of a simulation,
-the <code class="code docutils literal notranslate"><span class="pre">jacobian_class</span></code> object representing the settings and results of
-the Jacobian calculation for this specific object can be accessed through
-its <code class="code docutils literal notranslate"><span class="pre">jacobian</span></code> property.</p>
+<p>Abstract interface for quantities for which can be retrieved using ARTS.</p>
+<p>Instances of the <code class="code docutils literal notranslate"><span class="pre">RetrievalQuantity</span></code> class can be added to the
+retrieval quantities of a simulation, which means that parts will try
+to retrieve their value from a given observation.</p>
+<p>The interface for retrieval quantities is implemented by four properties
+that are shared by all quantities that can be retrieved with ARTS:</p>
+<ol class="arabic simple">
+<li><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">transformation</span></code>: Retrieval quantities can be retrieved not only</dt>
+<dd>in the units used inside ARTS but also as transformed quantities, e.g.
+in <span class="math notranslate nohighlight">\(log_{10}\)</span> space. The transformation property hols for each
+retrieval quantity a <a class="reference internal" href="parts.jacobian.html#parts.jacobian.Transformation" title="parts.jacobian.Transformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.jacobian.Transformation</span></code></a> object
+representing the applied transformation.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">fixed</span></code>: Property indicating whether a retrieval quantity should</dt>
+<dd>be held fixed for a given retrieval run.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">retrieval_class</span></code>: A python class object holding the</dt>
+<dd>quantity-specific retrieval class that is instantiated and set as the
+quantities’ <code class="code docutils literal notranslate"><span class="pre">retrieval</span></code> attribute when the quantity is added as
+retrieval quantity.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal notranslate"><span class="pre">retrieval</span></code>: Instance of the quantities <code class="code docutils literal notranslate"><span class="pre">retrieval_class</span></code></dt>
+<dd>holding the retrieval settings and results specific to the quantity
+and a given retrieval run.</dd>
+</dl>
+</li>
+</ol>
+<dl class="attribute">
+<dt id="parts.retrieval.RetrievalQuantity.fixed">
+<code class="descname">fixed</code><a class="headerlink" href="#parts.retrieval.RetrievalQuantity.fixed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not the retrieval quantity should be held fixed for a given
+retrieval run.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="parts.retrieval.RetrievalQuantity.retrieval">
 <code class="descname">retrieval</code><a class="headerlink" href="#parts.retrieval.RetrievalQuantity.retrieval" title="Permalink to this definition">¶</a></dt>
@@ -238,6 +390,19 @@ and actual results of the Jacobian calculations for this quantity.</p>
 <code class="descname">retrieval_class</code><a class="headerlink" href="#parts.retrieval.RetrievalQuantity.retrieval_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the class object that holds the actual implementation of the
 Jacobian calculation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.retrieval.RetrievalQuantity.set_from_x">
+<code class="descname">set_from_x</code><span class="sig-paren">(</span><em>ws</em>, <em>xa</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval.html#RetrievalQuantity.set_from_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.RetrievalQuantity.set_from_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set method that sets the value of the retrieval quantity to a given
+a priori state.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.retrieval.RetrievalQuantity.transformation">
+<code class="descname">transformation</code><a class="headerlink" href="#parts.retrieval.RetrievalQuantity.transformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>The transformation to be applied to the retrieval quantity.</p>
 </dd></dl>
 
 </dd></dl>
