@@ -3,7 +3,6 @@
 #ip.magic("autoreload 2")
 
 import numpy as np
-
 from examples.data_provider import DataProvider
 
 from parts                       import ArtsSimulation

@@ -14,8 +14,14 @@ from parts.data_provider         import DataProviderBase, FixedApriori
 
 from examples.data_provider      import DataProvider
 from tests.data                  import scattering_data, scattering_meta
+from parts.dashboard import dashboard, make_retrieval_panel
 
 import matplotlib.pyplot as plt
+
+from IPython import get_ipython
+ip = get_ipython()
+ip.magic("load_ext autoreload")
+ip.magic("%autoreload 2")
 
 ################################################################################
 # A priori providers
@@ -196,7 +202,10 @@ def test_scattering_combined_retrieval():
     return simulation
 
 def test_simulation_absorption_retrieval():
-
+    """
+    This test runs a passive clearsky water vapor retrieval retrieving
+    relative humidity.
+    """
     simulation = setup_retrieval_simulation(retrieval_type = "passive",
                                             scattering = False)
     data_provider = DataProvider()
@@ -204,18 +213,139 @@ def test_simulation_absorption_retrieval():
     simulation.setup()
     simulation.run()
 
-    # O2 a priori
-    o2_a_priori         = FixedApriori("O2", 0.209, 0.01)
-    data_provider.add(o2_a_priori)
+    # H2O a priori
+    h2o_a_priori         = FixedApriori("H2O", 0.5, 0.01)
+    data_provider.add(h2o_a_priori)
 
     n = simulation.sensors[0].f_grid.size * simulation.sensors[0].stokes_dimension
     measurement_a_priori = IndependentMeasurementErrors(n, 1.0)
     data_provider.add(measurement_a_priori)
 
-    o2 = simulation.atmosphere.absorbers[0]
+    h2o = simulation.atmosphere.absorbers[-1]
     y = np.copy(simulation.workspace.y)
-    simulation.retrieval.add(o2)
+    simulation.retrieval.add(h2o)
+    h2o.retrieval.unit = "rh"
     simulation.retrieval.y = y
 
     simulation.setup()
     simulation.run()
+
+    return simulation.workspace.x.value
+
+def test_retrieval_runs():
+    """
+    """
+    mwi = ICI(stokes_dimension = 1)
+    mwi.name = "mwi"
+    mwi.f_grid = np.array([19e9, 35e9, 89e9, 118e9])
+    mwi.sensor_line_of_sight = np.array([[135.0]])
+    mwi.sensor_position = np.array([[600e3]])
+
+    simulation = setup_retrieval_simulation(retrieval_type = "passive",
+                                            scattering = False)
+    simulation.sensors += [mwi]
+
+    def get_o2(self):
+        return 0.2091 * np.ones(21)
+
+    data_provider = DataProvider()
+
+    simulation.data_provider = data_provider
+    simulation.setup()
+    simulation.run()
+
+    data_provider.get_O2 = get_o2.__get__(data_provider)
+    # H2O a priori
+    h2o_a_priori         = FixedApriori("H2O", 0.5, 0.01)
+    data_provider.add(h2o_a_priori)
+
+    # O2 a priori
+    o2_a_priori         = FixedApriori("O2", 1.0, 0.001)
+    data_provider.add(o2_a_priori)
+
+    # observation error a priori
+    n = 0
+    for s in simulation.sensors:
+        n += s.f_grid.size * s.stokes_dimension
+    measurement_a_priori = IndependentMeasurementErrors(n, 1.0)
+    data_provider.add(measurement_a_priori)
+
+    h2o = simulation.atmosphere.absorbers[-1]
+    simulation.retrieval.add(h2o)
+    h2o.retrieval.unit = "rh"
+
+    o2  = simulation.atmosphere.absorbers[-1]
+    o2.retrieval.unit = "rel"
+    simulation.retrieval.add(o2)
+
+    y = np.copy(simulation.workspace.y)
+    simulation.retrieval.y = y
+
+    def remove_mwi_o2(retrieval_run):
+        retrieval_run.sensors = retrieval_run.sensors[:1]
+        retrieval_run.retrieval_quantities = retrieval_run.retrieval_quantities[:1]
+
+    simulation.retrieval.callbacks = [remove_mwi_o2, None]
+
+    simulation.setup()
+    simulation.run()
+
+
+
+    return simulation.workspace.x.value
+
+mwi = ICI(stokes_dimension = 1)
+mwi.name = "mwi"
+mwi.f_grid = np.array([19e9, 35e9, 89e9, 118e9])
+mwi.sensor_line_of_sight = np.array([[135.0]])
+mwi.sensor_position = np.array([[600e3]])
+
+simulation = setup_retrieval_simulation(retrieval_type = "passive",
+                                        scattering = False)
+simulation._sensors += [mwi]
+
+def get_o2(self):
+    return 0.2091 * np.ones(21)
+
+data_provider = DataProvider()
+
+simulation.data_provider = data_provider
+simulation.setup()
+simulation.run()
+
+data_provider.get_O2 = get_o2.__get__(data_provider)
+# H2O a priori
+h2o_a_priori         = FixedApriori("H2O", 0.5, 0.1)
+data_provider.add(h2o_a_priori)
+
+# O2 a priori
+o2_a_priori         = FixedApriori("O2", 1.0, 0.01)
+data_provider.add(o2_a_priori)
+
+# observation error a priori
+n = 0
+for s in simulation.sensors:
+    n += s.f_grid.size * s.stokes_dimension
+measurement_a_priori = IndependentMeasurementErrors(n, 1.0)
+data_provider.add(measurement_a_priori)
+
+h2o = simulation.atmosphere.absorbers[-1]
+simulation.retrieval.add(h2o)
+h2o.retrieval.unit = "rh"
+
+o2  = simulation.atmosphere.absorbers[0]
+simulation.retrieval.add(o2)
+o2.retrieval.unit = "rel"
+
+y = np.copy(simulation.workspace.y)
+simulation.retrieval.y = y
+
+def cb_1(run):
+    run.sensors              = run.sensors[:1]
+    run.retrieval_quantities = run.retrieval_quantities[:1]
+
+simulation.retrieval.callbacks = [cb_1, None]
+
+simulation.setup()
+simulation.run()
+dashboard(simulation)
