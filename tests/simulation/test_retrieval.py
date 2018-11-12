@@ -18,10 +18,10 @@ from parts.dashboard import dashboard, make_retrieval_panel
 
 import matplotlib.pyplot as plt
 
-from IPython import get_ipython
-ip = get_ipython()
-ip.magic("load_ext autoreload")
-ip.magic("%autoreload 2")
+#from IPython import get_ipython
+#ip = get_ipython()
+#ip.magic("load_ext autoreload")
+#ip.magic("%autoreload 2")
 
 ################################################################################
 # A priori providers
