@@ -266,3 +266,32 @@ class O2(AbsorptionSpecies):
                          model = model,
                          on_the_fly = on_the_fly,
                          zeeman = zeeman)
+
+class CloudWater(AbsorptionSpecies):
+    def __init__(self,
+                 catalog = None,
+                 cia = None,
+                 frequency_range = None,
+                 isotopologues = None,
+                 model = "MPM93",
+                 on_the_fly = True,
+                 zeeman = False):
+        super().__init__("cloud_water",
+                         catalog = catalog,
+                         cia = cia,
+                         frequency_range = frequency_range,
+                         isotopologues = isotopologues,
+                         model = model,
+                         on_the_fly = on_the_fly,
+                         zeeman = zeeman)
+
+    def get_tag_string(self):
+
+        ts = "liquidcloud"
+        ts += "-"
+
+        if self._model:
+            ts += self._model
+            ts += "-"
+
+        return ts
