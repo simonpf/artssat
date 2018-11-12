@@ -98,7 +98,7 @@ class Sensor(ArtsObject):
     ############################################################################
 
     @arts_property("Vector",
-                   shape = (dim.Frq,),
+                   shape = (dim.Joker,),
                    wsv = wsv["f_grid"])
     def f_grid(self):
         """
@@ -347,6 +347,10 @@ class Sensor(ArtsObject):
         self._stokes_dimension.fixed = True
         self._stokes_dimension.value = n
 
+    @abstractproperty
+    def y_vector_length(self):
+        pass
+
     #
     # General sensor setup
     #
@@ -461,6 +465,10 @@ class ActiveSensor(Sensor):
                    wsv = wsv["instrument_pol_array"])
     def instrument_pol_array(self):
         return [[1]]
+
+    @property
+    def y_vector_length(self):
+        return (self.range_bins.size - 1) * self.f_grid.size * self.stokes_dimension
 
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
@@ -610,6 +618,10 @@ class PassiveSensor(Sensor):
     """
     Specialization of the abstract Sensor class for passive sensors.
     """
+
+    @property
+    def y_vector_length(self):
+        return self.f_grid.size * self.stokes_dimension
 
     def __init__(self, name, f_grid, stokes_dimension = 1):
         """

@@ -82,6 +82,10 @@ class Transformation(metaclass = ABCMeta):
     def __call__(self, x):
         pass
 
+    @abstractmethod
+    def invert(self, y):
+        pass
+
 class Log10(Transformation):
     """
     The decadal logarithm transformation $f(x) = \log_{10}(x)$.
@@ -95,6 +99,9 @@ class Log10(Transformation):
     def __call__(self, x):
         return np.log10(x)
 
+    def invert(self, y):
+        return 10.0 ** y
+
 class Log(Transformation):
     """
     The natural logarithm transformation $f(x) = \log_{10}(x)$.
@@ -106,7 +113,10 @@ class Log(Transformation):
         ws.jacobianSetFuncTransformation(transformation_func = "log")
 
     def __call__(self, x):
-        return np.log10(x)
+        return np.log(x)
+
+    def invert(self, y):
+        return np.exp(1) ** y
 
 class Atanh(Transformation):
 
@@ -133,7 +143,8 @@ class Atanh(Transformation):
     def __call__(self, x):
         return np.arctanh(2.0 * (x - self.z_min) / (self.z_max - self.z_min) - 1)
 
-
+    def invert(self, y):
+        return (np.tanh(y) + 1) * 0.5 * (self.z_max - self.z_min) + self.z_min
 
 class Identity(Transformation):
     """
@@ -147,6 +158,9 @@ class Identity(Transformation):
 
     def __call__(self, x):
         return x
+
+    def invert(self, y):
+        return y
 
 ################################################################################
 # JacobianCalculation

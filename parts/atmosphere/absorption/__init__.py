@@ -177,6 +177,10 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
     def retrieval_class(self):
         return Retrieval
 
+    def set_from_x(self, ws, x):
+        x = self.transformation.invert(x)
+        x = np.copy(x.reshape(ws.vmr_field.value.shape[1:]))
+        ws.vmr_field.value[self._wsv_index, :, :, :] = x
 
     #
     # Retrieval

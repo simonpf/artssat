@@ -103,6 +103,11 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     def retrieval_class(self):
         return Retrieval
 
+    def set_from_x(self, x):
+        x = self.transformation.invert(x)
+        x = np.copy(x.reshape(self.particle_bulkprop_field.value.shape[1:]))
+        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = x
+
     #
     # Properties
     #

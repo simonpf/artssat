@@ -189,8 +189,11 @@ class ArtsSimulation:
         for s in self.sensors:
             s.get_data(ws, self.data_provider, *args, **kwargs)
 
+        # Run retrieval calculation
         if len(self.retrieval.retrieval_quantities) > 0:
-            self._run_retrieval(*args, **kwargs)
+            scattering = len(self.atmosphere.scatterers) > 0
+
+            self.retrieval.run(self, *args, **kwargs)
         else:
             self._run_forward_simulation()
 
