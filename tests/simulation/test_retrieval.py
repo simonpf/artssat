@@ -243,7 +243,7 @@ def test_retrieval_runs():
 
     simulation = setup_retrieval_simulation(retrieval_type = "passive",
                                             scattering = False)
-    simulation.sensors += [mwi]
+    simulation._sensors += [mwi]
 
     def get_o2(self):
         return 0.2091 * np.ones(21)
