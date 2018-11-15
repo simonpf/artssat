@@ -167,7 +167,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             fname = "get_" + self.quantity.name + "_xa"
             xa_fun = getattr(data_provider, fname)
             self.xa = xa_fun(*args, **kwargs)
-        except:
+        except AttributeError:
             raise Exception("The data provider must provide a get method for "
                            "the a priori state of retrieval quantity {0}."
                            .format(self.quantity.name))
@@ -408,7 +408,7 @@ class RetrievalRun:
         else:
             return None
 
-    def setup_a_priori(self, *args, set_x0 = True, **kwargs):
+    def setup_a_priori(self, *args, **kwargs):
         """
         Setup the retrieval calculation.
 
@@ -543,6 +543,8 @@ class RetrievalRun:
             if not preps is None:
                 agenda.append(preps)
 
+        #agenda.append(debug_print)
+
         arg_list = self.sensors[0].get_wsm_args(wsm["x2artsAtmAndSurf"])
         agenda.add_method(ws, wsm["x2artsAtmAndSurf"], *arg_list)
 
@@ -584,6 +586,12 @@ class RetrievalRun:
             ))
             i += 1
 
+        #@arts_agenda
+        #def debug_print_2(ws):
+        #    ws.Print(ws.particle_bulkprop_field, 0)
+
+        #agenda.append(debug_print_2)
+
 
         def iteration_finalize(ws):
             ws.Ignore(ws.inversion_iteration_counter)
@@ -601,14 +609,22 @@ class RetrievalRun:
         ws = self.simulation.workspace
 
         self.setup_iteration_agenda()
-        self.setup_a_priori()
+        self.setup_a_priori(*args, **kwargs)
 
         self.simulation.run_checks()
 
         y_blocks = []
         for s in self.sensors:
-            i, j = self.sensor_indices[s.name]
-            y_blocks += [self.y[i : j]]
+            if isinstance(s, ActiveSensor):
+                i, j = self.sensor_indices[s.name]
+                y_blocks += [self.y[i : j]]
+        for s in self.sensors:
+            if not isinstance(s, ActiveSensor):
+                i, j = self.sensor_indices[s.name]
+                y_blocks += [self.y[i : j]]
+
+        
+
         y = np.concatenate(y_blocks)
         self.y = y
         ws.y  = y
@@ -715,8 +731,13 @@ class RetrievalCalculation:
         i_start = 0
         sensor_indices = {}
         for s in simulation.sensors:
-            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
-            i_start += s.y_vector_length
+            if isinstance(s, ActiveSensor):
+                sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+                i_start += s.y_vector_length
+        for s in simulation.sensors:
+            if not isinstance(s, ActiveSensor):
+                sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+                i_start += s.y_vector_length
 
         # Get y vector
         ws   = simulation.workspace

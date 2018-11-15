@@ -154,7 +154,8 @@ class Atmosphere:
 
     def __setup_absorption__(self, ws):
         species = []
-        for a in self._absorbers:
+        for i, a in enumerate(self._absorbers):
+            a.setup(ws, i)
             species += [a.get_tag_string()]
 
         ws.abs_speciesSet(species = species)

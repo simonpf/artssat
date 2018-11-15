@@ -3,6 +3,7 @@ Absorption
 ==========
 
 """
+from abc import ABCMeta, abstractmethod, abstractproperty
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 
@@ -12,6 +13,144 @@ from parts.retrieval   import RetrievalBase, RetrievalQuantity
 
 import numpy as np
 from typhon.arts.workspace import arts_agenda
+from typhon.physics.atmosphere import vmr2relative_humidity, \
+    relative_humidity2vmr
+
+################################################################################
+# Retrieval units
+################################################################################
+
+class Unit(metaclass = ABCMeta):
+    """
+    Abstract base class for classes representing units used for the calculation
+    of Jacobians and retrievals of absorption species.
+    """
+    def __init__():
+        pass
+
+    @abstractmethod
+    def to_arts(self, ws, x):
+        pass
+
+    @abstractmethod
+    def from_arts(self, ws, x):
+        pass
+
+    @abstractproperty
+    def arts_name(self):
+        pass
+
+
+class VMR(Unit):
+    """
+    VMR is the default unit used for absorption species in ARTS. If this unit
+    is used value from the state vector are plugged in as they are into
+    the ARTS vmr field.
+    """
+
+    def __init__(self):
+        pass
+
+    def to_arts(self, ws, x):
+        """
+        Does nothing.
+        """
+        return x
+
+    def from_arts(self, ws, x):
+        """
+        Does nothing.
+        """
+        return x
+
+    @property
+    def arts_name(self):
+        return "vmr"
+
+class Relative(Unit):
+    """
+    In relative units, the amount of a quantity is specified relative to a
+    reference profile or field. 
+
+    If this unit is used in a Jacobian calculation, then the Jacobian is
+    calculated w.r.t. a relative perturbation.
+
+    If this unit is used in the retrieval, values in the state vector are
+    interpreted as multiplicative perturbations of the reference profile
+    or field.
+    """
+    def __init__(self, x_ref):
+        self.x_ref
+
+    def to_arts(self, ws, x):
+        return self.x_ref * x
+
+    def from_arts(self, ws, y):
+        return y / self.x_ref
+
+    @property
+    def arts_name(self):
+        return "rel"
+
+class RelativeHumidity(Unit):
+    """
+    Relative humidity is available only for the retrieval of H2O.
+    """
+    def __init__(self):
+        pass
+
+    def to_arts(self, ws, rh):
+        """
+        Converts value given in relative humidity units to ARTS vmr units.
+
+        Arguments:
+
+            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+                which contains pressure grid and temperature field required
+                for the converstion.
+
+            rh(:code:`numpy.ndarray`): Relative humidity values to convert.
+
+        Returns:
+
+            :code:`numpy.ndarray` containing the converted RH values.
+
+        """
+        p   = ws.p_grid.value.reshape(-1, 1, 1)
+        t   = ws.t_field.value
+        vmr = relative_humidity2vmr(rh, p, t)
+        return vmr
+
+    def from_arts(self, ws, vmr):
+        """
+        Converts a value given in ARTS vmr units back to relative humidity.
+
+        Arguments:
+
+            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+                which contains pressure grid and temperature field required
+                for the conversion.
+
+            vmr(:code:`numpy.ndarray`): Values in ARTS vmr units to convert
+                to relative humidity.
+
+        Returns:
+
+            :code:`numpy.ndarray` containing the converted RH values.
+
+        """
+        p  = ws.p_grid.value.reshape(-1, 1, 1)
+        t  = ws.t_field.value
+        rh = vmr2relative_humidity(vmr, p, t)
+        return rh
+
+    @property
+    def arts_name(self):
+        return "rh"
+
+################################################################################
+# The Jacobian class
+################################################################################
 
 class Jacobian(JacobianBase, ArtsObject):
 
@@ -28,7 +167,7 @@ class Jacobian(JacobianBase, ArtsObject):
         self.lat_grid = None
         self.lon_grid = None
 
-        self.unit = "vmr"
+        self.unit = VMR()
         self.method = "analytical"
         self.for_species_tag = 1
         self.dx = 0.001
@@ -53,7 +192,7 @@ class Jacobian(JacobianBase, ArtsObject):
         kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
                     "species" : self.quantity.get_tag_string(),
                     "method" : self.method,
-                    "unit" : self.unit,
+                    "unit" : self.unit.arts_name,
                     "for_species_tag" : self.for_species_tag,
                     "dx" : self.dx}
 
@@ -61,7 +200,6 @@ class Jacobian(JacobianBase, ArtsObject):
 
     def setup(self, ws):
         kwargs = self._make_setup_kwargs(ws)
-        print(kwargs)
         ws.jacobianAddAbsSpecies(**kwargs)
 
 class Retrieval(RetrievalBase, Jacobian):
@@ -178,8 +316,13 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
         return Retrieval
 
     def set_from_x(self, ws, x):
+
         x = self.transformation.invert(x)
-        x = np.copy(x.reshape(ws.vmr_field.value.shape[1:]))
+        x = x.reshape(ws.vmr_field.value.shape[1:])
+
+        unit = self.retrieval.unit
+        x = unit.to_arts(ws, x)
+
         ws.vmr_field.value[self._wsv_index, :, :, :] = x
 
     #
