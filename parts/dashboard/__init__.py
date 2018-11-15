@@ -1,7 +1,6 @@
 import numpy as np
 
 import threading
-import tornado.ioloop
 
 from bokeh                               import events
 from bokeh.colors                        import RGB
@@ -41,15 +40,7 @@ class BokehServer():
             self.server.stop()
 
         self.server = Server(application, port = port)
-
-        try:
-            self.server.io_loop.start()
-        except:
-            raise
-        finally:
-            print("Stopping server.")
-            tornado.ioloop.IOLoop.instance().stop()
-            self.server.stop()
+        self.server.io_loop.start()
 
 
 standalone_server = BokehServer()
