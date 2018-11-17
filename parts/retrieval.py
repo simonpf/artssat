@@ -489,7 +489,6 @@ class RetrievalRun:
         ws.retrievalDefClose()
 
         self.xa = np.concatenate(xa)
-        print(x0)
         self.x0 = np.concatenate(x0)
 
         ws.xa = self.xa

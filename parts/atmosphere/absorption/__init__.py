@@ -80,7 +80,7 @@ class Relative(Unit):
     or field.
     """
     def __init__(self, x_ref):
-        self.x_ref
+        self.x_ref = x_ref
 
     def to_arts(self, ws, x):
         return self.x_ref * x

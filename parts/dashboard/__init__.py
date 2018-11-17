@@ -284,16 +284,16 @@ class AVKPlot:
                                                 line_color = None,
                                                 width = 1,
                                                 height = 1)
-        marker_source = ColumnDataSource(data = dict(x = np.array([x[0]]),
-                                                     y = np.array([x[0]])))
+        #marker_source = ColumnDataSource(data = dict(x = np.array([x[0]]),
+        #                                             y = np.array([x[0]])))
 
-        marker = Rect(x = "x",
-                      y = "y",
-                      fill_color = None,
-                      line_color = RGB(0.0, 0.0, 0.0),
-                      width = x[-1] - x[0],
-                      height = 1)
-        self.images[rq].add_glyph(marker_source, rect)
+        #marker = Rect(x = "x",
+        #              y = "y",
+        #              fill_color = None,
+        #              line_color = RGB(0.0, 0.0, 0.0),
+        #              width = x[-1] - x[0],
+        #              height = 1)
+        #self.images[rq].add_glyph(marker_source, rect)
 
         #axis = self.figures[rq].xaxis
         #axis.major_label_overrides = dict(zip(axis.ticker,
@@ -314,7 +314,7 @@ class AVKPlot:
         color_bar = ColorBar(color_mapper = mapper,
                              #major_label_text_font_size ="5pt",
                              ticker = BasicTicker(desired_num_ticks = len(colors)),
-                             formatter = PrintfTickFormatter(format="%f"),
+                             formatter = PrintfTickFormatter(format="%.2f"),
                              label_standoff = 6,
                              border_line_color=None,
                              location=(0, 0))
@@ -328,6 +328,7 @@ class AVKPlot:
         source = ColumnDataSource(data = dict(x = x, y = avk[0]))
         fig =  figure(tools = ["box_zoom", "box_select", "reset"],
                       width = 400,
+                      y_range = [clim_low, clim_high],
                       toolbar_location = "above")
         line = fig.line(x = "x", y = "y", source = source)
 
@@ -337,7 +338,7 @@ class AVKPlot:
         #
 
         cb = CustomJS(args = dict(source_avk = self.sources[rq],
-                                  source_marker = marker_source,
+                                  #source_marker = marker_source,
                                   source = source), code =
                       """
                       var x = Number(cb_obj["x"]);
@@ -354,8 +355,6 @@ class AVKPlot:
 
                       console.log(source.data["x"].length);
                       console.log(source.data["y"].length);
-                      source_marker.data["y"][0] = source_avk.data["y"][i];
-                      source_marker.change.emit();
                       """)
         self.figures[rq].js_on_event(events.Tap, cb)
         r = row(self.figures[rq], fig)

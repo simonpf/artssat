@@ -4,7 +4,8 @@ import pytest
 
 from parts                       import ArtsSimulation
 from parts.atmosphere            import Atmosphere1D
-from parts.atmosphere.absorption import O2, N2, H2O
+from parts.atmosphere.absorption import O2, N2, H2O, Relative, \
+    RelativeHumidity
 from parts.atmosphere.surface    import Tessem
 from parts.jacobian              import Log10
 from parts.scattering            import ScatteringSpecies, D14
@@ -224,7 +225,7 @@ def test_simulation_absorption_retrieval():
     h2o = simulation.atmosphere.absorbers[-1]
     y = np.copy(simulation.workspace.y)
     simulation.retrieval.add(h2o)
-    h2o.retrieval.unit = "rh"
+    h2o.retrieval.unit = RelativeHumidity()
     simulation.retrieval.y = y
 
     simulation.setup()
@@ -272,11 +273,11 @@ def test_retrieval_runs():
 
     h2o = simulation.atmosphere.absorbers[-1]
     simulation.retrieval.add(h2o)
-    h2o.retrieval.unit = "rh"
+    h2o.retrieval.unit = RelativeHumidity()
 
     o2  = simulation.atmosphere.absorbers[0]
     simulation.retrieval.add(o2)
-    o2.retrieval.unit = "rel"
+    o2.retrieval.unit = Relative(0.2091 * np.ones(21))
 
     y = np.copy(simulation.workspace.y)
     simulation.retrieval.y = y
@@ -314,28 +315,28 @@ def test_retrieval_runs():
 #simulation.run()
 #
 #data_provider.get_O2 = get_o2.__get__(data_provider)
-## H2O a priori
+##H2O a priori
 #h2o_a_priori         = FixedApriori("H2O", 0.5, 0.1)
 #data_provider.add(h2o_a_priori)
 #
-## O2 a priori
+##O2 a priori
 #o2_a_priori         = FixedApriori("O2", 1.0, 0.01)
 #data_provider.add(o2_a_priori)
 #
-## observation error a priori
+##observation error a priori
 #n = 0
 #for s in simulation.sensors:
     #n += s.f_grid.size * s.stokes_dimension
-    #measurement_a_priori = IndependentMeasurementErrors(n, 1.0)
-    #data_provider.add(measurement_a_priori)
+#measurement_a_priori = IndependentMeasurementErrors(n, 1.0)
+#data_provider.add(measurement_a_priori)
 #
 #h2o = simulation.atmosphere.absorbers[-1]
 #simulation.retrieval.add(h2o)
-#h2o.retrieval.unit = "rh"
+#h2o.retrieval.unit = RelativeHumidity()
 #
 #o2  = simulation.atmosphere.absorbers[0]
 #simulation.retrieval.add(o2)
-#o2.retrieval.unit = "rel"
+#o2.retrieval.unit = Relative(0.2091 * np.ones((21, 1, 1)))
 #
 #y = np.copy(simulation.workspace.y)
 #simulation.retrieval.y = y
