@@ -622,8 +622,6 @@ class RetrievalRun:
                 i, j = self.sensor_indices[s.name]
                 y_blocks += [self.y[i : j]]
 
-        
-
         y = np.concatenate(y_blocks)
         self.y = y
         ws.y  = y
@@ -634,7 +632,8 @@ class RetrievalRun:
 
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
-        self.yf = np.copy(ws.yf.value)
+        self.yf              = np.copy(ws.yf.value)
+        self.jacobian        = np.copy(ws.jacobian.value)
 
         if self.oem_diagnostics[0] == 0.0:
             ws.avkCalc()
