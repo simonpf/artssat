@@ -277,7 +277,8 @@ def test_retrieval_runs():
 
     o2  = simulation.atmosphere.absorbers[0]
     simulation.retrieval.add(o2)
-    o2.retrieval.unit = Relative(0.2091 * np.ones(21))
+    o2.retrieval.unit = Relative(0.2091 * np.ones((21, 1, 1)))
+
 
     y = np.copy(simulation.workspace.y)
     simulation.retrieval.y = y
