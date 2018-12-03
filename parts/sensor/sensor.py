@@ -473,6 +473,7 @@ class ActiveSensor(Sensor):
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
         self.iy_unit = "dBZe"
+        self.range_bins = range_bins
 
     #
     # Agendas
@@ -619,6 +620,10 @@ class PassiveSensor(Sensor):
     Specialization of the abstract Sensor class for passive sensors.
     """
 
+    @arts_property("Index")
+    def t_interp_order(self):
+        return 0
+
     @property
     def y_vector_length(self):
         return self.f_grid.size * self.stokes_dimension
@@ -655,7 +660,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid(*args)
+            ws.iyHybrid(*args, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)
@@ -665,6 +670,8 @@ class PassiveSensor(Sensor):
             ws.Ignore(ws.iy_aux_vars)
             ws.ppathCalc()
             ws.iyEmissionStandard(*args)
+
+        kwargs = {"t_interp_order" : self.t_interp_order}
 
         if scattering:
             agenda = iy_main_agenda_scattering

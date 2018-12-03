@@ -404,7 +404,7 @@ class RetrievalRun:
             return x[i : j, i : j]
 
         if not self.previous_run is None:
-            return self.previous_run.get_result(q, attribute = attribute)
+            return self.previous_run.get_result(q, attribute = "avk")
         else:
             return None
 

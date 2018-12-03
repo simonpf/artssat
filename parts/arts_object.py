@@ -592,10 +592,16 @@ class ArtsProperty:
         return value
 
     def __get__(self, owner, objtype = None):
+
         if owner is None:
             return self
 
-        return owner.__dict__["_" + self.name].value
+        val = owner.__dict__["_" + self.name].value
+
+        if val is None:
+            val = self.fdefault(owner)
+
+        return val
 
     def __set__(self, owner, value):
         if not self.fset is None:
@@ -611,8 +617,9 @@ class ArtsProperty:
         ph.fixed = True
         ph.value = value
 
-        if not ph.workspace is None:
-            owner.set_wsv(ph.workspace, self.wsv, value)
+        if not self.wsv is None:
+            if not ph.workspace is None:
+                owner.set_wsv(ph.workspace, self.wsv, value)
 
     def _setup(self, *args, **kwargs):
         """

@@ -567,8 +567,15 @@ def make_retrieval_panel(simulation):
     retrieval_result_plot = RetrievalResultPlot(z, p, simulation.retrieval)
     r = retrieval_result_plot.make_doc()
 
-    avks = AVKPlot(simulation)
-    r.children += avks.make_doc().children
+    if type(simulation.retrieval.results) is list:
+        results = simulation.retrieval.results
+    else:
+        results = [simulation.retrieval.results]
+
+    if all([not r.avk is None for r in simulation.retrieval.results]):
+        avks = AVKPlot(simulation)
+        r.children += avks.make_doc().children
+
     return Panel(child = r, title = "Retrieval", width = 600)
 
 
