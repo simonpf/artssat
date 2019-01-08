@@ -292,6 +292,7 @@ class RetrievalQuantity(JacobianQuantity):
     def __init__(self):
         self._transformation = None
         self._fixed          = None
+        self._retrieval      = None
         super().__init__()
 
     @property
