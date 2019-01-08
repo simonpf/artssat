@@ -156,7 +156,7 @@ class ArtsSimulation:
             f(ws)
 
             s.y = np.copy(ws.y.value[y_index:].reshape((-1, s.stokes_dimension)))
-            y_index += ws.y.value.size
+            y_index = ws.y.value.size
 
             i += 1
 
