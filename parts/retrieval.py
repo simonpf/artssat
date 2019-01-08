@@ -59,7 +59,7 @@ from parts.sensor      import ActiveSensor, PassiveSensor
 
 
 ################################################################################
-# RetrievalBase class
+# RetrievalBase
 ################################################################################
 
 class RetrievalBase(ArtsObject, metaclass = ABCMeta):
@@ -236,7 +236,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         if not covmat is None:
             ws.covmat_sxAddBlock(block = covmat)
         if not precmat is None:
-            ws.covmat_sxAddInvBlock(block = precmat)
+            ws.covmat_sxAddInverseBlock(block = precmat)
 
         self.quantity.transformation.setup(ws)
 
@@ -258,6 +258,9 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
 
         return arts_agenda(agenda)
 
+################################################################################
+# RetrievalQuantity
+################################################################################
 
 class RetrievalQuantity(JacobianQuantity):
     """
@@ -361,6 +364,29 @@ class RetrievalQuantity(JacobianQuantity):
 ################################################################################
 
 class RetrievalRun:
+    """
+    The :class:`RetrievalRun` represents a single call to the ARTS OEM
+    workspace method. A single retrieval calculation can consist of
+    several sequential retrieval runs performed with different settings.
+    Each of these runs is represented by a single :code:`RetrievalRun`
+    instance that holds the retrieval settings as well as the results
+    of the single run.
+
+    Attributes:
+
+        name(:code:`str`): A name to identity the retrieval run.
+
+        simulation(:code:`parts.ArtsSimulation`): The simulation instance
+            on which this retrieval run is executed.
+
+        y(:code:`y`): The observation vector for the retrieval.
+
+        settings(:code:`dict`): A dictionary holding the retrieval
+            settings.
+
+        
+
+    """
     def __init__(self,
                  name,
                  simulation,
@@ -507,15 +533,31 @@ class RetrievalRun:
             covmat_se = covmat_se.todense()
 
         covmat_blocks = []
+
         for s in self.sensors:
-            (i, j) = self.sensor_indices[s.name]
-            covmat_blocks += [covmat_se[i:j, i:j]]
+            if isinstance(s, ActiveSensor):
+                (i, j) = self.sensor_indices[s.name]
+                covmat_blocks += [covmat_se[i:j, i:j]]
+
+        for s in self.sensors:
+            if not isinstance(s, ActiveSensor):
+                (i, j) = self.sensor_indices[s.name]
+                covmat_blocks += [covmat_se[i:j, i:j]]
 
         covmat_se = sp.sparse.block_diag(covmat_blocks, format = "coo")
+        print(covmat_se)
 
         ws.covmat_seAddBlock(block = covmat_se)
 
     def setup_iteration_agenda(self):
+
+        debug = self.simulation.retrieval.debug_mode
+
+        if debug:
+            self.debug = {"x"               : [],
+                          "yf"              : [],
+                          "jacobian"        : [],
+                          "iteration_index" : []}
 
         ws            = self.simulation.workspace
         data_provider = self.simulation.data_provider
@@ -535,14 +577,10 @@ class RetrievalRun:
         def debug_print(ws):
             ws.Print(ws.x, 0)
 
-        #agenda.append(debug_print)
-
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
             if not preps is None:
                 agenda.append(preps)
-
-        #agenda.append(debug_print)
 
         arg_list = self.sensors[0].get_wsm_args(wsm["x2artsAtmAndSurf"])
         agenda.add_method(ws, wsm["x2artsAtmAndSurf"], *arg_list)
@@ -550,7 +588,6 @@ class RetrievalRun:
         scattering = len(self.simulation.atmosphere.scatterers) > 0
         if scattering:
             agenda.add_method(ws, wsm["pnd_fieldCalcFromParticleBulkProps"])
-        #agenda = Agenda.create("inversion_iterate_agenda")
 
         i_active = []
         i_passive = []
@@ -585,12 +622,6 @@ class RetrievalRun:
             ))
             i += 1
 
-        #@arts_agenda
-        #def debug_print_2(ws):
-        #    ws.Print(ws.particle_bulkprop_field, 0)
-
-        #agenda.append(debug_print_2)
-
 
         def iteration_finalize(ws):
             ws.Ignore(ws.inversion_iteration_counter)
@@ -599,6 +630,16 @@ class RetrievalRun:
             ws.jacobianAdjustAndTransform()
 
         agenda.append(arts_agenda(iteration_finalize))
+
+        @arts_agenda
+        def get_debug(ws):
+            self.debug["x"]               += [np.copy(ws.x.value)]
+            self.debug["yf"]              += [np.copy(ws.yf.value)]
+            self.debug["jacobian"]        += [np.copy(ws.jacobian.value)]
+            self.debug["iteration_index"] += [ws.inversion_iteration_counter.value]
+
+        if debug:
+            agenda.append(get_debug)
 
         ws.inversion_iterate_agenda = agenda
 
@@ -635,17 +676,26 @@ class RetrievalRun:
         self.yf              = np.copy(ws.yf.value)
         self.jacobian        = np.copy(ws.jacobian.value)
 
-        if self.oem_diagnostics[0] == 0.0:
+        if self.oem_diagnostics[0] <= 2.0:
             ws.avkCalc()
-            self.avk = np.copy(ws.avk)
+            self.dxdy      = np.copy(ws.dxdy)
+            self.jacobian  = np.copy(ws.jacobian)
+            self.avk       = np.copy(ws.avk)
             ws.covmat_soCalc()
             self.covmat_so = np.copy(ws.covmat_so.value)
             ws.covmat_ssCalc()
             self.covmat_ss = np.copy(ws.covmat_ss.value)
         else:
+            self.dxdy      = None
+            self.jacobian  = None
             self.avk       = None
             self.covmat_so = None
             self.covmat_ss = None
+
+        if self.oem_diagnostics[0] == 9.0:
+            self.oem_errors = ws.oem_errors.value
+        else:
+            self.oem_errors = None
 
 
 class RetrievalCalculation:
@@ -653,8 +703,14 @@ class RetrievalCalculation:
     The :class:`Retrieval` takes care of the book-keeping around retrieval
     quantities in an ARTS simulation as well as the execution of the retrieval
     calculation.
+
+    Arguments:
+
+        debug_mode(:code:`bool`): If set to true, debug information will be
+            collected while the retrieval is run.
     """
-    def __init__(self):
+    def __init__(self,
+                 debug_mode = False):
 
         self.retrieval_quantities = []
         self.y = None
@@ -669,6 +725,7 @@ class RetrievalCalculation:
                          "display_progress" : 1}
 
         self.callbacks = []
+        self.debug_mode = debug_mode
 
     def add(self, rq):
         """
@@ -676,9 +733,8 @@ class RetrievalCalculation:
 
         This registers an atmospheric quantity as a retrieval quantity,
         which means that parts will try to retrieve the quantity using ARTS's
-        OEM method instead of querying its value from the data provider.
-
-        While the data provider is not required to provide get methods for
+        OEM method instead of querying its value from the data provider. While
+        the data provider is not required to provide get methods for
         the retrieval quantity itself, it must provide values for its a priori
         mean and covariance matrix.
 
