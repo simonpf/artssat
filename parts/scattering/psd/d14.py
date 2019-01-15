@@ -345,13 +345,16 @@ class D14(ArtsPSD):
             parameter and the last dimension to the size parameter.
 
         """
-        md = self.mass_density
-        if md is None:
+
+        try:
+            md = self.mass_density
+        except:
             raise Exception("The 'mass_density' array needs to be set,  before"
                             " the PSD can be evaluated.")
 
-        dm = self.mass_weighted_diameter
-        if dm is None:
+        try:
+            dm = self.mass_weighted_diameter
+        except:
             raise Exception("The 'mass_weighted_diameter' array needs to be"
                             " set,  before the PSD can be evaluated.")
 
