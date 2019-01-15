@@ -577,6 +577,7 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
+        agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
@@ -721,7 +722,7 @@ class RetrievalCalculation:
                          "x_norm" : np.zeros(0),
                          "max_iter" : 10,
                          "stop_dx" : 0.1,
-                         "lm_ga_settings" : np.array([100.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
+                         "lm_ga_settings" : np.array([1000.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
                          "clear_matrices" : 0,
                          "display_progress" : 1}
 
@@ -749,7 +750,29 @@ class RetrievalCalculation:
         self.retrieval_quantities += [rq]
 
 
+    def _get_y_vector(self, simulation, *args, **kwargs):
 
+        if len(simulation.sensors) == 0:
+            raise Exception("Can't perform retrieval without sensors.")
+
+        y = getattr(self, "y", None)
+        if y is None:
+            f = getattr(simulation.data_provider, "get_y", None)
+            if not f is None:
+                y = f(*args, **kwargs)
+            else:
+                ys = []
+
+                for ss in [simulation.active_sensors, simulation.passive_sensors]:
+                    for s in ss:
+                        fname = "get_y_" + s.name
+                        f = getattr(simulation.data_provider, fname, None)
+                        if f is None:
+                            raise Exception("No measurement vector provided for "
+                                            " sensor {0}.".format(s.name))
+                        ys += [f(*args, **kwargs).ravel()]
+                y = np.concatenate(ys)
+        return y
 
     def run(self, simulation, *args, **kwargs):
         """
@@ -785,16 +808,16 @@ class RetrievalCalculation:
         # Determine sensor indices of y vector
         i_start = 0
         sensor_indices = {}
-        for s in simulation.sensors:
-            if isinstance(s, ActiveSensor):
-                sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
-                i_start += s.y_vector_length
-        for s in simulation.sensors:
-            if not isinstance(s, ActiveSensor):
-                sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
-                i_start += s.y_vector_length
+        for s in simulation.active_sensors:
+            s.get_data(simulation.workspace, simulation.data_provider, *args, **kwargs)
+            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            i_start += s.y_vector_length
+        for s in simulation.passive_sensors:
+            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            i_start += s.y_vector_length
 
-        # Get y vector
+        self.y = self._get_y_vector(simulation, *args, **kwargs)
+
         ws   = simulation.workspace
 
         previous_run = None

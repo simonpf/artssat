@@ -166,7 +166,7 @@ class Sensor(ArtsObject):
         """
         return np.zeros((1, self.sensor_line_of_sight.shape[1]))
 
-    @arts_property("Matrix",
+    @arts_property("Sparse",
                    shape = (dim.Joker, dim.Joker),
                    wsv = wsv["sensor_response"])
     def sensor_response(self):
@@ -194,8 +194,8 @@ class Sensor(ArtsObject):
         """
         return []
 
-    @arts_property("Matrix",
-                   shape = (dim.Joker,),
+    @arts_property("Vector",
+                   shape = (dim.Joker, dim.Joker),
                    wsv = wsv["sensor_response_dlos"])
     def sensor_response_dlos(self):
         """
@@ -417,7 +417,8 @@ class Sensor(ArtsObject):
 
         """
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
-        self.call_wsm(ws, wsm["sensor_responseInit"])
+        if self.sensor_response == []:
+            self.call_wsm(ws, wsm["sensor_responseInit"])
         self.call_wsm(ws, wsm["sensor_checkedCalc"])
 
 
@@ -472,8 +473,10 @@ class ActiveSensor(Sensor):
 
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
-        self.iy_unit = "dBZe"
-        self.range_bins = range_bins
+        self.iy_unit    = "dBZe"
+
+        if not range_bins is None:
+            self.range_bins = range_bins
 
     #
     # Agendas
@@ -626,7 +629,10 @@ class PassiveSensor(Sensor):
 
     @property
     def y_vector_length(self):
-        return self.f_grid.size * self.stokes_dimension
+        if hasattr(self.sensor_response, "shape"):
+            return self.sensor_response.shape[0]
+        else:
+            return self.f_grid.size * self.stokes_dimension
 
     def __init__(self, name, f_grid, stokes_dimension = 1):
         """
@@ -660,7 +666,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid(*args, t_interp_order = self.t_interp_order)
+            ws.iyHybrid2(*args, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)
@@ -675,7 +681,7 @@ class PassiveSensor(Sensor):
 
         if scattering:
             agenda = iy_main_agenda_scattering
-            args = self.get_wsm_args(wsm["iyHybrid"])
+            args = self.get_wsm_args(wsm["iyHybrid2"])
         else:
             agenda = iy_main_agenda_no_scattering
             args = self.get_wsm_args(wsm["iyEmissionStandard"])

@@ -36,6 +36,14 @@ class ArtsSimulation:
         return self._sensors
 
     @property
+    def active_sensors(self):
+        return [s for s in self._sensors if isinstance(s, ActiveSensor)]
+
+    @property
+    def passive_sensors(self):
+        return [s for s in self._sensors if isinstance(s, PassiveSensor)]
+
+    @property
     def data_provider(self):
         return self._data_provider
 

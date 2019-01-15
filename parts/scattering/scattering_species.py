@@ -89,7 +89,8 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         pass
 
     def get_data(self, ws, provider, *args, **kwargs):
-        AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
+        if self.retrieval is None:
+            AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
 
     #
     # Jacobian & retrieval
