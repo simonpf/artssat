@@ -271,7 +271,7 @@ def get_shape(obj):
         of these types.
 
     """
-    if type(obj) == np.ndarray:
+    if hasattr(obj, "shape"):
         return obj.shape
     elif type(obj) == list:
         if obj == []:
@@ -293,6 +293,10 @@ def broadcast(shape, obj):
         obj(object): The object to broadcast to the provided shape. Either a
         numpy array or a (nested) list.
     """
+
+    if shape == get_shape(obj):
+        return obj
+
     if type(obj) == np.ndarray:
         return np.broadcast_to(obj, shape)
     elif type(obj) == list:
@@ -549,6 +553,7 @@ class ArtsProperty:
 
         # catch inconsistent number of dimensions.
         if not len(shape) == len(self.shape):
+
             s = "The provided value for {0} has {1} dimensions but {2} were"\
                 " expected.".format(who, len(shape), len(self.shape))
             raise Exception(s)
@@ -884,7 +889,6 @@ class ArtsObject:
         # Copy output
         for i in wsm.outs:
             name = WorkspaceVariable.get_variable_name(i)
-            print(name)
             if name in self._wsvs and not i in wsm.ins:
                 ws.Copy(self._wsvs[name], wsv[name])
 
