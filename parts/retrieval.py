@@ -504,6 +504,8 @@ class RetrievalRun:
                 self.rq_indices[rq] = (rq_index, rq_index + xa[-1].size)
                 rq_index += xa[-1].size
 
+                rq.set_from_x(ws, rq.retrieval.xa)
+
         #
         # Set values of retrieval quantities excluded from retrieval.
         #
@@ -827,7 +829,6 @@ class RetrievalCalculation:
         ws   = simulation.workspace
 
         previous_run = None
-        print("running retrieval ...")
         if self.callbacks == []:
             #
             # No retrieval callback provided. The retrieval consists only
