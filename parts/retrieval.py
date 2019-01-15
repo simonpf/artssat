@@ -671,7 +671,13 @@ class RetrievalRun:
         ws.yf       = []
         ws.jacobian = []
 
-        ws.OEM(**self.settings)
+        try:
+            ws.OEM(**self.settings)
+        except Exception as e:
+            ws.oem_diagnostics = 9 * np.ones(5)
+            ws.yf       = None
+            ws.jacobian = None
+            ws.oem_errors = ["Error computing initial cost.", str(e)]
 
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
