@@ -23,31 +23,55 @@ class NetCDFDataProvider(DataProviderBase):
     get methods are consecutively applied to the variable.
     """
     @staticmethod
-    def _make_getter(variable):
+    def _make_getter(variable, fixed_dimensions):
         def get(*args):
+
+            args = list(args)
+            args.reverse()
             v = variable
-            for a in args:
-                v = variable[a]
+
+            i = 0
+            while len(args) > 0:
+                d = variable.dimensions[i]
+                if d in fixed_dimensions:
+                    v = v[fixed_dimensions[d]]
+                    i += 1
+                else:
+                    v = v[args.pop()]
+
             if len(v.shape) > 0:
                 return v[:]
             else:
                 return v
         return get
 
-
-
-    def __init__(self, path):
+    def __init__(self, path, *args, **kwargs):
         """
         Arguments:
 
             path(str): Path to a NetCDF4 file.
 
         """
-        self.file_handle = Dataset(path)
+        self.file_handle      = Dataset(path, *args, **kwargs)
+        self.fixed_dimensions = {}
 
         for name in self.file_handle.variables:
             fname = "get_" + name
             v = self.file_handle.variables[name]
-            self.__dict__[fname] = NetCDFDataProvider._make_getter(v)
+            self.__dict__[fname] = NetCDFDataProvider._make_getter(v, self.fixed_dimensions)
 
         super().__init__()
+
+    def fix_dimension(self, dimension, value):
+        """
+        Fixed the value of the dimension :code:`dimension` for every variables in
+        the NetCDF file. This can be used if the data provider is combined with
+        another one that has less dimensions.
+
+        Arguments:
+
+            dimension(str): Name of the dimension to fix.
+
+            value(int): The value that the dimension should be fixed to.
+        """
+        self.fixed_dimensions[dimension] = value
