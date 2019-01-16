@@ -71,9 +71,9 @@ class ArtsSimulation:
     # Radiative transfer calculations
     #
 
-    def setup(self):
+    def setup(self, verbosity = 1):
 
-        self._workspace = Workspace()
+        self._workspace = Workspace(verbosity = verbosity)
         ws = self._workspace
         ws.execute_controlfile("general/general.arts")
         ws.execute_controlfile("general/continua.arts")

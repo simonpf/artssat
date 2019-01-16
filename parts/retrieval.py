@@ -548,7 +548,6 @@ class RetrievalRun:
                 covmat_blocks += [covmat_se[i:j, i:j]]
 
         covmat_se = sp.sparse.block_diag(covmat_blocks, format = "coo")
-        print(covmat_se)
 
         ws.covmat_seAddBlock(block = covmat_se)
 
@@ -579,7 +578,7 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
-        agenda.append(debug_print)
+        #agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
