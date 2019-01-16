@@ -23,7 +23,7 @@ class NetCDFDataProvider(DataProviderBase):
     get methods are consecutively applied to the variable.
     """
     @staticmethod
-    def _make_getter(variable, fixed_dimensions):
+    def _make_getter(variable, fixed_dimensions, offsets):
         def get(*args):
 
             args = list(args)
@@ -33,11 +33,14 @@ class NetCDFDataProvider(DataProviderBase):
             i = 0
             while len(args) > 0:
                 d = variable.dimensions[i]
+                i += 1
                 if d in fixed_dimensions:
                     v = v[fixed_dimensions[d]]
-                    i += 1
                 else:
-                    v = v[args.pop()]
+                    a = args.pop()
+                    if d in offsets:
+                        a += offsets[d]
+                    v = v[a]
 
             if len(v.shape) > 0:
                 return v[:]
@@ -54,11 +57,14 @@ class NetCDFDataProvider(DataProviderBase):
         """
         self.file_handle      = Dataset(path, *args, **kwargs)
         self.fixed_dimensions = {}
+        self.offsets = {}
 
         for name in self.file_handle.variables:
             fname = "get_" + name
             v = self.file_handle.variables[name]
-            self.__dict__[fname] = NetCDFDataProvider._make_getter(v, self.fixed_dimensions)
+            self.__dict__[fname] = NetCDFDataProvider._make_getter(v,
+                                                                   self.fixed_dimensions,
+                                                                   self.offsets)
 
         super().__init__()
 
@@ -75,3 +81,16 @@ class NetCDFDataProvider(DataProviderBase):
             value(int): The value that the dimension should be fixed to.
         """
         self.fixed_dimensions[dimension] = value
+
+    def add_offset(self, dimension, value):
+        """
+        This adds an offset to a dimension. The value is then added to
+        any arguments provided to any get method along that dimension.
+
+        Arguments:
+
+            dimension(str): Name of the dimension that is offset.
+
+            value(int): The value that should be added to the argument.
+        """
+        self.offsets[dimension] = value
