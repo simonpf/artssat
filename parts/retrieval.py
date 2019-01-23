@@ -97,7 +97,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         :math:`log_{10}`-transformed, :code:`xa` should be given as :code:`-5`.
 
     """
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
+    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
     def covariance_matrix(self):
         """
         The covariance matrix for the retrieval quantity.
@@ -107,7 +107,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
+    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
     def precision_matrix(self):
         """
         The inverse of the covariance matrix.
@@ -125,14 +125,14 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,))
+    @arts_property("Numeric", shape = (dim.Joker,), optional = True)
     def x0(self):
         """
         Optional start value for the retrieval iteration.
         """
         return None
 
-    @arts_property("Numeric")
+    @arts_property("Numeric", optional = True)
     def limit_low(self):
         """
         Optional lower cutoff to apply to an iteration state :math:`x_i` before
@@ -141,7 +141,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric")
+    @arts_property("Numeric", optional = True)
     def limit_high(self):
         """
         Optional upper cutoff to apply to an iteration state :math:`x_i` before
@@ -207,6 +207,8 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             self.x0 = x0_fun(*args, **kwargs)
         else:
             self.x0 = np.copy(self.xa)
+
+        self.get_data(ws, data_provider, *args, **kwargs)
 
         self.add(ws)
 
@@ -512,6 +514,7 @@ class RetrievalRun:
 
         for rq in self.simulation.retrieval.retrieval_quantities:
             if rq not in self.retrieval_quantities:
+                rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
                 rq.retrieval.get_xa(data_provider, *args, **kwargs)
                 rq.set_from_x(ws, rq.retrieval.xa)
 

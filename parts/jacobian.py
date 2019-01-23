@@ -47,6 +47,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 from parts.sensor      import ActiveSensor, PassiveSensor
 from parts.arts_object import ArtsObject, arts_property
+from parts.arts_object import Dimension as dim
 
 ################################################################################
 # Transformations
@@ -268,18 +269,34 @@ class JacobianQuantity(metaclass = ABCMeta):
 # JacobianBase
 ################################################################################
 
-class JacobianBase(metaclass = ABCMeta):
+class JacobianBase(ArtsObject, metaclass = ABCMeta):
     """
     Abstract base class for the Jacobian classes that encapsulate the
     quantity-specific calls and settings of the Jacobian. This class
     muss be inherited by the :code:`jacobian_class` of each
     :code:`JacobianQuantity` object.
     """
+    @arts_property("Vector", shape = (dim.Joker,))
+    def p_grid(self):
+        return np.zeros(0)
+
+    @arts_property("Vector", shape = (dim.Joker,))
+    def lat_grid(self):
+        return np.zeros(0)
+
+    @arts_property("Vector", shape = (dim.Joker,))
+    def lon_grid(self):
+        return np.zeros(0)
+
     def __init__(self, quantity, index):
 
         self.quantity = quantity
         self.index    = index
         self.quantity.transformation = Identity()
+
+    @property
+    def name(self):
+        return self.quantity.name
 
     @abstractmethod
     def setup(self, ws):
@@ -288,3 +305,25 @@ class JacobianBase(metaclass = ABCMeta):
         the quantity on the given workspace :code:`ws`.
         """
         pass
+
+    def get_grids(self, ws):
+
+        if self.p_grid.size == 0:
+            g1 = ws.p_grid
+        else:
+            g1 = self.p_grid
+
+        if self.lat_grid.size == 0:
+            g2 = ws.lat_grid
+        else:
+            g2 = self.lat_grid
+
+        if self.lon_grid.size == 0:
+            g3 = ws.lon_grid
+        else:
+            g3 = self.lon_grid
+
+        return {"g1" : g1, "g2" : g2, "g3" : g3}
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)

@@ -1,4 +1,6 @@
 import numpy as np
+import scipy as sp
+import scipy.interpolate
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 from parts.arts_object import add_property
@@ -17,31 +19,12 @@ class Jacobian(JacobianBase):
     def __init__(self, quantity, index):
         super().__init__(quantity, index)
 
-        self.p_grid   = None
-        self.lat_grid = None
-        self.lon_grid = None
-
 
     def _make_setup_kwargs(self, ws):
 
-        if self.p_grid is None:
-            g1 = ws.p_grid
-        else:
-            g1 = self.p_grid
-
-        if self.lat_grid is None:
-            g2 = ws.lat_grid
-        else:
-            g2 = self.lat_grid
-
-        if self.lon_grid is None:
-            g3 = ws.lon_grid
-        else:
-            g3 = self.lon_grid
-
-        kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
-                  "species" : self.quantity._species_name,
-                  "quantity" : self.quantity.name}
+        kwargs = self.get_grids(ws)
+        kwargs.update({"species" : self.quantity._species_name,
+                      "quantity" : self.quantity.name})
 
         return kwargs
 
@@ -106,8 +89,48 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
 
     def set_from_x(self, ws, x):
         x = self.transformation.invert(x)
-        x = np.copy(x.reshape(ws.particle_bulkprop_field.value.shape[1:]))
-        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = x
+
+
+        grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+        grids = [g for g in grids if g.size > 0]
+        retrieval_grids = [self.retrieval.p_grid,
+                           self.retrieval.lat_grid,
+                           self.retrieval.lon_grid]
+        used_grids = []
+        print(retrieval_grids)
+        for i, g in enumerate(grids):
+            if retrieval_grids[i].size == 0:
+                used_grids += [g]
+            else:
+                used_grids += [retrieval_grids[i]]
+        retrieval_grids = used_grids
+
+        retrieval_grids_shape = [g.size for g in retrieval_grids]
+        x = np.reshape(x, retrieval_grids_shape)
+
+        x = x[::-1]
+        retrieval_grids[0] = retrieval_grids[0][::-1]
+        grids[0] = grids[0][::-1]
+
+        interp = sp.interpolate.RegularGridInterpolator(retrieval_grids, x,
+                                                        method = "linear",
+                                                        bounds_error = False,
+                                                        fill_value = None)
+
+        mesh_grids = np.meshgrid(grids)
+        if len(mesh_grids) > 1:
+            xi = np.transpose(np.stack(mesh_grids), axes = (0, -1))
+        else:
+            xi = mesh_grids[0].reshape(-1, 1)
+        y  = interp(xi)
+
+        pbf_shape  = [1, 1, 1]
+        for i, g in enumerate(grids):
+            pbf_shape[i] = g.size
+        y = np.reshape(y, pbf_shape)
+        y = y[::-1, :, :]
+
+        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(y, pbf_shape)
 
     #
     # Properties
