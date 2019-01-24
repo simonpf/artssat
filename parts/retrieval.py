@@ -311,7 +311,7 @@ class RetrievalQuantity(JacobianQuantity):
     def transformation(self, t):
         if not isinstance(t, Transformation):
             raise TypeError("The transformation of a retrieval quantity must"\
-                            "of type Transformation.")
+                            " be of type Transformation.")
         else:
             self._transformation = t
 
@@ -414,12 +414,20 @@ class RetrievalRun:
 
         self.x = None
 
-    def get_result(self, q, attribute = "x"):
+    def get_result(self, q, attribute = "x", interpolate = False):
 
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, attribute)
-            return x[i : j]
+            x = x[i : j]
+
+            if interpolate:
+                ws = self.simulation.workspace
+                grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+                grids = [g for g in grids if g.size > 0]
+                x = q.retrieval.interpolate_to_grids(x, grids)
+
+            return x
 
         if not self.previous_run is None:
             return self.previous_run.get_result(q, attribute = attribute)

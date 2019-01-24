@@ -41,6 +41,7 @@ Reference
 """
 
 import scipy as sp
+import scipy.interpolate
 import numpy as np
 
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -324,6 +325,43 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
             g3 = self.lon_grid
 
         return {"g1" : g1, "g2" : g2, "g3" : g3}
+
+    def interpolate_to_grids(self, x, grids):
+        retrieval_grids = [self.p_grid,
+                           self.lat_grid,
+                           self.lon_grid]
+        used_grids = []
+        for i, g in enumerate(grids):
+            if retrieval_grids[i].size == 0:
+                used_grids += [g]
+            else:
+                used_grids += [retrieval_grids[i]]
+        retrieval_grids = used_grids
+
+        retrieval_grids_shape = [g.size for g in retrieval_grids]
+        x = np.reshape(x, retrieval_grids_shape)
+
+        x = x[::-1]
+        retrieval_grids[0] = retrieval_grids[0][::-1]
+        grids[0] = grids[0][::-1]
+
+        interp = sp.interpolate.RegularGridInterpolator(retrieval_grids, x,
+                                                        method = "linear",
+                                                        bounds_error = False,
+                                                        fill_value = None)
+
+        mesh_grids = np.meshgrid(grids)
+        if len(mesh_grids) > 1:
+            xi = np.transpose(np.stack(mesh_grids), axes = (0, -1))
+        else:
+            xi = mesh_grids[0].reshape(-1, 1)
+
+        y  = interp(xi)
+
+        grids_shape = [g.size for g in grids]
+        y = np.reshape(y, grids_shape)[::-1]
+
+        return y
 
     def get_data(self, ws, data_provider, *args, **kwargs):
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
