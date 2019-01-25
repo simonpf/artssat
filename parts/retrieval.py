@@ -434,6 +434,16 @@ class RetrievalRun:
         else:
             return None
 
+    def get_xa(self, q, interpolate = True):
+        if interpolate:
+            ws = self.simulation.workspace
+            grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+            grids = [g for g in grids if g.size > 0]
+            xa = q.retrieval.interpolate_to_grids(q.retrieval.xa, grids)
+        else:
+            xa = q.retrieval.xa
+        return xa
+
     def get_avk(self, q):
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
