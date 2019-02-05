@@ -6,6 +6,93 @@ The model atmosphere
 
 import numpy as np
 from parts.atmosphere.cloud_box import CloudBox
+from parts.jacobian import  JacobianBase
+from parts.retrieval import RetrievalBase, RetrievalQuantity
+
+class TemperatureJacobian(JacobianBase):
+    def __init__(self,
+                 quantity,
+                 index,
+                 p_grid   = None,
+                 lat_grid = None,
+                 lon_grid = None,
+                 hse      = "on"):
+        super().__init__(quantity, index)
+        self.p_grid   = p_grid
+        self.lat_grid = lat_grid
+        self.lon_grid = lon_grid
+        self.hse      = hse
+
+    def _make_setup_kwargs(self, ws):
+
+        if self.p_grid is None:
+            g1 = ws.p_grid
+        else:
+            g1 = self.p_grid
+
+        if self.lat_grid is None:
+            g2 = ws.lat_grid
+        else:
+            g2 = self.lat_grid
+
+        if self.lon_grid is None:
+            g3 = ws.lon_grid
+        else:
+            g3 = self.lon_grid
+
+        kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
+                  "hse" : self.hse}
+
+        return kwargs
+
+    def setup(self, ws, data_provider, *args, **kwargs):
+        kwargs = self._make_setup_kwargs(ws)
+        ws.jacobianAddTemperature(**kwargs)
+
+class TemperatureRetrieval(RetrievalBase, TemperatureJacobian):
+
+    def __init__(self,
+                 quantity,
+                 index,
+                 p_grid   = None,
+                 lat_grid = None,
+                 lon_grid = None,
+                 hse = "on"):
+        RetrievalBase.__init__(self)
+        TemperatureJacobian.__init__(self, quantity, index,
+                                     p_grid, lat_grid, lon_grid, hse)
+
+    def add(self, ws):
+        ws.retrievalAddTemperature(**self._make_setup_kwargs(ws))
+
+class Temperature(RetrievalQuantity):
+
+
+    def __init__(self, atmosphere):
+        super().__init__()
+        self.atmosphere = atmosphere
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        t = data_provider.get_temperature(*args, **kwargs)
+        self.atmosphere.__check_dimensions__(t, "temperature")
+        ws.t_field = self.atmosphere.__reshape__(t)
+
+    def set_from_x(self, ws, xa):
+        x = self.transformation.invert(xa)
+        self.t_field = x
+
+    @property
+    def name(self):
+        return "temperature"
+
+    @property
+    def jacobian_class(self):
+        return TemperatureJacobian
+
+    @property
+    def retrieval_class(self):
+        return TemperatureRetrieval
+
 
 
 class Atmosphere:
@@ -34,6 +121,7 @@ class Atmosphere:
 
         self._surface_data_indices = []
         self._surface = surface
+        self.temperature = Temperature(self)
 
         if not surface is None:
             nd = len(self._required_data)
@@ -229,11 +317,6 @@ class Atmosphere:
                             " dimensions of the atmosphere.")
         ws.p_grid = p
 
-    def __get_temperature__(self, ws, provider, *args, **kwargs):
-        t = provider.get_temperature(*args, **kwargs)
-        self.__check_dimensions__(t, "temperature")
-        ws.t_field = self.__reshape__(t)
-
     def __get_altitude__(self, ws, provider, *args, **kwargs):
         dimensions = ws.t_field.value.shape
         z = provider.get_altitude(*args, **kwargs)
@@ -298,8 +381,9 @@ class Atmosphere:
 
     def get_data(self, ws, provider, *args, **kwargs):
 
+
         self.__get_pressure__(ws, provider, *args, **kwargs)
-        self.__get_temperature__(ws, provider, *args, **kwargs)
+        self.temperature.get_data(ws, provider, *args, **kwargs)
         self.__get_altitude__(ws, provider, *args, **kwargs)
         self.__get_absorbers__(ws, provider, *args, **kwargs)
         self.__get_scatterers__(ws, provider, *args, **kwargs)
