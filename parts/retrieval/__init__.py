@@ -97,7 +97,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         :math:`log_{10}`-transformed, :code:`xa` should be given as :code:`-5`.
 
     """
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
+    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
     def covariance_matrix(self):
         """
         The covariance matrix for the retrieval quantity.
@@ -107,7 +107,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker))
+    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
     def precision_matrix(self):
         """
         The inverse of the covariance matrix.
@@ -125,14 +125,14 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,))
+    @arts_property("Numeric", shape = (dim.Joker,), optional = True)
     def x0(self):
         """
         Optional start value for the retrieval iteration.
         """
         return None
 
-    @arts_property("Numeric")
+    @arts_property("Numeric", optional = True)
     def limit_low(self):
         """
         Optional lower cutoff to apply to an iteration state :math:`x_i` before
@@ -141,7 +141,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric")
+    @arts_property("Numeric", optional = True)
     def limit_high(self):
         """
         Optional upper cutoff to apply to an iteration state :math:`x_i` before
@@ -207,6 +207,8 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             self.x0 = x0_fun(*args, **kwargs)
         else:
             self.x0 = np.copy(self.xa)
+
+        self.get_data(ws, data_provider, *args, **kwargs)
 
         self.add(ws)
 
@@ -309,7 +311,7 @@ class RetrievalQuantity(JacobianQuantity):
     def transformation(self, t):
         if not isinstance(t, Transformation):
             raise TypeError("The transformation of a retrieval quantity must"\
-                            "of type Transformation.")
+                            " be of type Transformation.")
         else:
             self._transformation = t
 
@@ -412,17 +414,35 @@ class RetrievalRun:
 
         self.x = None
 
-    def get_result(self, q, attribute = "x"):
+    def get_result(self, q, attribute = "x", interpolate = False):
 
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, attribute)
-            return x[i : j]
+            x = x[i : j]
+
+            if interpolate:
+                ws = self.simulation.workspace
+                grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+                grids = [g for g in grids if g.size > 0]
+                x = q.retrieval.interpolate_to_grids(x, grids)
+
+            return x
 
         if not self.previous_run is None:
             return self.previous_run.get_result(q, attribute = attribute)
         else:
             return None
+
+    def get_xa(self, q, interpolate = True):
+        if interpolate:
+            ws = self.simulation.workspace
+            grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+            grids = [g for g in grids if g.size > 0]
+            xa = q.retrieval.interpolate_to_grids(q.retrieval.xa, grids)
+        else:
+            xa = q.retrieval.xa
+        return xa
 
     def get_avk(self, q):
         if q in self.retrieval_quantities:
@@ -512,6 +532,7 @@ class RetrievalRun:
 
         for rq in self.simulation.retrieval.retrieval_quantities:
             if rq not in self.retrieval_quantities:
+                rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
                 rq.retrieval.get_xa(data_provider, *args, **kwargs)
                 rq.set_from_x(ws, rq.retrieval.xa)
 
@@ -548,7 +569,6 @@ class RetrievalRun:
                 covmat_blocks += [covmat_se[i:j, i:j]]
 
         covmat_se = sp.sparse.block_diag(covmat_blocks, format = "coo")
-        print(covmat_se)
 
         ws.covmat_seAddBlock(block = covmat_se)
 
@@ -579,7 +599,7 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
-        agenda.append(debug_print)
+        #agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
@@ -673,7 +693,13 @@ class RetrievalRun:
         ws.yf       = []
         ws.jacobian = []
 
-        ws.OEM(**self.settings)
+        try:
+            ws.OEM(**self.settings)
+        except Exception as e:
+            ws.oem_diagnostics = 9 * np.ones(5)
+            ws.yf       = None
+            ws.jacobian = None
+            ws.oem_errors = ["Error computing initial cost.", str(e)]
 
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)

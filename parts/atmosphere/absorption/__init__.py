@@ -163,39 +163,18 @@ class Jacobian(JacobianBase, ArtsObject):
         JacobianBase.__init__(self, quantity, index)
         ArtsObject.__init__(self)
 
-        self.p_grid   = None
-        self.lat_grid = None
-        self.lon_grid = None
-
         self.unit = VMR()
         self.method = "analytical"
         self.for_species_tag = 1
         self.dx = 0.001
 
     def _make_setup_kwargs(self, ws):
-
-        if self.p_grid is None:
-            g1 = ws.p_grid
-        else:
-            g1 = self.p_grid
-
-        if self.lat_grid is None:
-            g2 = ws.lat_grid
-        else:
-            g2 = self.lat_grid
-
-        if self.lon_grid is None:
-            g3 = ws.lon_grid
-        else:
-            g3 = self.lon_grid
-
-        kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
-                    "species" : self.quantity.get_tag_string(),
-                    "method" : self.method,
-                    "unit" : self.unit.arts_name,
-                    "for_species_tag" : self.for_species_tag,
-                    "dx" : self.dx}
-
+        kwargs = self.get_grids(ws)
+        kwargs.update({"species" : self.quantity.get_tag_string(),
+                       "method" : self.method,
+                       "unit" : self.unit.arts_name,
+                       "for_species_tag" : self.for_species_tag,
+                       "dx" : self.dx})
         return kwargs
 
     def setup(self, ws):

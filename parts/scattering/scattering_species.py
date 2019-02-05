@@ -17,31 +17,12 @@ class Jacobian(JacobianBase):
     def __init__(self, quantity, index):
         super().__init__(quantity, index)
 
-        self.p_grid   = None
-        self.lat_grid = None
-        self.lon_grid = None
-
 
     def _make_setup_kwargs(self, ws):
 
-        if self.p_grid is None:
-            g1 = ws.p_grid
-        else:
-            g1 = self.p_grid
-
-        if self.lat_grid is None:
-            g2 = ws.lat_grid
-        else:
-            g2 = self.lat_grid
-
-        if self.lon_grid is None:
-            g3 = ws.lon_grid
-        else:
-            g3 = self.lon_grid
-
-        kwargs = {"g1" : g1, "g2" : g2, "g3" : g3,
-                  "species" : self.quantity._species_name,
-                  "quantity" : self.quantity.name}
+        kwargs = self.get_grids(ws)
+        kwargs.update({"species" : self.quantity._species_name,
+                      "quantity" : self.quantity.name})
 
         return kwargs
 
@@ -105,9 +86,14 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         return Retrieval
 
     def set_from_x(self, ws, x):
-        x = self.transformation.invert(x)
-        x = np.copy(x.reshape(ws.particle_bulkprop_field.value.shape[1:]))
-        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = x
+
+        grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+        grids = [g for g in grids if g.size > 0]
+        y = self.retrieval.interpolate_to_grids(x, grids)
+        x = self.transformation.invert(y)
+
+        pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
+        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(x, pbf_shape)
 
     #
     # Properties

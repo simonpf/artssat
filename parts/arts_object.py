@@ -312,7 +312,7 @@ def broadcast(shape, obj):
                             " length of the provided shape tuple.")
 
 
-def arts_property(group, shape = None, wsv = None):
+def arts_property(group, shape = None, wsv = None, optional = False):
     """
     The :code:`arts_property` decorator.
 
@@ -356,7 +356,7 @@ def arts_property(group, shape = None, wsv = None):
     """
     class ArtsPropertySpecialization(ArtsProperty):
         def __init__(self, fdefault):
-            super().__init__(fdefault, group, shape, wsv)
+            super().__init__(fdefault, group, shape, wsv, optional)
     return ArtsPropertySpecialization
 
 ws = Workspace(verbosity = 0)
@@ -386,7 +386,7 @@ class ArtsProperty:
     fixes the :code:`group, shape` and :code:`wsv` values of the :code:`__init__`
     method.
     """
-    def __init__(self, fdefault, group, shape, wsv):
+    def __init__(self, fdefault, group, shape, wsv, optional):
         """
         Create a :code:`ArtsProperty` instance.
 
@@ -404,9 +404,13 @@ class ArtsProperty:
             wsv(typhon.arts.workspace.WorkspaceVariable): Workspace variable
             corresponding to this ARTS property or :code:`None` if no such
             WSV exists.
+
+            optional(Boolean): If True no Exception will be thrown if the
+            data_provider doesn't provide a get method for this property.
         """
         self.group = group
         self.shape = shape
+        self.optional = optional
 
         if not wsv is None:
             if type(wsv) == str:
@@ -688,7 +692,7 @@ class ArtsProperty:
             in determining the value of the :code:`ArtsProperty`.
         """
         ph = owner.__dict__["_" + self.name]
-        if self.wsv and not ph.fixed:
+        if not ph.fixed:
             getter_name = "get_" + self.get_name(owner, separator = "_")
 
             default = self.fdefault(owner)
@@ -702,19 +706,29 @@ class ArtsProperty:
 
                 if not self.shape is None:
                     value = self.check_and_broadcast(value, owner)
+
+                if self.wsv:
                     owner.set_wsv(ws, self.wsv, value)
-                    ph = owner.__dict__["_" + self.name]
-                    ph.value = value
+
+                ph = owner.__dict__["_" + self.name]
+                ph.value = value
 
             # Check if there's a default value.
             elif not default is None:
-                owner.set_wsv(ws, self.wsv, default)
+                ph = owner.__dict__["_" + self.name]
+                ph.value = default
+
+                if self.wsv:
+                    owner.set_wsv(ws, self.wsv, default)
 
             # No value - throw exception
-            else:
+            elif not self.optional:
                 raise Exception("Neither a default value nor a get method "
                                 " has been provided for the ARTS property"
                                 "{0}.".format(self.get_name(owner, ".")))
+            else:
+                return
+
 
 class PlaceHolder:
     """

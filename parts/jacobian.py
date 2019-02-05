@@ -41,12 +41,14 @@ Reference
 """
 
 import scipy as sp
+import scipy.interpolate
 import numpy as np
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 from parts.sensor      import ActiveSensor, PassiveSensor
 from parts.arts_object import ArtsObject, arts_property
+from parts.arts_object import Dimension as dim
 
 ################################################################################
 # Transformations
@@ -268,18 +270,34 @@ class JacobianQuantity(metaclass = ABCMeta):
 # JacobianBase
 ################################################################################
 
-class JacobianBase(metaclass = ABCMeta):
+class JacobianBase(ArtsObject, metaclass = ABCMeta):
     """
     Abstract base class for the Jacobian classes that encapsulate the
     quantity-specific calls and settings of the Jacobian. This class
     muss be inherited by the :code:`jacobian_class` of each
     :code:`JacobianQuantity` object.
     """
+    @arts_property("Vector", shape = (dim.Joker,))
+    def p_grid(self):
+        return np.zeros(0)
+
+    @arts_property("Vector", shape = (dim.Joker,))
+    def lat_grid(self):
+        return np.zeros(0)
+
+    @arts_property("Vector", shape = (dim.Joker,))
+    def lon_grid(self):
+        return np.zeros(0)
+
     def __init__(self, quantity, index):
 
         self.quantity = quantity
         self.index    = index
         self.quantity.transformation = Identity()
+
+    @property
+    def name(self):
+        return self.quantity.name
 
     @abstractmethod
     def setup(self, ws):
@@ -288,3 +306,62 @@ class JacobianBase(metaclass = ABCMeta):
         the quantity on the given workspace :code:`ws`.
         """
         pass
+
+    def get_grids(self, ws):
+
+        if self.p_grid.size == 0:
+            g1 = ws.p_grid
+        else:
+            g1 = self.p_grid
+
+        if self.lat_grid.size == 0:
+            g2 = ws.lat_grid
+        else:
+            g2 = self.lat_grid
+
+        if self.lon_grid.size == 0:
+            g3 = ws.lon_grid
+        else:
+            g3 = self.lon_grid
+
+        return {"g1" : g1, "g2" : g2, "g3" : g3}
+
+    def interpolate_to_grids(self, x, grids):
+        retrieval_grids = [self.p_grid,
+                           self.lat_grid,
+                           self.lon_grid]
+        used_grids = []
+        for i, g in enumerate(grids):
+            if retrieval_grids[i].size == 0:
+                used_grids += [g]
+            else:
+                used_grids += [retrieval_grids[i]]
+        retrieval_grids = used_grids
+
+        retrieval_grids_shape = [g.size for g in retrieval_grids]
+        x = np.reshape(x, retrieval_grids_shape)
+
+        x = x[::-1]
+        retrieval_grids[0] = retrieval_grids[0][::-1]
+        grids[0] = grids[0][::-1]
+
+        interp = sp.interpolate.RegularGridInterpolator(retrieval_grids, x,
+                                                        method = "linear",
+                                                        bounds_error = False,
+                                                        fill_value = None)
+
+        mesh_grids = np.meshgrid(grids)
+        if len(mesh_grids) > 1:
+            xi = np.transpose(np.stack(mesh_grids), axes = (0, -1))
+        else:
+            xi = mesh_grids[0].reshape(-1, 1)
+
+        y  = interp(xi)
+
+        grids_shape = [g.size for g in grids]
+        y = np.reshape(y, grids_shape)[::-1]
+
+        return y
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
