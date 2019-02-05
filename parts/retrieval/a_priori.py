@@ -6,6 +6,7 @@ The :code:`retrieval.a_priori` sub-module provides modular data provider
 object that can be used to build a priori data providers.
 """
 from parts.data_provider import DataProviderBase
+from parts.sensor import ActiveSensor, PassiveSensor
 import numpy as np
 import scipy as sp
 import scipy.sparse
@@ -363,3 +364,57 @@ class FixedAPriori(APrioriProviderBase):
 ################################################################################
 # Sensor a priori
 ################################################################################
+
+class SensorNoiseAPriori(DataProviderBase):
+    """
+    Measurement error due to sensor noise.
+
+    The :code:`SensorNoiseAPriori` class constructs a combined
+    observation error covariance matrix from the noise characteristics
+    of a list of sensors.
+
+    The noise of particular sensors can be amplified by adding the
+    scaling factor to the :code:`noise_scaling` attribute of the
+    class.
+
+    Attributes:
+
+        noise_scaling(:code:`dict`): Dictionary mapping sensor names to
+            noise scaling factors.
+    """
+    def __init__(self,
+                 sensors):
+        """
+        Arguments:
+
+            sensors(list of :code:`parts.sensor.Sensor`): Sensors used
+                in the observation for which to construct the observation
+                error covariance matrix.
+
+        """
+        self.sensors = sensors
+        self.noise_scaling = {}
+
+    def get_observation_error_covariance(self, *args, **kwargs):
+        m = 0
+
+        stds = []
+
+        for s in self.sensors:
+            if isinstance(s, ActiveSensor):
+                if s.name in self.noise_scaling:
+                    c = self.noise_scaling[s.name]
+                else:
+                    c = 1.0
+                stds += [c * s.nedt]
+
+        for s in self.sensors:
+            if isinstance(s, PassiveSensor):
+                if s.name in self.noise_scaling:
+                    c = self.noise_scaling[s.name]
+                else:
+                    c = 1.0
+                stds += [c * s.nedt]
+
+        sig = np.concatenate(stds).ravel()
+        return sp.sparse.diags(sig ** 2.0, format = "coo")

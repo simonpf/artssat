@@ -7,8 +7,10 @@ if not ip is None:
 import numpy as np
 import pytest
 from examples.data_provider import DataProvider
+from examples.sensors import ICI
 from parts.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
-    TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori
+    TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori, \
+    SensorNoiseAPriori
 
 def test_masks():
     data_provider    = DataProvider()
@@ -72,3 +74,9 @@ def test_fixed_a_priori():
     assert(np.all(data_provider.get_temperature_xa() == t))
 
     return data_provider
+
+def test_sensor_noise_a_priori():
+    sna = SensorNoiseAPriori([ICI()])
+    sna.noise_scaling["ici"] = 2.0
+    covmat = sna.get_observation_error_covariance()
+    assert(np.allclose((ICI.nedt * 2.0) ** 2.0, covmat.diagonal()))
