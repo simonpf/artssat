@@ -22,23 +22,50 @@ class Diagonal:
                  mask_value = 1e-12):
         self.diagonal = np.array(diagonal)
         self.mask = mask
+        self.mask_value = mask_value
 
     def get_covariance(self, data_provider, *args, **kwargs):
+
+        if not self.mask is None:
+            mask = self.mask(data_provider, *args, **kwargs)
+        else:
+            mask = []
+
         if self.diagonal.size == 1:
             z = data_provider.get_altitude(*args, **kwargs)
-            return sp.sparse.diags(self.diagonal[0] * np.ones(z.size),
-                                   format = "coo")
+            diagonal = self.diagonal * np.ones(z.size)
         else:
-            return self.diagonal
+            diagonal = self.diagonal
+
+        diagonal[mask] = self.mask_value
+        diagonal = sp.sparse.diags(diagonal, format = "coo")
+        return diagonal
 
 class SpatialCorrelation:
+    """
+    Adds spatial correlation to a given covariance matrix.
+    """
     def __init__(self,
                  covariance,
                  correlation_length,
                  correlation_type = "exp",
                  cutoff = 1e-2):
+        """
+        Arguments:
+
+            covariance: Covariance object providing the original covariance
+                matrix to which to apply the spatial correlation.
+
+            correlation_length(:code:`float`): Correlation length in meters.
+
+            correlation_type(:code:`str`): Type of the correlation to apply.
+
+            cutoff(:code:`float`): Threshold below which to set correlation
+                coefficients to zero.
+        """
         self.covariance         = covariance
         self.correlation_length = correlation_length
+        self.correlation_type   = correlation_type
         self.cutoff = cutoff
 
     def get_covariance(self, data_provider, *args, **kwargs):
@@ -47,32 +74,49 @@ class SpatialCorrelation:
         dz = np.abs(z.reshape(-1, 1) - z.reshape(1, -1))
 
         if self.correlation_type == "exp":
-            corr = np.exp(- np.abs(dz / self.cl) )
+            corr = np.exp(- np.abs(dz / self.correlation_length) )
         elif self.correlation_type == "gauss":
-            corr = np.exp(- (dz / self.cl) ** 2)
+            corr = np.exp(- (dz / self.correlation_length) ** 2)
 
         inds = corr < self.cutoff
         corr[inds] = 0.0
 
-        covmat = self.covariance(data_provider, *args, **kwargs)
-        if isinstance(covmat, sp.sparse.spamtrix):
+        covmat = self.covariance.get_covariance(data_provider, *args, **kwargs)
+        if isinstance(covmat, sp.sparse.spmatrix):
             covmat = covmat.todense()
 
         return corr @ covmat
 
 class Thikhonov:
+    """
+    Thikhonov regularization using second order finite differences.
+    """
     def __init__(self,
                  scaling    = 1.0,
                  mask       = None,
-                 mask_value = 1e12):
+                 mask_value = 1e12,
+                 z_scaling  = True):
+        """
+        Arguments:
+            scaling(:code:`np.float`): Scalar to scale the precision matrix with.
+
+            mask: A mask object defining indices on the diagonal on the precision
+                matrix to which to as :code:`mask_value`.
+
+            mask_value(:code:`float`): Scalar to add to the diagonal of the precision
+                matrix on locations defined by :code:`mask`.
+
+            z_scaling(:code:`Bool`): Whether or not to scale matrix coefficients
+                according to height differences between levels.
+        """
         self.scaling    = scaling
         self.mask       = mask
         self.mask_value = mask_value
+        self.z_scaling  = z_scaling
 
-    def get_precision(data_provider, *args, **kwargs):
+    def get_precision(self, data_provider, *args, **kwargs):
 
         z = data_provider.get_altitude(*args, **kwargs)
-        t = data_provider.get_temperature(*args, **kwargs)
         n = z.size
 
         du2 = np.ones(n - 2)
@@ -85,24 +129,25 @@ class Thikhonov:
         d[:2]  = [1, 5]
         d[-2:] = [5, 1]
 
-        dd = np.zeros(n)
-        if not self.height_mask is None:
-            dd = self.height_mask(dd, 1e12, z)
-        if not self.temperature_mask is None:
-            dd = self.temperature_mask(dd, 1e12, t)
-        d += dd
+        if not self.mask is None:
+            mask = self.mask(data_provider, *args, **kwargs)
+            d_mask = np.zeros(n)
+            d_mask[mask] = self.mask_value
+            d += d_mask
 
         precmat = sp.sparse.diags(diagonals = [du2, du1, d, du1, du2],
                                   offsets   = [2, 1, 0, -1, -2],
                                   format    = "coo")
         precmat *= self.scaling
 
-        zf = (np.diff(z) / np.diff(z).mean()) ** 2.0
-        zf1 = np.zeros(z.shape)
-        zf1[1:]  += zf
-        zf1[:-1] += zf
-        zf1[1:-1] *= 0.5
-        precmat = sp.sparse.diags(diagonals = [zf1], offsets = [0], format = "coo") * precmat
+        if self.z_scaling:
+            z = data_provider.get_altitude(*args, **kwargs)
+            zf = (np.diff(z) / np.diff(z).mean()) ** 2.0
+            zf1 = np.zeros(z.shape)
+            zf1[1:]  += zf
+            zf1[:-1] += zf
+            zf1[1:-1] *= 0.5
+            precmat = sp.sparse.diags(diagonals = [zf1], offsets = [0], format = "coo") * precmat
 
         return precmat.tocoo()
 
@@ -138,29 +183,112 @@ class APrioriProviderBase(DataProviderBase):
 
         covariance.provider = self
 
-        if hasattr("get_covariance", covariance):
+        if hasattr(covariance, "get_covariance"):
             covariance_name = "get_" + name + "_covariance"
             self.__dict__[covariance_name] = self.get_covariance
-        if hasattr("get_precision", precision):
+        if hasattr(covariance, "get_precision"):
             precision_name = "get_" + name + "_precision"
             self.__dict__[precision_name] = self.get_precision
 
         self.name = name
         self.covariance = covariance
-        self.spatial_correlation = spatial_correlation
 
-    def get_covariance(self, *args, *kwargs):
-        self.covariance.get_covariance(self.owner, *args, **kwargs)
+    def get_covariance(self, *args, **kwargs):
+        return self.covariance.get_covariance(self.owner, *args, **kwargs)
 
-    def get_precision(self, *args, *kwargs):
-        self.covariance.get_precision(self.owner, *args, **kwargs)
+    def get_precision(self, *args, **kwargs):
+        return self.covariance.get_precision(self.owner, *args, **kwargs)
 
 
 ################################################################################
-# DataProviderAPriori
+# Masks
 ################################################################################
 
-class DataProviderAPriori(AprioriProviderBase):
+class And:
+    """
+    Creates a combined mask by applying logical and to a list
+    of single masks.
+    """
+    def __init__(self, *args):
+        self.masks = list(args)
+
+    def __call__(self, data_provider, *args, **kwargs):
+        """
+        Arguments:
+
+            data_provider: Data provider describing the atmospheric scenario.
+
+            *args: Arguments to forward to data provider.
+
+            **kwargs: Keyword arguments to forward to data_provider.
+        """
+        masks = []
+        for m in self.masks:
+            masks += [m(data_provider, *args, **kwargs)]
+
+        m_and = masks[0]
+        for m in masks[1:]:
+            m_and = np.logical_and(m_and, m)
+
+        return m_and
+
+class TropopauseMask:
+    """
+    Returns a mask that is true only below the approximate height of the
+    troposphere. The troposphere is detected as the first grid point
+    where the lapse rate is negative and the temperature below 220.
+    """
+    def __init__(self):
+        pass
+
+    def __call__(self, data_provider, *args, **kwargs):
+        """
+        Arguments:
+
+            data_provider: Data provider describing the atmospheric scenario.
+
+            *args: Arguments to forward to data provider.
+
+            **kwargs: Keyword arguments to forward to data_provider.
+        """
+        t     = data_provider.get_temperature(*args, **kwargs)
+        t_avg = 0.5 * (t[1:] + t[:-1])
+        lr    = - np.diff(t)
+        i     = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
+        inds  = np.ones(t.size, dtype = np.bool)
+        inds[i : inds.size] = False
+        return inds
+
+class TemperatureMask:
+    """
+    The temperature mask replaces values at grid points outside of the
+    given temperature interval with another value.
+    """
+    def __init__(self, lower_limit, upper_limit):
+        """
+        Arguments:
+
+            lower_limit(:code:`float`): The lower temperature limit
+
+            upper_limit(:code:`float`): The upper temperature limit
+
+            transition(:code:`int`): Length of linear transition between
+                the original and the replacement values.
+        """
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+
+    def __call__(self, data_provider, *args, **kwargs):
+        t    = data_provider.get_temperature()
+        inds = np.logical_and(t.ravel() >= self.lower_limit,
+                              t.ravel() <  self.upper_limit)
+        return inds
+
+################################################################################
+# A priori providers
+################################################################################
+
+class DataProviderAPriori(APrioriProviderBase):
     """
     A priori provider that propagates an atmospheric quantity :code:`name`
     as a priori mean profile from the data provider.
@@ -168,8 +296,7 @@ class DataProviderAPriori(AprioriProviderBase):
 
     def __init__(self,
                  name,
-                 covariance,
-                 spatial_correlation = None):
+                 covariance):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -189,8 +316,6 @@ class DataProviderAPriori(AprioriProviderBase):
         """
 
         super().__init__(name, covariance)
-        xa_name = "get_" + name + "_xa"
-        self.__dict__[xa_name] = self.get_xa
 
     def get_xa(self, *args, **kwargs):
 
@@ -204,182 +329,37 @@ class DataProviderAPriori(AprioriProviderBase):
         x = f(*args, **kwargs)
         return x
 
-################################################################################
-# Temperature mask
-################################################################################
 
-def tropopause_mask(t):
+class FixedAPriori(APrioriProviderBase):
     """
-    Returns a mask that is true only below the approximate height of the
-    troposphere. The troposphere is detected as the first grid point
-    where the lapse rate is negative and the temperature below 220.
-
-    Arguments:
-
-        t(code:`numpy.array`): 1D temperature array into which to detect
-            the troposphere.
+    Returns an a priori profile that does not depend on the atmospheric
+    state.
     """
-    t_avg = 0.5 * (t[1:] + t[:-1])
-    lr = - np.diff(t)
-    i = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
-    inds = np.ones(t.size, dtype = np.bool)
-    inds[i:inds.size] = False
-    return inds
-
-class TemperatureMask:
-    """
-    The temperature mask replaces values at grid points outside of the
-    given temperature interval with another value.
-    """
-    def __init__(self, lower_limit, upper_limit, transition = 0):
-        """
-        Arguments:
-
-            lower_limit(:code:`float`): The lower temperature limit
-
-            upper_limit(:code:`float`): The upper temperature limit
-
-            transition(:code:`int`): Length of linear transition between
-                the original and the replacement values.
-        """
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
-        self.transition = transition
-
-    def __call__(self, x, xr, t):
-        inds = np.logical_and(t.ravel() >= self.lower_limit,
-                              t.ravel() <  self.upper_limit)
-        inds = np.logical_and(tropopause_mask(t),
-                              inds)
-
-        x_new = np.copy(x)
-        x_new[np.logical_not(inds)] = xr
-
-        if self.transition > 1:
-            k = np.ones(self.transition) / self.transition
-            k2 = (self.transition - 1) // 2
-            x_new[k2 : -k2] = np.convolve(x_new, k, mode = "valid")
-
-        return x_new
-
-    def apply_matrix(self, x, xr, t):
-        """
-        Applies mask to matrix. It is assumed that rows and columns
-        of the matrix :code:`x` correspond to the temperature in
-        `t`.
-
-        Arguments:
-
-            x(:code:`numpy.array`):
-
-            xr(:code: `numpy.array`): The value to replaced the values
-               for which the mask is :code:`False` with.
-
-            t(:code: `numpy.array`): The temperature array corresponding
-                to rows and column of :code:`x`.
-        """
-        x = np.copy(x)
-        inds = np.logical_and(t.ravel() >= self.lower_limit,
-                              t.ravel() <  self.upper_limit)
-        inds = np.logical_and(tropopause_mask(t),
-                              inds)
-        inds     = np.logical_not(inds)
-        inds2    = np.logical_or(inds.reshape(-1, 1),
-                                 inds.reshape(1, -1))
-        x[inds2] = 0.0
-        x[inds, inds]  = xr
-        return x
-
-    def apply_matrix_off_diagonal(self, x, xr, t1, t2):
-        """
-        Applies mask to matrix where rows and column correspond
-        to different temperatures.
-
-        Arguments:
-
-            x(:code:`numpy.array`):
-
-            xr(:code: `numpy.array`): The value to replaced the values
-               for which the mask is :code:`False` with.
-
-            t1(:code: `numpy.array`): The temperature array corresponding
-                to rows of :code:`x`.
-
-            t2(:code: `numpy.array`): The temperature array corresponding
-                to column of :code:`x`.
-        """
-        x = np.copy(x)
-        inds1 = np.logical_and(t1.ravel() >= self.lower_limit,
-                               t1.ravel() <  self.upper_limit)
-        inds2 = np.logical_and(t2.ravel() >= self.lower_limit,
-                               t2.ravel() <  self.upper_limit)
-        inds12 = np.logical_and(inds1, inds2)
-        inds12 = np.logical_and(tropopause_mask(t),
-                                inds12)
-        inds     = np.logical_not(inds12)
-        x[inds]  = 0.0
-        return x
-
-
-################################################################################
-# Fixed a priori
-################################################################################
-
-class FixedApriori(AprioriBase):
-    """
-    Returns a fixed a priori profile.
-    
-    """
-
     def __init__(self,
                  name,
                  xa,
                  covariance,
-                 xr = 1e-12,
-                 height_mask = None,
-                 temperature_mask = None,
-                 spatial_correlation = None):
-
-        xa_name = "get_" + name + "_xa"
-        self.__dict__[xa_name] = self.get_xa
-        covariance_name = "get_" + name + "_covariance"
-        self.__dict__[covariance_name] = self.get_covariance
-
-        super().__init__(name)
-        self.xa  = xa
-        self.xr = xr
-        self.covariance = covariance
-        self.height_mask = height_mask
-        self.temperature_mask = temperature_mask
-        self.spatial_correlation = spatial_correlation
+                 mask = None,
+                 mask_value = 1e-12):
+        super().__init__(name, covariance)
+        self.xa   = np.array(xa)
+        self.mask = mask
+        self.mask_value = mask_value
 
     def get_xa(self, *args, **kwargs):
 
-        z = self.owner.get_altitude(*args, **kwargs)
-        t = self.owner.get_temperature(*args, **kwargs)
-        x = self.xa * np.ones(z.shape)
+        if self.xa.size == 1:
+            z = self.owner.get_altitude(*args, **kwargs)
+            xa = self.xa.ravel() * np.ones(z.size)
+        else:
+            xa = self.xa
 
-        if not self.height_mask is None:
-            x = self.height_mask(x, self.xr, z)
+        if not self.mask is None:
+            mask = self.mask(self.owner, *args, **kwargs)
+            xa[mask] = self.mask_value
 
-        if not self.temperature_mask is None:
-            x = self.temperature_mask(x, self.xr, t)
+        return xa
 
-        return x
-
-    def get_covariance(self, *args, **kwargs):
-
-        z = self.owner.get_altitude(*args, **kwargs)
-        t = self.owner.get_temperature(*args, **kwargs)
-        covmat = np.diag(self.covariance * np.ones(z.size))
-
-        if not self.spatial_correlation is None:
-            covmat = self.spatial_correlation(covmat, z)
-
-        if not self.height_mask is None:
-            covmat = self.height_mask.apply_matrix(covmat, 1e-12, z)
-
-        if not self.temperature_mask is None:
-            covmat = self.temperature_mask.apply_matrix(covmat, 1e-12, t)
-
-        return covmat
+################################################################################
+# Sensor a priori
+################################################################################
