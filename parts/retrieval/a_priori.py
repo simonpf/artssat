@@ -182,8 +182,6 @@ class APrioriProviderBase(DataProviderBase):
         xa_name = "get_" + name + "_xa"
         self.__dict__[xa_name] = self.get_xa
 
-        covariance.provider = self
-
         if hasattr(covariance, "get_covariance"):
             covariance_name = "get_" + name + "_covariance"
             self.__dict__[covariance_name] = self.get_covariance
@@ -192,14 +190,13 @@ class APrioriProviderBase(DataProviderBase):
             self.__dict__[precision_name] = self.get_precision
 
         self.name = name
-        self.covariance = covariance
+        self._covariance = covariance
 
     def get_covariance(self, *args, **kwargs):
-        return self.covariance.get_covariance(self.owner, *args, **kwargs)
+        return self._covariance.get_covariance(self.owner, *args, **kwargs)
 
     def get_precision(self, *args, **kwargs):
-        return self.covariance.get_precision(self.owner, *args, **kwargs)
-
+        return self._covariance.get_precision(self.owner, *args, **kwargs)
 
 ################################################################################
 # Masks
@@ -362,6 +359,45 @@ class FixedAPriori(APrioriProviderBase):
         return xa
 
 ################################################################################
+# Functional a priori
+################################################################################
+
+class FunctionalAPriori(APrioriProviderBase):
+    """
+    Returns an a priori profile that does not depend on the atmospheric
+    state.
+    """
+    def __init__(self,
+                 name,
+                 variable,
+                 f,
+                 covariance,
+                 mask = None,
+                 mask_value = 1e-12):
+        super().__init__(name, covariance)
+        self.variable   = variable
+        self.f          = f
+        self.mask       = mask
+        self.mask_value = mask_value
+
+    def get_xa(self, *args, **kwargs):
+
+        try:
+            f_get = getattr(self.owner, "get_" + self.variable)
+            x = f_get(*args, **kwargs)
+        except:
+            raise Exception("Could not get variable {} from data provider."
+                            .format(self.variable))
+
+        xa = self.f(x)
+
+        if not self.mask is None:
+            mask = self.mask(self.owner, *args, **kwargs)
+            xa[mask] = self.mask_value
+
+        return xa
+
+################################################################################
 # Sensor a priori
 ################################################################################
 
@@ -418,3 +454,81 @@ class SensorNoiseAPriori(DataProviderBase):
 
         sig = np.concatenate(stds).ravel()
         return sp.sparse.diags(sig ** 2.0, format = "coo")
+
+################################################################################
+# Reduced retrieval grids
+################################################################################
+
+class ReducedVerticalGrid(APrioriProviderBase):
+
+    def __init__(self,
+                 a_priori,
+                 grid,
+                 quantity = "pressure",
+                 covariance = None):
+
+        if covariance is None:
+            super().__init__(a_priori.name, a_priori)
+        else:
+            super().__init__(a_priori.name, covariance)
+        self.a_priori = a_priori
+        self.new_grid = grid
+        self.quantity = quantity
+        self._covariance = covariance
+
+    def _get_grid(self, *args, **kwargs):
+        f_name = "get_" + self.quantity
+        try:
+            grid = getattr(self.owner, f_name)(*args, **kwargs)
+        except:
+            raise Exception("Data provider does not provide get function "
+                            "for quantity {} required to determine original "
+                            "size of retrieval grid."
+                            .format(self.quantity))
+        return grid
+
+
+    def _interpolate(self, y, *args, **kwargs):
+        old_grid = self._get_grid(*args, **kwargs)
+        if self.quantity == "pressure":
+            f = sp.interpolate.interp1d(old_grid[::-1], y[::-1], axis = 0)
+            yi = f(self.new_grid[::-1])[::-1]
+        else:
+            f = sp.interpolate.interp1d(old_grid, y, axis = 0)
+            yi = f(self.new_grid)
+        return yi
+
+    def _interpolate_matrix(self, y, *args, **kwargs):
+        old_grid = self._get_grid(*args, **kwargs)
+        if self.quantity == "pressure":
+            f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1])
+            yi = f(self.new_grid[::-1], self.new_grid[::-1])[::-1, ::-1]
+        else:
+            f = sp.interpolate.interp2d(old_grid, old_grid, y)
+            yi = f(self.new_grid, self.new_grid)
+        return yi
+
+    def get_xa(self, *args, **kwargs):
+        self.a_priori.owner = self.owner
+        xa = self.a_priori.get_xa(*args, **kwargs)
+        return self._interpolate(xa, *args, **kwargs)
+
+    def get_covariance(self, *args, **kwargs):
+        if self._covariance is None:
+            self.a_priori.owner = self.owner
+            covmat = self.a_priori.get_covariance(*args, **kwargs)
+            if isinstance(covmat, sp.sparse.spmatrix):
+                covmat = covmat.todense()
+            return self._interpolate_matrix(covmat, *args, **kwargs)
+        else:
+            return self._covariance.get_covariance(self.owner, *args, **kwargs)
+
+    def get_precision(self, *args, **kwargs):
+        if self._covariance is None:
+            self.a_priori.owner = self.owner
+            precmat = self.a_priori.get_precision(*args, **kwargs)
+            if isinstance(precmat, sp.sparse.spmatrix):
+                precmat = precmat.todense()
+            return self._interpolate_matrix(precmat, *args, **kwargs)
+        else:
+            return self._covariance.get_precision(self.owner, *args **kwargs)

@@ -10,7 +10,7 @@ from examples.data_provider import DataProvider
 from examples.sensors import ICI
 from parts.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
     TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori, \
-    SensorNoiseAPriori
+    SensorNoiseAPriori, ReducedVerticalGrid, FunctionalAPriori
 
 def test_masks():
     data_provider    = DataProvider()
@@ -80,3 +80,43 @@ def test_sensor_noise_a_priori():
     sna.noise_scaling["ici"] = 2.0
     covmat = sna.get_observation_error_covariance()
     assert(np.allclose((ICI.nedt * 2.0) ** 2.0, covmat.diagonal()))
+
+def test_reduced_grid_a_priori():
+    tropopause_mask  = TropopauseMask()
+    temperature_mask = TemperatureMask(lower_limit = 230.0,
+                                       upper_limit = 280.0)
+    covariance       = Diagonal(2.0, And(temperature_mask, tropopause_mask))
+    covariance_new   = Diagonal(2.0 * np.ones(10))
+
+    data_provider    = DataProvider()
+    t = data_provider.get_temperature()
+    a_priori = FixedAPriori("temperature", t, covariance)
+    a_priori = ReducedVerticalGrid(a_priori, np.logspace(3, 5, 10)[::-1])
+    data_provider.add(a_priori)
+
+    t_xa = data_provider.get_temperature_xa()
+    assert(t_xa.size == 10)
+
+    covmat = data_provider.get_temperature_covariance()
+    assert(covmat.shape == (10, 10))
+
+    data_provider    = DataProvider()
+    a_priori = ReducedVerticalGrid(a_priori, np.logspace(3, 5, 10)[::-1],
+                                   covariance = covariance_new)
+    data_provider.add(a_priori)
+    covmat = data_provider.get_temperature_covariance()
+    assert(np.all(covmat.diagonal() == 2.0))
+
+def test_functional_a_priori():
+    temperature_mask = TemperatureMask(lower_limit = 230.0,
+                                        upper_limit = 280.0)
+    tropopause_mask  = TropopauseMask()
+    covariance       = Diagonal(2.0, And(temperature_mask, tropopause_mask))
+    covariance_new   = Diagonal(2.0 * np.ones(10))
+
+    data_provider    = DataProvider()
+    t = data_provider.get_temperature()
+    f = lambda x: x ** 2
+    a_priori = FunctionalAPriori("temperature", "temperature", f, covariance)
+    data_provider.add(a_priori)
+    assert(np.all(np.isclose(t ** 2, data_provider.get_temperature_xa())))
