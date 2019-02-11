@@ -476,6 +476,9 @@ class ReducedVerticalGrid(APrioriProviderBase):
         self.quantity = quantity
         self._covariance = covariance
 
+        retrieval_p_name = "get_" + a_priori.name + "_p_grid"
+        self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
+
     def _get_grid(self, *args, **kwargs):
         f_name = "get_" + self.quantity
         try:
@@ -491,20 +494,28 @@ class ReducedVerticalGrid(APrioriProviderBase):
     def _interpolate(self, y, *args, **kwargs):
         old_grid = self._get_grid(*args, **kwargs)
         if self.quantity == "pressure":
-            f = sp.interpolate.interp1d(old_grid[::-1], y[::-1], axis = 0)
+            f = sp.interpolate.interp1d(old_grid[::-1], y[::-1],
+                                        axis = 0,
+                                        bounds_error = False,
+                                        fill_value = (y[-1], y[0]))
             yi = f(self.new_grid[::-1])[::-1]
         else:
-            f = sp.interpolate.interp1d(old_grid, y, axis = 0)
+            f = sp.interpolate.interp1d(old_grid, y,
+                                        axis = 0,
+                                        bounds_error = False,
+                                        fill_value = (y[0], y[-1]))
             yi = f(self.new_grid)
         return yi
 
     def _interpolate_matrix(self, y, *args, **kwargs):
         old_grid = self._get_grid(*args, **kwargs)
         if self.quantity == "pressure":
-            f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1])
+            f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1],
+                                        bounds_error = False)
             yi = f(self.new_grid[::-1], self.new_grid[::-1])[::-1, ::-1]
         else:
-            f = sp.interpolate.interp2d(old_grid, old_grid, y)
+            f = sp.interpolate.interp2d(old_grid, old_grid, y,
+                                        bounds_error = False)
             yi = f(self.new_grid, self.new_grid)
         return yi
 
@@ -532,3 +543,10 @@ class ReducedVerticalGrid(APrioriProviderBase):
             return self._interpolate_matrix(precmat, *args, **kwargs)
         else:
             return self._covariance.get_precision(self.owner, *args **kwargs)
+
+    def get_retrieval_p_grid(self, *args, **kwargs):
+        if self.quantity == "pressure":
+            return self.new_grid
+        else:
+            y = self._get_grid(*args, **kwargs)
+            return self._interpolate(y, *args, **kwargs)
