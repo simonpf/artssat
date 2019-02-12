@@ -220,15 +220,19 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         try:
             covmat_fun = getattr(data_provider, fname)
             covmat = covmat_fun(*args, **kwargs)
-        except:
+        except AttributeError as e:
             covmat = None
+        except Exception as e:
+            raise e
 
         fname = "get_" + self.quantity.name + "_precision"
         try:
             precmat_fun = getattr(data_provider, fname)
             precmat = precmat_fun(*args, **kwargs)
-        except:
+        except AttributeError as e:
             precmat = None
+        except Exception as e:
+            raise e
 
         if covmat is None and precmat is None:
             raise Exception("The data provider must provide a get method for "
@@ -386,9 +390,6 @@ class RetrievalRun:
 
         settings(:code:`dict`): A dictionary holding the retrieval
             settings.
-
-        
-
     """
     def __init__(self,
                  name,
@@ -891,3 +892,11 @@ class RetrievalCalculation:
                 self.results += [retrieval]
                 previous_run = retrieval
 
+
+    def store_results(self):
+        sim = self.results[-1].simulation
+        if not sim.output_file is None:
+            sim.output_file.store_retrieval_results(self)
+        else:
+            raise Exception("The output file must be initialized before results"
+                            " can be written to it.")

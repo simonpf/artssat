@@ -4,6 +4,7 @@ from parts.sensor.sensor       import ActiveSensor, PassiveSensor
 from parts.scattering.solvers  import ScatteringSolver, RT4
 from parts.jacobian            import JacobianCalculation
 from parts.retrieval           import RetrievalCalculation
+from parts.io                  import OutputFile
 
 class ArtsSimulation:
     def __init__(self,
@@ -18,6 +19,7 @@ class ArtsSimulation:
         self._scattering_solver = scattering_solver
         self._data_provider     = data_provider
         self._workspace         = None
+        self.output_file        = None
 
         self.jacobian  = JacobianCalculation()
         self.retrieval = RetrievalCalculation()
@@ -191,6 +193,9 @@ class ArtsSimulation:
 
     def run(self, *args, **kwargs):
 
+        self.args   = args
+        self.kwargs = kwargs
+
         ws = self.workspace
 
         self.atmosphere.get_data(ws, self.data_provider, *args, **kwargs)
@@ -205,5 +210,41 @@ class ArtsSimulation:
         else:
             self._run_forward_simulation()
 
+    def run_mpi(self, *args, callback = None):
+        from mpi4py import MPI
+        ranges = list(args)
+
+        if len(ranges) > 1:
+            raise Exception("Currently only 1-dimensional ranges are supported.")
+
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size()
+
+        r = ranges[0]
+        n  = (r.stop - r.start) // r.step
+        dn  = n // size
+        n0  = rank * dn
+        rem = n % size
+        if rank < rem:
+            dn = dn + 1
+        n0 += min(rank, rem)
+        print(n0, n0 + dn, dn)
+
+        for i in range(n0, n0 + dn):
+            self.run(i)
+
+            if not callback is None:
+                callback(self)
+            else:
+                if not self.output_file is None:
+                    if hasattr(self, "retrieval"):
+                        self.retrieval.store_results()
+
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)
+
+    def initialize_output_file(self, filename, dimension_names = None, mode = "w"):
+        self.output_file = OutputFile(filename,
+                                      dimension_names = dimension_names,
+                                      mode = mode)

@@ -28,7 +28,7 @@ class Diagonal:
     def get_covariance(self, data_provider, *args, **kwargs):
 
         if not self.mask is None:
-            mask = self.mask(data_provider, *args, **kwargs)
+            mask = np.logical_not(self.mask(data_provider, *args, **kwargs))
         else:
             mask = []
 
@@ -115,6 +115,11 @@ class Thikhonov:
         self.mask_value = mask_value
         self.z_scaling  = z_scaling
 
+    def get_covariance(self, data_provider, *args, **kwargs):
+        precmat = self.get_precision(data_provider, *args, **kwargs)
+        diag = precmat.diagonal()
+        return sp.sparse.diags(1.0 / diag, format = "coo")
+
     def get_precision(self, data_provider, *args, **kwargs):
 
         z = data_provider.get_altitude(*args, **kwargs)
@@ -131,7 +136,7 @@ class Thikhonov:
         d[-2:] = [5, 1]
 
         if not self.mask is None:
-            mask = self.mask(data_provider, *args, **kwargs)
+            mask = np.logical_not(self.mask(data_provider, *args, **kwargs))
             d_mask = np.zeros(n)
             d_mask[mask] = self.mask_value
             d += d_mask
@@ -277,7 +282,7 @@ class TemperatureMask:
         self.upper_limit = upper_limit
 
     def __call__(self, data_provider, *args, **kwargs):
-        t    = data_provider.get_temperature()
+        t    = data_provider.get_temperature(*args, **kwargs)
         inds = np.logical_and(t.ravel() >= self.lower_limit,
                               t.ravel() <  self.upper_limit)
         return inds
@@ -340,20 +345,20 @@ class FixedAPriori(APrioriProviderBase):
                  mask = None,
                  mask_value = 1e-12):
         super().__init__(name, covariance)
-        self.xa   = np.array(xa)
+        self._xa   = np.array(xa)
         self.mask = mask
         self.mask_value = mask_value
 
     def get_xa(self, *args, **kwargs):
 
-        if self.xa.size == 1:
+        if self._xa.size == 1:
             z = self.owner.get_altitude(*args, **kwargs)
-            xa = self.xa.ravel() * np.ones(z.size)
+            xa = self._xa.ravel() * np.ones(z.size)
         else:
-            xa = self.xa
+            xa = self._xa
 
         if not self.mask is None:
-            mask = self.mask(self.owner, *args, **kwargs)
+            mask = np.logical_not(self.mask(self.owner, *args, **kwargs))
             xa[mask] = self.mask_value
 
         return xa
@@ -392,7 +397,7 @@ class FunctionalAPriori(APrioriProviderBase):
         xa = self.f(x)
 
         if not self.mask is None:
-            mask = self.mask(self.owner, *args, **kwargs)
+            mask = np.logical_not(self.mask(self.owner, *args, **kwargs))
             xa[mask] = self.mask_value
 
         return xa
@@ -548,5 +553,5 @@ class ReducedVerticalGrid(APrioriProviderBase):
         if self.quantity == "pressure":
             return self.new_grid
         else:
-            y = self._get_grid(*args, **kwargs)
-            return self._interpolate(y, *args, **kwargs)
+            p = self.owner.get_pressure(*args, **kwargs)
+            return self._interpolate(p, *args, **kwargs)
