@@ -689,7 +689,7 @@ class RetrievalRun:
                 y_blocks += [self.y[i : j]]
 
         y = np.concatenate(y_blocks)
-        self.y = y
+        self._y = y
         ws.y  = y
         ws.yf       = []
         ws.jacobian = []
@@ -845,7 +845,7 @@ class RetrievalCalculation:
             sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
             i_start += s.y_vector_length
 
-        self.y = self._get_y_vector(simulation, *args, **kwargs)
+        self._y = self._get_y_vector(simulation, *args, **kwargs)
 
         ws   = simulation.workspace
 
@@ -857,7 +857,7 @@ class RetrievalCalculation:
             #
             retrieval = RetrievalRun("Retrieval",
                                      simulation,
-                                     self.y,
+                                     self._y,
                                      self.settings,
                                      sensor_indices,
                                      self.retrieval_quantities)
@@ -879,7 +879,7 @@ class RetrievalCalculation:
 
                 retrieval = RetrievalRun(name,
                                          simulation,
-                                         self.y,
+                                         self._y,
                                          self.settings,
                                          sensor_indices,
                                          self.retrieval_quantities,

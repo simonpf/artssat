@@ -229,7 +229,6 @@ class ArtsSimulation:
         if rank < rem:
             dn = dn + 1
         n0 += min(rank, rem)
-        print(n0, n0 + dn, dn)
 
         for i in range(n0, n0 + dn):
             self.run(i)

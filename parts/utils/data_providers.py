@@ -9,6 +9,7 @@ parts retrievals.
 
 from parts.data_provider import DataProviderBase
 from netCDF4 import Dataset
+import numpy as np
 
 class NetCDFDataProvider(DataProviderBase):
     """
@@ -41,6 +42,9 @@ class NetCDFDataProvider(DataProviderBase):
                     if d in offsets:
                         a += offsets[d]
                     v = v[a]
+
+            if type(v) == np.ma.core.MaskedArray:
+                v = np.ma.getdata(v)
 
             if len(v.shape) > 0:
                 return v[:]
