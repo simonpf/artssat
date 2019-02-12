@@ -35,6 +35,7 @@ class OutputFile:
             self.file_handle.createDimension(name, None)
             indices += [name]
 
+        self.file_handle.createDimension("oem_diagnostics", 5)
         self.file_handle.createDimension("callbacks", len(retrieval.callbacks))
         indices = ["callbacks"] + indices
 
@@ -46,6 +47,11 @@ class OutputFile:
             if self.parallel:
                 v.set_collective(True)
         self.retrieval_output_initialized = True
+
+        v = self.file_handle.createVariable("diagnostics", "f8",
+                                            dimensions = tuple(indices + ["oem_diagnostics"]))
+        if self.parallel:
+            v.set_collective(True)
 
         if self.parallel:
             self.comm.Barrier()
@@ -66,4 +72,9 @@ class OutputFile:
                     x = r.get_xa(rq, interpolate = True)
                 x = rq.transformation.invert(x)
                 var = self.file_handle.variables[rq.name]
-                s = var.__setitem__([i] + list(args) + [slice(0, None)], x)
+                var.__setitem__([i] + list(args) + [slice(0, None)], x)
+
+        for i, r in enumerate(retrieval.results):
+            var = self.file_handle.variables["diagnostics"]
+            var.__setitem__([i] + list(args) + [slice(0, None)], r.oem_diagnostics)
+
