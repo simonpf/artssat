@@ -131,17 +131,23 @@ class Thikhonov:
         du1[0]  = -2.0
         du1[-1] = -2.0
 
+        dl1 = np.copy(du1)
+        dl2 = np.copy(du2)
+
         d     = 6.0 * np.ones(n)
         d[:2]  = [1, 5]
         d[-2:] = [5, 1]
 
         if not self.mask is None:
             mask = np.logical_not(self.mask(data_provider, *args, **kwargs))
-            d_mask = np.zeros(n)
-            d_mask[mask] = self.mask_value
-            d += d_mask
+            du1[mask[:-1]] = 0
+            du2[mask[:-2]] = 0
+            dl1[mask[1:]]  = 0
+            dl2[mask[2:]]  = 0
+            d[mask] = self.mask_value
 
-        precmat = sp.sparse.diags(diagonals = [du2, du1, d, du1, du2],
+
+        precmat = sp.sparse.diags(diagonals = [du2, du1, d, dl1, dl2],
                                   offsets   = [2, 1, 0, -1, -2],
                                   format    = "coo")
         precmat *= self.scaling
