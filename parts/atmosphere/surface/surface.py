@@ -37,7 +37,7 @@ class Tessem(Surface):
         self._surface_salinity       = ws.add_variable(salinity)
         self._surface_salinity_field = ws.add_variable(np.zeros((1, 1)))
 
-        self._surface_wind_speed       = ws.add_variable(salinity)
+        self._surface_wind_speed       = ws.add_variable(0.0)
         self._surface_wind_speed_field = ws.add_variable(np.zeros((1, 1)))
         self._surface_wind_speed = ws.add_variable(wind_speed)
 

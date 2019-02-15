@@ -94,6 +94,7 @@ class Thikhonov:
     """
     def __init__(self,
                  scaling    = 1.0,
+                 diagonal   = 0.0,
                  mask       = None,
                  mask_value = 1e12,
                  z_scaling  = True):
@@ -111,6 +112,7 @@ class Thikhonov:
                 according to height differences between levels.
         """
         self.scaling    = scaling
+        self.diagonal   = diagonal
         self.mask       = mask
         self.mask_value = mask_value
         self.z_scaling  = z_scaling
@@ -137,6 +139,9 @@ class Thikhonov:
         d     = 6.0 * np.ones(n)
         d[:2]  = [1, 5]
         d[-2:] = [5, 1]
+
+        if self.diagonal > 0.0:
+            d += self.diagonal
 
         if not self.mask is None:
             mask = np.logical_not(self.mask(data_provider, *args, **kwargs))
@@ -263,9 +268,12 @@ class TropopauseMask:
         t     = data_provider.get_temperature(*args, **kwargs)
         t_avg = 0.5 * (t[1:] + t[:-1])
         lr    = - np.diff(t)
-        i     = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
+
+        tp = np.where(np.logical_and(lr < 0, t_avg < 220))[0]
         inds  = np.ones(t.size, dtype = np.bool)
-        inds[i : inds.size] = False
+        if len(tp > 0):
+            i     = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
+            inds[i : inds.size] = False
         return inds
 
 class TemperatureMask:

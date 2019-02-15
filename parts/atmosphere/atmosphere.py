@@ -350,17 +350,18 @@ class Atmosphere:
         ws.vmr_field = np.zeros((len(self.absorbers),) + dimensions)
 
         for i, a in enumerate(self.absorbers):
-            fname = "get_" + a.name
-            f = provider.__getattribute__(fname)
-            x = f(*args, **kwargs)
-            self.__check_dimensions__(x, a.name)
-            x = self.__reshape__(x)
+            if a.retrieval is None:
+                fname = "get_" + a.name
+                f = provider.__getattribute__(fname)
+                x = f(*args, **kwargs)
+                self.__check_dimensions__(x, a.name)
+                x = self.__reshape__(x)
 
-            if not x.shape == dimensions:
-                raise Exception("Dimensions of " + a.name + " VMR field "
-                                "inconcistent with dimensions of temperature "
-                                "field.")
-            ws.vmr_field.value[i, :, :, :] = x
+                if not x.shape == dimensions:
+                    raise Exception("Dimensions of " + a.name + " VMR field "
+                                    "inconcistent with dimensions of temperature "
+                                    "field.")
+                ws.vmr_field.value[i, :, :, :] = x
 
         i = 0
 
