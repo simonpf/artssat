@@ -288,9 +288,6 @@ class TemperatureMask:
             lower_limit(:code:`float`): The lower temperature limit
 
             upper_limit(:code:`float`): The upper temperature limit
-
-            transition(:code:`int`): Length of linear transition between
-                the original and the replacement values.
         """
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
@@ -299,6 +296,29 @@ class TemperatureMask:
         t    = data_provider.get_temperature(*args, **kwargs)
         inds = np.logical_and(t.ravel() >= self.lower_limit,
                               t.ravel() <  self.upper_limit)
+        return inds
+
+class AltitudeMask:
+    """
+    The altitude mask replaces values at grid points outside of the
+    given altitude interval with another value.
+    """
+    def __init__(self, lower_limit, upper_limit):
+        """
+        Arguments:
+
+            lower_limit(:code:`float`): The lower altitude limit
+
+            upper_limit(:code:`float`): The upper altitude limit
+
+        """
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+
+    def __call__(self, data_provider, *args, **kwargs):
+        z    = data_provider.get_altitude(*args, **kwargs)
+        inds = np.logical_and(z.ravel() >= self.lower_limit,
+                              z.ravel() <  self.upper_limit)
         return inds
 
 ################################################################################
