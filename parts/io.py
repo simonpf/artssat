@@ -6,8 +6,6 @@ class OutputFile:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             size = self.comm.Get_size()
-            print("MPI size: ", size)
-
             self.parallel = size > 1
         except:
             self.parallel = False
@@ -26,6 +24,11 @@ class OutputFile:
         if self.parallel:
             self.comm.Barrier()
 
+        #
+        # Global dimensions
+        #
+
+        # indices
         indices = []
         for i, a in enumerate(sim.args):
             if not self.dimension_names is None:
@@ -35,28 +38,58 @@ class OutputFile:
             self.file_handle.createDimension(name, None)
             indices += [name]
 
-        self.file_handle.createDimension("oem_diagnostics", 5)
-        self.file_handle.createDimension("callbacks", len(retrieval.callbacks))
-        indices = ["callbacks"] + indices
-
+        # z grid
         p = sim.workspace.p_grid.value
         self.file_handle.createDimension("z", p.size)
 
-        for rq in retrieval.retrieval_quantities:
-            v = self.file_handle.createVariable(rq.name, "f8", dimensions = tuple(indices + ["z"]))
+        # oem diagnostices
+        self.file_handle.createDimension("oem_diagnostics", 5)
+
+        #
+        # Result groups
+        #
+
+        self.groups = []
+
+        for r in retrieval.results:
+            group = self.file_handle.createGroup(r.name)
+            self.groups += [group]
+
+            # Retrieval quantities.
+            for rq in retrieval.retrieval_quantities:
+                v = group.createVariable(rq.name, "f8", dimensions = tuple(indices + ["z"]))
+                if self.parallel:
+                    v.set_collective(True)
+
+            # OEM diagnostics.
+            v = group.createVariable("diagnostics", "f8",
+                                     dimensions = tuple(indices + ["oem_diagnostics"]))
             if self.parallel:
                 v.set_collective(True)
+
+            # Observations and fit.
+            for s in r.sensors:
+                i, j = r.sensor_indices[s.name]
+                m = j - i
+                d1 = s.name + "_channels"
+                group.createDimension(d1, m)
+                v = group.createVariable("y_" + s.name, "f8",
+                                              dimensions = tuple(indices  + [d1]))
+                if self.parallel:
+                    v.set_collective(True)
+                v = group.createVariable("yf_" + s.name, "f8",
+                                              dimensions = tuple(indices  + [d1]))
+                if self.parallel:
+                    v.set_collective(True)
+
+
         self.retrieval_output_initialized = True
-
-        v = self.file_handle.createVariable("diagnostics", "f8",
-                                            dimensions = tuple(indices + ["oem_diagnostics"]))
-        if self.parallel:
-            v.set_collective(True)
-
         if self.parallel:
             self.comm.Barrier()
 
     def store_retrieval_results(self, retrieval):
+
+        # Initialize file structure
         if not self.retrieval_output_initialized:
             self.initialize_retrieval_output(retrieval)
 
@@ -64,17 +97,40 @@ class OutputFile:
         args   = sim.args
         kwargs = sim.kwargs
 
-        for rq in retrieval.retrieval_quantities:
-            for i, r in enumerate(retrieval.results):
+        for g, r in zip(self.groups, retrieval.results):
+            #
+            # Retrieved quantities
+            #
 
+            for rq in retrieval.retrieval_quantities:
                 x = r.get_result(rq, interpolate = True)
                 if x is None:
                     x = r.get_xa(rq, interpolate = True)
                 x = rq.transformation.invert(x)
-                var = self.file_handle.variables[rq.name]
-                var.__setitem__([i] + list(args) + [slice(0, None)], x)
+                var = g.variables[rq.name]
+                var.__setitem__(list(args) + [slice(0, None)], x)
 
-        for i, r in enumerate(retrieval.results):
-            var = self.file_handle.variables["diagnostics"]
-            var.__setitem__([i] + list(args) + [slice(0, None)], r.oem_diagnostics)
+            #
+            # OEM diagnostics.
+            #
 
+            for i, r in enumerate(retrieval.results):
+                var = g.variables["diagnostics"]
+                var.__setitem__(list(args) + [slice(0, None)], r.oem_diagnostics)
+
+            #
+            # Observation and fit.
+            #
+
+            for s in r.sensors:
+                i, j = r.sensor_indices[s.name]
+                y  = r.y[i : j]
+                yf = r.yf[i : j]
+
+                name = "y_" + s.name
+                var = g[name]
+                var.__setitem__(list(args) + [slice(0, None)], y)
+
+                name = "yf_" + s.name
+                var = g[name]
+                var.__setitem__(list(args) + [slice(0, None)], yf)

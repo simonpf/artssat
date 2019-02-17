@@ -296,7 +296,10 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
     def set_from_x(self, ws, x):
 
-        x = self.transformation.invert(x)
+        grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+        grids = [g for g in grids if g.size > 0]
+        y = self.retrieval.interpolate_to_grids(x, grids)
+        x = self.transformation.invert(y)
         x = x.reshape(ws.vmr_field.value.shape[1:])
 
         unit = self.retrieval.unit

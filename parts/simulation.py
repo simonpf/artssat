@@ -75,6 +75,7 @@ class ArtsSimulation:
 
     def setup(self, verbosity = 1):
 
+        self.verbosity  = verbosity
         self._workspace = Workspace(verbosity = verbosity)
         ws = self._workspace
         ws.execute_controlfile("general/general.arts")

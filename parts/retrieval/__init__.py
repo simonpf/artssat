@@ -725,6 +725,8 @@ class RetrievalRun:
 
         if self.oem_diagnostics[0] == 9.0:
             self.oem_errors = ws.oem_errors.value
+            print("Error in OEM calculation:")
+            print(self.oem_errors)
         else:
             self.oem_errors = None
 
