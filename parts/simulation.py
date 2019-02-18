@@ -231,6 +231,7 @@ class ArtsSimulation:
             dn = dn + 1
         n0 += min(rank, rem)
 
+        print("run_mpi :: ", rank, n0, dn)
         for i in range(n0, n0 + dn):
             self.run(i)
 
@@ -244,7 +245,7 @@ class ArtsSimulation:
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)
 
-    def initialize_output_file(self, filename, dimension_names = None, mode = "w"):
+    def initialize_output_file(self, filename, dimensions, mode = "w"):
         self.output_file = OutputFile(filename,
-                                      dimension_names = dimension_names,
+                                      dimensions = dimensions,
                                       mode = mode)
