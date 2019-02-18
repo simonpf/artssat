@@ -21,8 +21,8 @@ class OutputFile:
         args   = sim.args
         kwargs = sim.kwargs
 
-        if self.parallel:
-            self.comm.Barrier()
+        #if self.parallel:
+        #    self.comm.Barrier()
 
         #
         # Global dimensions
@@ -81,11 +81,7 @@ class OutputFile:
                                               dimensions = tuple(indices  + [d1]))
                 if self.parallel:
                     v.set_collective(True)
-
-
         self.retrieval_output_initialized = True
-        if self.parallel:
-            self.comm.Barrier()
 
     def store_retrieval_results(self, retrieval):
 
