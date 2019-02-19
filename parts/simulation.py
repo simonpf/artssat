@@ -231,8 +231,8 @@ class ArtsSimulation:
             dn = dn + 1
         n0 += min(rank, rem)
 
-        print("run_mpi :: ", rank, n0, dn)
-        for i in range(n0, n0 + dn):
+        print("run_mpi :: ", rank, n0 + r.start, dn)
+        for i in range(r.start + n0, r.start + n0 + dn):
             self.run(i)
 
             if not callback is None:
