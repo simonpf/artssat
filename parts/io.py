@@ -30,7 +30,7 @@ class OutputFile:
 
         # indices
         indices = []
-        for n, s in self.dimensions:
+        for n, s, _ in self.dimensions:
             self.file_handle.createDimension(n, s)
             indices += [n]
 
@@ -78,7 +78,7 @@ class OutputFile:
             self.initialize_retrieval_output(retrieval)
 
         sim = retrieval.results[0].simulation
-        args   = sim.args
+        args   = [a - o for a, (_, _, o) in zip(sim.args, self.dimensions)]
         kwargs = sim.kwargs
 
         for g, r in zip(self.groups, retrieval.results):
@@ -97,10 +97,8 @@ class OutputFile:
             #
             # OEM diagnostics.
             #
-
-            for i, r in enumerate(retrieval.results):
-                var = g.variables["diagnostics"]
-                var.__setitem__(list(args) + [slice(0, None)], r.oem_diagnostics)
+            var = g.variables["diagnostics"]
+            var.__setitem__(list(args) + [slice(0, None)], r.oem_diagnostics)
 
             #
             # Observation and fit.
