@@ -13,9 +13,9 @@ class TemperatureJacobian(JacobianBase):
     def __init__(self,
                  quantity,
                  index,
-                 p_grid   = None,
-                 lat_grid = None,
-                 lon_grid = None,
+                 p_grid   = [],
+                 lat_grid = [],
+                 lon_grid = [],
                  hse      = "on"):
         super().__init__(quantity, index)
         self.p_grid   = p_grid
@@ -25,17 +25,17 @@ class TemperatureJacobian(JacobianBase):
 
     def _make_setup_kwargs(self, ws):
 
-        if self.p_grid is None:
+        if self.p_grid.size == 0:
             g1 = ws.p_grid
         else:
             g1 = self.p_grid
 
-        if self.lat_grid is None:
+        if self.lat_grid.size == 0:
             g2 = ws.lat_grid
         else:
             g2 = self.lat_grid
 
-        if self.lon_grid is None:
+        if self.lon_grid.size == 0:
             g3 = ws.lon_grid
         else:
             g3 = self.lon_grid
@@ -54,9 +54,9 @@ class TemperatureRetrieval(RetrievalBase, TemperatureJacobian):
     def __init__(self,
                  quantity,
                  index,
-                 p_grid   = None,
-                 lat_grid = None,
-                 lon_grid = None,
+                 p_grid   = [],
+                 lat_grid = [],
+                 lon_grid = [],
                  hse = "on"):
         RetrievalBase.__init__(self)
         TemperatureJacobian.__init__(self, quantity, index,
