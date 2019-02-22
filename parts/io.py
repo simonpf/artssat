@@ -78,6 +78,9 @@ class OutputFile:
 
     def store_retrieval_results(self, retrieval):
 
+        if self.parallel:
+           self.comm.Barrier()
+
         # Initialize file structure
         if not self.retrieval_output_initialized:
             self.initialize_retrieval_output(retrieval)
