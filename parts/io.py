@@ -1,7 +1,7 @@
 from netCDF4 import Dataset
 
 class OutputFile:
-    def __init__(self, filename, dimensions = None, mode = "m"):
+    def __init__(self, filename, dimensions = None, mode = "w"):
         try:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
@@ -10,13 +10,18 @@ class OutputFile:
         except:
             self.parallel = False
 
-        self.file_handle = Dataset(filename, mode = mode,
-                                   parallel = self.parallel)
+        self.filename = filename
+        self.mode = mode
         self.retrieval_output_initialized   = False
         self.initialized_simulations = False
         self.dimensions = dimensions
 
     def initialize_retrieval_output(self, retrieval):
+
+        self.file_handle = Dataset(self.filename,
+                                   mode = self.mode,
+                                   parallel = self.parallel)
+
         sim = retrieval.results[0].simulation
         args   = sim.args
         kwargs = sim.kwargs
