@@ -12,6 +12,8 @@ from parts.arts_object import Dimension as dim
 from parts.arts_object import ArtsObject
 from typhon.arts.workspace import Workspace, arts_agenda
 
+ws = Workspace()
+
 class FixedShape(ArtsPSD, ArtsObject):
     """
     Fixed shape particle size distribution.
