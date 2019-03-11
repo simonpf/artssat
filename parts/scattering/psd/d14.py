@@ -462,7 +462,7 @@ class D14N(ArtsPSD):
         def pnd_call(ws):
             ws.psdD14(n0Star = np.nan,
                       Dm     = np.nan,
-                      iwc    = np.nan,
+                      iwc    = -999.0,
                       rho    = self.rho,
                       alpha  = self.alpha,
                       beta   = self.beta,

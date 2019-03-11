@@ -1,14 +1,24 @@
+"""
+Fixed shape PSD
+===============
+
+The fixed-shape PSD takes a fixed PSD shape and scales it with
+a given mass density.
+"""
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq
 from parts.arts_object import arts_property
 from parts.arts_object import Dimension as dim
-from parts.arts_object import ArtsObjectReplacement
+from parts.arts_object import ArtsObject
 from typhon.arts.workspace import Workspace, arts_agenda
 
-ws = Workspace()
+class FixedShape(ArtsPSD, ArtsObject):
+    """
+    Fixed shape particle size distribution.
 
-class FixedShape(ArtsPSD, ArtsObjectReplacement):
-
+    This PSD class takes a mass density as input and returns a given PSD shape
+    scaled in the vertical dimension to match the provided mass density.
+    """
     _wsvs = [ws.create_variable("Vector", "x"),
              ws.create_variable("Matrix", "data")]
 
@@ -23,7 +33,19 @@ class FixedShape(ArtsPSD, ArtsObjectReplacement):
         return None
 
     def __init__(self, x, data, size_parameter = D_eq(1000.0)):
+        """
+        Create PSD with shape given by :code:`x` and :code:`data`.
 
+        Arguments:
+            x(numpy.ndarray): 1D array containing the centers of the size
+                bins of the provided PSD shape.
+
+            data(numpy.ndarray): 1D array containing the PSD representing the
+                shape of the PSD.
+
+            size_parameter: :class:`SizeParameter` representing the size parameter
+                over which the PSD is defined.
+        """
         ArtsObjectReplacement.__init__(self)
         self.psd = PSDData(x, data, size_parameter)
         ArtsPSD.__init__(self, self.psd.size_parameter)
@@ -50,7 +72,6 @@ class FixedShape(ArtsPSD, ArtsObjectReplacement):
             ws.Copy(ws.psd_size_grid, self._wsvs["x"])
             ws.Copy(ws.pnd_size_grid, self._wsvs["x"])
             ws.Copy(ws.psd_data, self._wsvs["data"])
-            ws.Print(self._wsvs["data"])
             ws.Touch(ws.dpsd_data_dx)
 
         return pnd_call
@@ -62,5 +83,4 @@ class FixedShape(ArtsPSD, ArtsObjectReplacement):
     def get_data(self, ws, i, *args, **kwargs):
         md = ws.particle_bulkprop_field.value[self.pbf_index, :, :, :]\
                                        .reshape(-1, 1)
-        print((self.shape * md).shape)
         ws.Copy(self._wsvs["data"], self.shape * md)

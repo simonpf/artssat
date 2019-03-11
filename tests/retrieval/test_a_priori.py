@@ -22,6 +22,7 @@ def test_masks():
     assert(np.all(temperature[mask] >= 230))
     assert(np.all(temperature[mask] < 280))
 
+    tropopause_mask = TropopauseMask()
     mask = tropopause_mask(data_provider)
     assert(np.all(temperature[mask]) <= 225)
 
@@ -46,7 +47,7 @@ def test_covariances():
     thik = Thikhonov(scaling = 1.0, z_scaling = False, mask = temperature_mask)
     precmat = thik.get_precision(data_provider)
 
-    mask = temperature_mask(data_provider)
+    mask = np.logical_not(temperature_mask(data_provider))
     assert(np.all(precmat.diagonal()[mask] >= 1e12))
     mask2 = np.logical_not(mask)[2 : -2]
     assert(np.all(precmat.diagonal()[2:-2][mask2] == 6))
@@ -57,7 +58,7 @@ def test_data_provider_a_priori():
     tropopause_mask = TropopauseMask()
     covariance = Diagonal(2.0, And(temperature_mask, tropopause_mask))
     data_provider    = DataProvider()
-    data_provider.add(DataProviderApriori("temperature", covariance))
+    data_provider.add(DataProviderAPriori("temperature", covariance))
 
     t = data_provider.get_temperature()
     assert(np.all(data_provider.get_temperature_xa() == t))

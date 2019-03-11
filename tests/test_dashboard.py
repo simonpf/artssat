@@ -13,7 +13,8 @@ from parts.jacobian              import Log10
 from parts.scattering            import ScatteringSpecies, D14
 from parts.scattering.solvers    import RT4, Disort
 from parts.sensor                import CloudSat, ICI
-from parts.data_provider         import DataProviderBase, FixedApriori
+from parts.data_provider         import DataProviderBase
+from parts.retrieval.a_priori    import FixedAPriori
 from parts.dashboard             import dashboard
 
 from examples.data_provider      import DataProvider
