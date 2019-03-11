@@ -1,8 +1,8 @@
-from IPython import get_ipython
-ip = get_ipython()
-if not ip is None:
-    ip.magic("%load_ext autoreload")
-    ip.magic("%autoreload 2")
+#from IPython import get_ipython
+#ip = get_ipython()
+#if not ip is None:
+#    ip.magic("%load_ext autoreload")
+#    ip.magic("%autoreload 2")
 
 import numpy as np
 import pytest

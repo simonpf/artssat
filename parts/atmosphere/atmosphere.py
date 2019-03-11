@@ -113,7 +113,6 @@ class Atmosphere:
         self.scatterers = scatterers
         self.scattering = len(scatterers) > 0
         self._dimensions = dimensions
-
         self._cloud_box = CloudBox(n_dimensions = len(dimensions),
                                    scattering = self.scattering)
 
@@ -209,8 +208,11 @@ class Atmosphere:
     def add_scatterer(self, scatterer):
         self.__dict__[scatterer.name] = scatterer
         self._required_data += [(n, self._dimensions, False) \
-                                for n in s.moment_names]
-        self._absorbers += absorber
+                                for n in scatterer.moment_names]
+        self._scatterers += [scatterer]
+        self.scattering = True
+        self._cloud_box = CloudBox(n_dimensions = len(self.dimensions),
+                                   scattering = self.scattering)
 
     #
     # Surface
