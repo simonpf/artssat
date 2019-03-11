@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="parts.atmosphere.surface" href="parts.atmosphere.surface.html" />
     <link rel="prev" title="parts.atmosphere" href="parts.atmosphere.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -93,12 +95,12 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.data_provider.html">data_provider</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
-<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
 </ul>
 </li>
 </ul>
@@ -178,7 +180,7 @@
 <dl class="class">
 <dt id="parts.atmosphere.absorption.AbsorptionSpecies">
 <em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">AbsorptionSpecies</code><span class="sig-paren">(</span><em>name</em>, <em>catalog=None</em>, <em>cia=None</em>, <em>frequency_range=None</em>, <em>isotopologues=None</em>, <em>model=None</em>, <em>on_the_fly=True</em>, <em>zeeman=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#AbsorptionSpecies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.AbsorptionSpecies" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.atmospheric_quantity.AtmosphericQuantity</span></code>, <a class="reference internal" href="parts.retrieval.html#parts.retrieval.RetrievalQuantity" title="parts.retrieval.RetrievalQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalQuantity</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.atmospheric_quantity.AtmosphericQuantity</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalQuantity</span></code></p>
 <dl class="attribute">
 <dt id="parts.atmosphere.absorption.AbsorptionSpecies.jacobian_class">
 <code class="descname">jacobian_class</code><a class="headerlink" href="#parts.atmosphere.absorption.AbsorptionSpecies.jacobian_class" title="Permalink to this definition">¶</a></dt>
@@ -240,9 +242,95 @@ the quantity on the given workspace <code class="code docutils literal notransla
 </dd></dl>
 
 <dl class="class">
+<dt id="parts.atmosphere.absorption.Relative">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">Relative</code><span class="sig-paren">(</span><em>x_ref</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#Relative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.Relative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.atmosphere.absorption.Unit" title="parts.atmosphere.absorption.Unit"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.absorption.Unit</span></code></a></p>
+<p>In relative units, the amount of a quantity is specified relative to a
+reference profile or field.</p>
+<p>If this unit is used in a Jacobian calculation, then the Jacobian is
+calculated w.r.t. a relative perturbation.</p>
+<p>If this unit is used in the retrieval, values in the state vector are
+interpreted as multiplicative perturbations of the reference profile
+or field.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.atmosphere.absorption.RelativeHumidity">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">RelativeHumidity</code><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#RelativeHumidity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.RelativeHumidity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.atmosphere.absorption.Unit" title="parts.atmosphere.absorption.Unit"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.absorption.Unit</span></code></a></p>
+<p>Relative humidity is available only for the retrieval of H2O.</p>
+<dl class="method">
+<dt id="parts.atmosphere.absorption.RelativeHumidity.from_arts">
+<code class="descname">from_arts</code><span class="sig-paren">(</span><em>ws</em>, <em>vmr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#RelativeHumidity.from_arts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.RelativeHumidity.from_arts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a value given in ARTS vmr units back to relative humidity.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(<code class="code docutils literal notranslate"><span class="pre">typhon.arts.workspace.Workspace</span></code>): Workspace object</dt>
+<dd>which contains pressure grid and temperature field required
+for the conversion.</dd>
+<dt>vmr(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Values in ARTS vmr units to convert</dt>
+<dd>to relative humidity.</dd>
+</dl>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> containing the converted RH values.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.atmosphere.absorption.RelativeHumidity.to_arts">
+<code class="descname">to_arts</code><span class="sig-paren">(</span><em>ws</em>, <em>rh</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#RelativeHumidity.to_arts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.RelativeHumidity.to_arts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts value given in relative humidity units to ARTS vmr units.</p>
+<p>Arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>ws(<code class="code docutils literal notranslate"><span class="pre">typhon.arts.workspace.Workspace</span></code>): Workspace object</dt>
+<dd>which contains pressure grid and temperature field required
+for the converstion.</dd>
+</dl>
+<p>rh(<code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Relative humidity values to convert.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><code class="code docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> containing the converted RH values.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="parts.atmosphere.absorption.Retrieval">
 <em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">Retrieval</code><span class="sig-paren">(</span><em>quantity</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#Retrieval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.Retrieval" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="parts.retrieval.html#parts.retrieval.RetrievalBase" title="parts.retrieval.RetrievalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalBase</span></code></a>, <a class="reference internal" href="#parts.atmosphere.absorption.Jacobian" title="parts.atmosphere.absorption.Jacobian"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.absorption.Jacobian</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalBase</span></code>, <a class="reference internal" href="#parts.atmosphere.absorption.Jacobian" title="parts.atmosphere.absorption.Jacobian"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.absorption.Jacobian</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.atmosphere.absorption.Unit">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">Unit</code><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#Unit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.Unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Abstract base class for classes representing units used for the calculation
+of Jacobians and retrievals of absorption species.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.atmosphere.absorption.VMR">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.absorption.</code><code class="descname">VMR</code><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#VMR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.VMR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.atmosphere.absorption.Unit" title="parts.atmosphere.absorption.Unit"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.absorption.Unit</span></code></a></p>
+<p>VMR is the default unit used for absorption species in ARTS. If this unit
+is used value from the state vector are plugged in as they are into
+the ARTS vmr field.</p>
+<dl class="method">
+<dt id="parts.atmosphere.absorption.VMR.from_arts">
+<code class="descname">from_arts</code><span class="sig-paren">(</span><em>ws</em>, <em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#VMR.from_arts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.VMR.from_arts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.atmosphere.absorption.VMR.to_arts">
+<code class="descname">to_arts</code><span class="sig-paren">(</span><em>ws</em>, <em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/absorption.html#VMR.to_arts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.absorption.VMR.to_arts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does nothing.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -259,7 +347,7 @@ the quantity on the given workspace <code class="code docutils literal notransla
         <a href="parts.atmosphere.surface.html" class="btn btn-neutral float-right" title="parts.atmosphere.surface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="parts.atmosphere.html" class="btn btn-neutral" title="parts.atmosphere" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="parts.atmosphere.html" class="btn btn-neutral float-left" title="parts.atmosphere" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -285,26 +373,16 @@ the quantity on the given workspace <code class="code docutils literal notransla
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

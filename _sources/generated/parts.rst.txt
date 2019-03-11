@@ -13,13 +13,14 @@ Contents
 
    parts.atmosphere
    parts.dashboard
+   parts.retrieval
    parts.scattering
    parts.sensor
 
    parts.arts_object
    parts.data_provider
    parts.dimensions
+   parts.io
    parts.jacobian
-   parts.retrieval
    parts.simulation
 

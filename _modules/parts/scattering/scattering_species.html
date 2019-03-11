@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -164,31 +166,12 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>   <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="o">=</span> <span class="kc">None</span>
-
 
     <span class="k">def</span> <span class="nf">_make_setup_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g1</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g2</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g3</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span>
-
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g1&quot;</span> <span class="p">:</span> <span class="n">g1</span><span class="p">,</span> <span class="s2">&quot;g2&quot;</span> <span class="p">:</span> <span class="n">g2</span><span class="p">,</span> <span class="s2">&quot;g3&quot;</span> <span class="p">:</span> <span class="n">g3</span><span class="p">,</span>
-                  <span class="s2">&quot;species&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">_species_name</span><span class="p">,</span>
-                  <span class="s2">&quot;quantity&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grids</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;species&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">_species_name</span><span class="p">,</span>
+                      <span class="s2">&quot;quantity&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
 
         <span class="k">return</span> <span class="n">kwargs</span>
 
@@ -236,7 +219,8 @@
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">AtmosphericQuantity</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">AtmosphericQuantity</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="c1">#</span>
     <span class="c1"># Jacobian &amp; retrieval</span>
@@ -250,10 +234,15 @@
     <span class="k">def</span> <span class="nf">retrieval_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Retrieval</span>
 
-<div class="viewcode-block" id="Moment.set_from_x"><a class="viewcode-back" href="../../../generated/parts.scattering.scattering_species.html#parts.scattering.scattering_species.Moment.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
-        <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span></div>
+<div class="viewcode-block" id="Moment.set_from_x"><a class="viewcode-back" href="../../../generated/parts.scattering.scattering_species.html#parts.scattering.scattering_species.Moment.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+
+        <span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grids</span> <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">interpolate_to_grids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">grids</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">pbf_shape</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pbf_shape</span><span class="p">)</span></div>
 
     <span class="c1">#</span>
     <span class="c1"># Properties</span>
@@ -388,26 +377,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

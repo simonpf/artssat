@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -313,7 +315,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_line_of_sight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
-    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Sparse&quot;</span><span class="p">,</span>
                    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">),</span>
                    <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response&quot;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">sensor_response</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -341,8 +343,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[]</span>
 
-    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Matrix&quot;</span><span class="p">,</span>
-                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,),</span>
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Vector&quot;</span><span class="p">,</span>
+                   <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">,</span> <span class="n">dim</span><span class="o">.</span><span class="n">Joker</span><span class="p">),</span>
                    <span class="n">wsv</span> <span class="o">=</span> <span class="n">wsv</span><span class="p">[</span><span class="s2">&quot;sensor_response_dlos&quot;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">sensor_response_dlos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -564,7 +566,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_data_arts_properties</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">call_wsm</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;sensor_responseInit&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_response</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_wsm</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;sensor_responseInit&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call_wsm</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">wsm</span><span class="p">[</span><span class="s2">&quot;sensor_checkedCalc&quot;</span><span class="p">])</span></div></div>
 
 
@@ -619,7 +622,10 @@
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span><span class="p">,</span> <span class="n">range_bins</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="n">stokes_dimension</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">iy_unit</span> <span class="o">=</span> <span class="s2">&quot;dBZe&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iy_unit</span>    <span class="o">=</span> <span class="s2">&quot;dBZe&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">range_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">range_bins</span> <span class="o">=</span> <span class="n">range_bins</span>
 
     <span class="c1">#</span>
     <span class="c1"># Agendas</span>
@@ -766,9 +772,16 @@
 <span class="sd">    Specialization of the abstract Sensor class for passive sensors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="nd">@arts_property</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">t_interp_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">y_vector_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor_response</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensor_response</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">stokes_dimension</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f_grid</span><span class="p">,</span> <span class="n">stokes_dimension</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -802,7 +815,7 @@
             <span class="n">ws</span><span class="o">.</span><span class="n">FlagOff</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
             <span class="n">ws</span><span class="o">.</span><span class="n">ppathCalc</span><span class="p">()</span>
             <span class="n">ws</span><span class="o">.</span><span class="n">FlagOn</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span><span class="p">)</span>
-            <span class="n">ws</span><span class="o">.</span><span class="n">iyHybrid</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">iyHybrid</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">t_interp_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_interp_order</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">iy_main_agenda_no_scattering</span><span class="p">(</span><span class="n">ws</span><span class="p">):</span>
             <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_id</span><span class="p">)</span>
@@ -812,6 +825,8 @@
             <span class="n">ws</span><span class="o">.</span><span class="n">Ignore</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">iy_aux_vars</span><span class="p">)</span>
             <span class="n">ws</span><span class="o">.</span><span class="n">ppathCalc</span><span class="p">()</span>
             <span class="n">ws</span><span class="o">.</span><span class="n">iyEmissionStandard</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;t_interp_order&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_interp_order</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">scattering</span><span class="p">:</span>
             <span class="n">agenda</span> <span class="o">=</span> <span class="n">iy_main_agenda_scattering</span>
@@ -999,26 +1014,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
-
-  
-  <script src="../../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -150,6 +152,7 @@
 <span class="sd">==========</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
 <span class="kn">from</span> <span class="nn">parts.atmosphere.atmospheric_quantity</span> \
     <span class="kn">import</span> <span class="nn">AtmosphericQuantity</span><span class="o">,</span> <span class="nn">extend_dimensions</span>
 
@@ -159,6 +162,144 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">typhon.arts.workspace</span> <span class="k">import</span> <span class="n">arts_agenda</span>
+<span class="kn">from</span> <span class="nn">typhon.physics.atmosphere</span> <span class="k">import</span> <span class="n">vmr2relative_humidity</span><span class="p">,</span> \
+    <span class="n">relative_humidity2vmr</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1"># Retrieval units</span>
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="Unit"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Unit">[docs]</a><span class="k">class</span> <span class="nc">Unit</span><span class="p">(</span><span class="n">metaclass</span> <span class="o">=</span> <span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for classes representing units used for the calculation</span>
+<span class="sd">    of Jacobians and retrievals of absorption species.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">():</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">to_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">from_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">arts_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="VMR"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.VMR">[docs]</a><span class="k">class</span> <span class="nc">VMR</span><span class="p">(</span><span class="n">Unit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    VMR is the default unit used for absorption species in ARTS. If this unit</span>
+<span class="sd">    is used value from the state vector are plugged in as they are into</span>
+<span class="sd">    the ARTS vmr field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="VMR.to_arts"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.VMR.to_arts">[docs]</a>    <span class="k">def</span> <span class="nf">to_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Does nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="VMR.from_arts"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.VMR.from_arts">[docs]</a>    <span class="k">def</span> <span class="nf">from_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Does nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arts_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;vmr&quot;</span></div>
+
+<div class="viewcode-block" id="Relative"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Relative">[docs]</a><span class="k">class</span> <span class="nc">Relative</span><span class="p">(</span><span class="n">Unit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In relative units, the amount of a quantity is specified relative to a</span>
+<span class="sd">    reference profile or field. </span>
+
+<span class="sd">    If this unit is used in a Jacobian calculation, then the Jacobian is</span>
+<span class="sd">    calculated w.r.t. a relative perturbation.</span>
+
+<span class="sd">    If this unit is used in the retrieval, values in the state vector are</span>
+<span class="sd">    interpreted as multiplicative perturbations of the reference profile</span>
+<span class="sd">    or field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_ref</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_ref</span> <span class="o">=</span> <span class="n">x_ref</span>
+
+    <span class="k">def</span> <span class="nf">to_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_ref</span> <span class="o">*</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">from_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">y</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_ref</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arts_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;rel&quot;</span></div>
+
+<div class="viewcode-block" id="RelativeHumidity"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.RelativeHumidity">[docs]</a><span class="k">class</span> <span class="nc">RelativeHumidity</span><span class="p">(</span><span class="n">Unit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Relative humidity is available only for the retrieval of H2O.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="RelativeHumidity.to_arts"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.RelativeHumidity.to_arts">[docs]</a>    <span class="k">def</span> <span class="nf">to_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">rh</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts value given in relative humidity units to ARTS vmr units.</span>
+
+<span class="sd">        Arguments:</span>
+
+<span class="sd">            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object</span>
+<span class="sd">                which contains pressure grid and temperature field required</span>
+<span class="sd">                for the converstion.</span>
+
+<span class="sd">            rh(:code:`numpy.ndarray`): Relative humidity values to convert.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            :code:`numpy.ndarray` containing the converted RH values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span>   <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">t</span>   <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">vmr</span> <span class="o">=</span> <span class="n">relative_humidity2vmr</span><span class="p">(</span><span class="n">rh</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vmr</span></div>
+
+<div class="viewcode-block" id="RelativeHumidity.from_arts"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.RelativeHumidity.from_arts">[docs]</a>    <span class="k">def</span> <span class="nf">from_arts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">vmr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts a value given in ARTS vmr units back to relative humidity.</span>
+
+<span class="sd">        Arguments:</span>
+
+<span class="sd">            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object</span>
+<span class="sd">                which contains pressure grid and temperature field required</span>
+<span class="sd">                for the conversion.</span>
+
+<span class="sd">            vmr(:code:`numpy.ndarray`): Values in ARTS vmr units to convert</span>
+<span class="sd">                to relative humidity.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            :code:`numpy.ndarray` containing the converted RH values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span>  <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">t</span>  <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">rh</span> <span class="o">=</span> <span class="n">vmr2relative_humidity</span><span class="p">(</span><span class="n">vmr</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rh</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">arts_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;rh&quot;</span></div>
+
+<span class="c1">################################################################################</span>
+<span class="c1"># The Jacobian class</span>
+<span class="c1">################################################################################</span>
 
 <div class="viewcode-block" id="Jacobian"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Jacobian">[docs]</a><span class="k">class</span> <span class="nc">Jacobian</span><span class="p">(</span><span class="n">JacobianBase</span><span class="p">,</span> <span class="n">ArtsObject</span><span class="p">):</span>
 
@@ -171,44 +312,22 @@
         <span class="n">JacobianBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="n">ArtsObject</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>   <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;vmr&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">VMR</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;analytical&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">for_species_tag</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="mf">0.001</span>
 
     <span class="k">def</span> <span class="nf">_make_setup_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g1</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g2</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">g3</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">g3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span>
-
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g1&quot;</span> <span class="p">:</span> <span class="n">g1</span><span class="p">,</span> <span class="s2">&quot;g2&quot;</span> <span class="p">:</span> <span class="n">g2</span><span class="p">,</span> <span class="s2">&quot;g3&quot;</span> <span class="p">:</span> <span class="n">g3</span><span class="p">,</span>
-                    <span class="s2">&quot;species&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">get_tag_string</span><span class="p">(),</span>
-                    <span class="s2">&quot;method&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
-                    <span class="s2">&quot;unit&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
-                    <span class="s2">&quot;for_species_tag&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">for_species_tag</span><span class="p">,</span>
-                    <span class="s2">&quot;dx&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">}</span>
-
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grids</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;species&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">get_tag_string</span><span class="p">(),</span>
+                       <span class="s2">&quot;method&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+                       <span class="s2">&quot;unit&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="o">.</span><span class="n">arts_name</span><span class="p">,</span>
+                       <span class="s2">&quot;for_species_tag&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">for_species_tag</span><span class="p">,</span>
+                       <span class="s2">&quot;dx&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">kwargs</span>
 
 <div class="viewcode-block" id="Jacobian.setup"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Jacobian.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_setup_kwargs</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">ws</span><span class="o">.</span><span class="n">jacobianAddAbsSpecies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="Retrieval"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.Retrieval">[docs]</a><span class="k">class</span> <span class="nc">Retrieval</span><span class="p">(</span><span class="n">RetrievalBase</span><span class="p">,</span> <span class="n">Jacobian</span><span class="p">):</span>
@@ -325,8 +444,16 @@
         <span class="k">return</span> <span class="n">Retrieval</span>
 
 <div class="viewcode-block" id="AbsorptionSpecies.set_from_x"><a class="viewcode-back" href="../../../generated/parts.atmosphere.absorption.html#parts.atmosphere.absorption.AbsorptionSpecies.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+        <span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grids</span> <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">interpolate_to_grids</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">grids</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+        <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieval</span><span class="o">.</span><span class="n">unit</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">to_arts</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
         <span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsv_index</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span></div>
 
     <span class="c1">#</span>
@@ -471,26 +598,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.retrieval.a_priori &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>parts.retrieval.a_priori</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/parts.retrieval.a_priori.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-parts.retrieval.a_priori"></span><div class="section" id="parts-retrieval-a-priori">
+<h1>parts.retrieval.a_priori<a class="headerlink" href="#parts-retrieval-a-priori" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">retrieval.a_priori</span></code> sub-module provides modular data provider
+object that can be used to build a priori data providers.</p>
+<dl class="class">
+<dt id="parts.retrieval.a_priori.APrioriProviderBase">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">APrioriProviderBase</code><span class="sig-paren">(</span><em>name</em>, <em>covariance</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#APrioriProviderBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.APrioriProviderBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.data_provider.html#parts.data_provider.DataProviderBase" title="parts.data_provider.DataProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.data_provider.DataProviderBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.AltitudeMask">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">AltitudeMask</code><span class="sig-paren">(</span><em>lower_limit</em>, <em>upper_limit</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#AltitudeMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.AltitudeMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The altitude mask replaces values at grid points outside of the
+given altitude interval with another value.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.And">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">And</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#And"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.And" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Creates a combined mask by applying logical and to a list
+of single masks.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.DataProviderAPriori">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">DataProviderAPriori</code><span class="sig-paren">(</span><em>name</em>, <em>covariance</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#DataProviderAPriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.DataProviderAPriori" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.retrieval.a_priori.APrioriProviderBase" title="parts.retrieval.a_priori.APrioriProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.a_priori.APrioriProviderBase</span></code></a></p>
+<p>A priori provider that propagates an atmospheric quantity <code class="code docutils literal notranslate"><span class="pre">name</span></code>
+as a priori mean profile from the data provider.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.FixedAPriori">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">FixedAPriori</code><span class="sig-paren">(</span><em>name</em>, <em>xa</em>, <em>covariance</em>, <em>mask=None</em>, <em>mask_value=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#FixedAPriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.FixedAPriori" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.retrieval.a_priori.APrioriProviderBase" title="parts.retrieval.a_priori.APrioriProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.a_priori.APrioriProviderBase</span></code></a></p>
+<p>Returns an a priori profile that does not depend on the atmospheric
+state.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.FunctionalAPriori">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">FunctionalAPriori</code><span class="sig-paren">(</span><em>name</em>, <em>variable</em>, <em>f</em>, <em>covariance</em>, <em>mask=None</em>, <em>mask_value=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#FunctionalAPriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.FunctionalAPriori" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.retrieval.a_priori.APrioriProviderBase" title="parts.retrieval.a_priori.APrioriProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.a_priori.APrioriProviderBase</span></code></a></p>
+<p>Returns an a priori profile that does not depend on the atmospheric
+state.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.ReducedVerticalGrid">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">ReducedVerticalGrid</code><span class="sig-paren">(</span><em>a_priori</em>, <em>grid</em>, <em>quantity='pressure'</em>, <em>covariance=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#ReducedVerticalGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.ReducedVerticalGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#parts.retrieval.a_priori.APrioriProviderBase" title="parts.retrieval.a_priori.APrioriProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.a_priori.APrioriProviderBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.SensorNoiseAPriori">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">SensorNoiseAPriori</code><span class="sig-paren">(</span><em>sensors</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#SensorNoiseAPriori"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.SensorNoiseAPriori" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.data_provider.html#parts.data_provider.DataProviderBase" title="parts.data_provider.DataProviderBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.data_provider.DataProviderBase</span></code></a></p>
+<p>Measurement error due to sensor noise.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">SensorNoiseAPriori</span></code> class constructs a combined
+observation error covariance matrix from the noise characteristics
+of a list of sensors.</p>
+<p>The noise of particular sensors can be amplified by adding the
+scaling factor to the <code class="code docutils literal notranslate"><span class="pre">noise_scaling</span></code> attribute of the
+class.</p>
+<p>Attributes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>noise_scaling(<code class="code docutils literal notranslate"><span class="pre">dict</span></code>): Dictionary mapping sensor names to</dt>
+<dd>noise scaling factors.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.SpatialCorrelation">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">SpatialCorrelation</code><span class="sig-paren">(</span><em>covariance</em>, <em>correlation_length</em>, <em>correlation_type='exp'</em>, <em>cutoff=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#SpatialCorrelation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.SpatialCorrelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Adds spatial correlation to a given covariance matrix.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.TemperatureMask">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">TemperatureMask</code><span class="sig-paren">(</span><em>lower_limit</em>, <em>upper_limit</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#TemperatureMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.TemperatureMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The temperature mask replaces values at grid points outside of the
+given temperature interval with another value.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.Thikhonov">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">Thikhonov</code><span class="sig-paren">(</span><em>scaling=1.0</em>, <em>diagonal=0.0</em>, <em>mask=None</em>, <em>mask_value=1000000000000.0</em>, <em>z_scaling=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#Thikhonov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.Thikhonov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Thikhonov regularization using second order finite differences.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.retrieval.a_priori.TropopauseMask">
+<em class="property">class </em><code class="descclassname">parts.retrieval.a_priori.</code><code class="descname">TropopauseMask</code><a class="reference internal" href="../_modules/parts/retrieval/a_priori.html#TropopauseMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.retrieval.a_priori.TropopauseMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Returns a mask that is true only below the approximate height of the
+troposphere. The troposphere is detected as the first grid point
+where the lapse rate is negative and the temperature below 220.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="parts.atmosphere.atmospheric_quantity.html" />
     <link rel="prev" title="parts.atmosphere.surface" href="parts.atmosphere.surface.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -93,12 +95,12 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="parts.dashboard.html">parts.dashboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.scattering.html">parts.scattering</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.sensor.html">parts.sensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.arts_object.html">parts.arts_object</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.data_provider.html">data_provider</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parts.jacobian.html">parts.jacobian</a></li>
-<li class="toctree-l3"><a class="reference internal" href="parts.retrieval.html">parts.retrieval</a></li>
 </ul>
 </li>
 </ul>
@@ -173,6 +175,52 @@
             
   <span class="target" id="module-parts.atmosphere.atmosphere"></span><div class="section" id="the-model-atmosphere">
 <h1>The model atmosphere<a class="headerlink" href="#the-model-atmosphere" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="parts.atmosphere.atmosphere.Temperature">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.atmosphere.</code><code class="descname">Temperature</code><span class="sig-paren">(</span><em>atmosphere</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/atmosphere.html#Temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.atmosphere.Temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalQuantity</span></code></p>
+<dl class="attribute">
+<dt id="parts.atmosphere.atmosphere.Temperature.jacobian_class">
+<code class="descname">jacobian_class</code><a class="headerlink" href="#parts.atmosphere.atmosphere.Temperature.jacobian_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the class object that holds the actual implementation of the
+Jacobian calculation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parts.atmosphere.atmosphere.Temperature.retrieval_class">
+<code class="descname">retrieval_class</code><a class="headerlink" href="#parts.atmosphere.atmosphere.Temperature.retrieval_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the class object that holds the actual implementation of the
+Jacobian calculation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="parts.atmosphere.atmosphere.Temperature.set_from_x">
+<code class="descname">set_from_x</code><span class="sig-paren">(</span><em>ws</em>, <em>xa</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/atmosphere.html#Temperature.set_from_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.atmosphere.Temperature.set_from_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set method that sets the value of the retrieval quantity to a given
+a priori state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.atmosphere.atmosphere.TemperatureJacobian">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.atmosphere.</code><code class="descname">TemperatureJacobian</code><span class="sig-paren">(</span><em>quantity</em>, <em>index</em>, <em>p_grid=[]</em>, <em>lat_grid=[]</em>, <em>lon_grid=[]</em>, <em>hse='on'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/atmosphere.html#TemperatureJacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.atmosphere.TemperatureJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="parts.jacobian.html#parts.jacobian.JacobianBase" title="parts.jacobian.JacobianBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.jacobian.JacobianBase</span></code></a></p>
+<dl class="method">
+<dt id="parts.atmosphere.atmosphere.TemperatureJacobian.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><em>ws</em>, <em>data_provider</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/atmosphere.html#TemperatureJacobian.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.atmosphere.TemperatureJacobian.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method should call the <code class="code docutils literal notranslate"><span class="pre">jacobianAdd...</span></code> method corresponding to
+the quantity on the given workspace <code class="code docutils literal notranslate"><span class="pre">ws</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parts.atmosphere.atmosphere.TemperatureRetrieval">
+<em class="property">class </em><code class="descclassname">parts.atmosphere.atmosphere.</code><code class="descname">TemperatureRetrieval</code><span class="sig-paren">(</span><em>quantity</em>, <em>index</em>, <em>p_grid=[]</em>, <em>lat_grid=[]</em>, <em>lon_grid=[]</em>, <em>hse='on'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/atmosphere/atmosphere.html#TemperatureRetrieval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.atmosphere.atmosphere.TemperatureRetrieval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalBase</span></code>, <a class="reference internal" href="#parts.atmosphere.atmosphere.TemperatureJacobian" title="parts.atmosphere.atmosphere.TemperatureJacobian"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.atmosphere.TemperatureJacobian</span></code></a></p>
+</dd></dl>
+
 </div>
 
 
@@ -186,7 +234,7 @@
         <a href="parts.atmosphere.atmospheric_quantity.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="parts.atmosphere.surface.html" class="btn btn-neutral" title="parts.atmosphere.surface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="parts.atmosphere.surface.html" class="btn btn-neutral float-left" title="parts.atmosphere.surface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -212,26 +260,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

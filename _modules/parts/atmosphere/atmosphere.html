@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>parts.atmosphere.atmosphere &mdash; pARTS 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pARTS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../generated/parts.html">parts</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pARTS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>parts.atmosphere.atmosphere</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for parts.atmosphere.atmosphere</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The model atmosphere</span>
+<span class="sd">====================</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">parts.atmosphere.cloud_box</span> <span class="k">import</span> <span class="n">CloudBox</span>
+<span class="kn">from</span> <span class="nn">parts.jacobian</span> <span class="k">import</span>  <span class="n">JacobianBase</span>
+<span class="kn">from</span> <span class="nn">parts.retrieval</span> <span class="k">import</span> <span class="n">RetrievalBase</span><span class="p">,</span> <span class="n">RetrievalQuantity</span>
+
+<div class="viewcode-block" id="TemperatureJacobian"><a class="viewcode-back" href="../../../generated/parts.atmosphere.atmosphere.html#parts.atmosphere.atmosphere.TemperatureJacobian">[docs]</a><span class="k">class</span> <span class="nc">TemperatureJacobian</span><span class="p">(</span><span class="n">JacobianBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">quantity</span><span class="p">,</span>
+                 <span class="n">index</span><span class="p">,</span>
+                 <span class="n">p_grid</span>   <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">lat_grid</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">lon_grid</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">hse</span>      <span class="o">=</span> <span class="s2">&quot;on&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>   <span class="o">=</span> <span class="n">p_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span> <span class="o">=</span> <span class="n">lat_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span> <span class="o">=</span> <span class="n">lon_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hse</span>      <span class="o">=</span> <span class="n">hse</span>
+
+    <span class="k">def</span> <span class="nf">_make_setup_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">g1</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">g2</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lat_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_grid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">g3</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">lon_grid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_grid</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;g1&quot;</span> <span class="p">:</span> <span class="n">g1</span><span class="p">,</span> <span class="s2">&quot;g2&quot;</span> <span class="p">:</span> <span class="n">g2</span><span class="p">,</span> <span class="s2">&quot;g3&quot;</span> <span class="p">:</span> <span class="n">g3</span><span class="p">,</span>
+                  <span class="s2">&quot;hse&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hse</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">kwargs</span>
+
+<div class="viewcode-block" id="TemperatureJacobian.setup"><a class="viewcode-back" href="../../../generated/parts.atmosphere.atmosphere.html#parts.atmosphere.atmosphere.TemperatureJacobian.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_setup_kwargs</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">jacobianAddTemperature</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="TemperatureRetrieval"><a class="viewcode-back" href="../../../generated/parts.atmosphere.atmosphere.html#parts.atmosphere.atmosphere.TemperatureRetrieval">[docs]</a><span class="k">class</span> <span class="nc">TemperatureRetrieval</span><span class="p">(</span><span class="n">RetrievalBase</span><span class="p">,</span> <span class="n">TemperatureJacobian</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">quantity</span><span class="p">,</span>
+                 <span class="n">index</span><span class="p">,</span>
+                 <span class="n">p_grid</span>   <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">lat_grid</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">lon_grid</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">hse</span> <span class="o">=</span> <span class="s2">&quot;on&quot;</span><span class="p">):</span>
+        <span class="n">RetrievalBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">TemperatureJacobian</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span>
+                                     <span class="n">p_grid</span><span class="p">,</span> <span class="n">lat_grid</span><span class="p">,</span> <span class="n">lon_grid</span><span class="p">,</span> <span class="n">hse</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">retrievalAddTemperature</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_setup_kwargs</span><span class="p">(</span><span class="n">ws</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Temperature"><a class="viewcode-back" href="../../../generated/parts.atmosphere.atmosphere.html#parts.atmosphere.atmosphere.Temperature">[docs]</a><span class="k">class</span> <span class="nc">Temperature</span><span class="p">(</span><span class="n">RetrievalQuantity</span><span class="p">):</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atmosphere</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere</span> <span class="o">=</span> <span class="n">atmosphere</span>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">data_provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">data_provider</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere</span><span class="o">.</span><span class="n">__check_dimensions__</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;temperature&quot;</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atmosphere</span><span class="o">.</span><span class="n">__reshape__</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Temperature.set_from_x"><a class="viewcode-back" href="../../../generated/parts.atmosphere.atmosphere.html#parts.atmosphere.atmosphere.Temperature.set_from_x">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">xa</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">xa</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_field</span> <span class="o">=</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;temperature&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jacobian_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TemperatureJacobian</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">retrieval_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TemperatureRetrieval</span></div>
+
+
+
+<span class="k">class</span> <span class="nc">Atmosphere</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">dimensions</span><span class="p">,</span>
+                 <span class="n">absorbers</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">scatterers</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">surface</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_dimensions__</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;p_grid&quot;</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span> <span class="kc">False</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s2">&quot;altitude&quot;</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                               <span class="p">(</span><span class="s2">&quot;surface_altitude&quot;</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="kc">True</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">absorbers</span>  <span class="o">=</span> <span class="n">absorbers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span> <span class="o">=</span> <span class="n">scatterers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scattering</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scatterers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span> <span class="o">=</span> <span class="n">dimensions</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cloud_box</span> <span class="o">=</span> <span class="n">CloudBox</span><span class="p">(</span><span class="n">n_dimensions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dimensions</span><span class="p">),</span>
+                                   <span class="n">scattering</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scattering</span><span class="p">)</span>
+
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_surface_data_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="o">=</span> <span class="n">surface</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">Temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">surface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">+=</span> <span class="n">surface</span><span class="o">.</span><span class="n">required_data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">surface_data_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nd</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span><span class="p">))</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Dimensions</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">__set_dimensions__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Dimensions of atmosphere must be given as a tuple &quot;</span>
+                            <span class="s2">&quot;of integers.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The number of dimensions of the atmosphere &quot;</span>
+                            <span class="s2">&quot;must be 1, 2 or 3.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The dimension tuple must contain only  positive &quot;</span>
+                            <span class="s2">&quot;integers.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span> <span class="o">=</span> <span class="n">dimensions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Absorbers</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">absorbers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_absorbers</span>
+
+    <span class="nd">@absorbers</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">absorbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">absorbers</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">absorbers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_absorbers</span> <span class="o">=</span> <span class="n">absorbers</span>
+
+    <span class="k">def</span> <span class="nf">add_absorber</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">absorber</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">absorber</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">absorber</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">absorber</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_absorbers</span> <span class="o">+=</span> <span class="n">absorber</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Cloud box</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cloud_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cloud_box</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Jacobian</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">has_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">absorbers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">jacobian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">moments</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">jacobian</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Scatterers</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scatterers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scatterers</span>
+
+    <span class="nd">@scatterers</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">scatterers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scatterers</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scatterers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> \
+                                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">moment_names</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scatterers</span> <span class="o">=</span> <span class="n">scatterers</span>
+
+    <span class="k">def</span> <span class="nf">add_scatterer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scatterer</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">scatterer</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scatterer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> \
+                                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">moment_names</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_absorbers</span> <span class="o">+=</span> <span class="n">absorber</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Surface</span>
+    <span class="c1">#</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">surface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span>
+
+    <span class="nd">@surface</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">set_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rd</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span><span class="p">)</span> \
+                  <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_required_data_indices</span><span class="p">]</span>
+            <span class="n">nd</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rd</span><span class="p">)</span>
+            <span class="n">rd</span> <span class="o">+=</span> <span class="n">surface</span><span class="o">.</span><span class="n">required_data</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span> <span class="o">=</span> <span class="n">rd</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_requried_data_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nd</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rd</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="o">=</span> <span class="n">surface</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">required_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_required_data</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Setup</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">__setup_absorption__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="n">species</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_absorbers</span><span class="p">):</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">species</span> <span class="o">+=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">get_tag_string</span><span class="p">()]</span>
+
+        <span class="n">ws</span><span class="o">.</span><span class="n">abs_speciesSet</span><span class="p">(</span><span class="n">species</span> <span class="o">=</span> <span class="n">species</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">abs_lines_per_speciesSetEmpty</span><span class="p">()</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">abs_xsec_agenda</span><span class="p">,</span> <span class="n">ws</span><span class="o">.</span><span class="n">abs_xsec_agenda__noCIA</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">propmat_clearsky_agenda</span><span class="p">,</span>
+                <span class="n">ws</span><span class="o">.</span><span class="n">propmat_clearsky_agenda__OnTheFly</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setup_scattering__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">ScatSpeciesInit</span><span class="p">()</span>
+        <span class="n">pb_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scatterers</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pb_names</span><span class="p">))</span>
+            <span class="n">pb_names</span> <span class="o">+=</span> <span class="n">s</span><span class="o">.</span><span class="n">moment_names</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_names</span> <span class="o">=</span> <span class="n">pb_names</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">AtmosphereSet1D</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">AtmosphereSet2D</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">AtmosphereSet3D</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__setup_absorption__</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__setup_scattering__</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_box</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setup_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">absorbers</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">setup_jacobian</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">moments</span><span class="p">:</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">setup_jacobian</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Data</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">__check_dimensions__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">err</span> <span class="o">=</span> <span class="s2">&quot;Provided atmospheric &quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; field&quot;</span>
+        <span class="n">err</span> <span class="o">+=</span> <span class="s2">&quot; is inconsistent with the dimensions of the atmosphere.&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="n">j</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> \
+                    <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reshape__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__get_pressure__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_pressure</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Provided pressure grid is inconsistent with&quot;</span>
+                            <span class="s2">&quot; dimensions of the atmosphere.&quot;</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">p_grid</span> <span class="o">=</span> <span class="n">p</span>
+
+    <span class="k">def</span> <span class="nf">__get_altitude__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_altitude</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_dimensions__</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="s2">&quot;altitude&quot;</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reshape__</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Dimensions of altitude field inconsistent&quot;</span>
+                            <span class="s2">&quot; with dimensions of temperature field.&quot;</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">z_field</span> <span class="o">=</span> <span class="n">z</span>
+
+        <span class="c1"># Surface altitude</span>
+
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="s2">&quot;get_surface_altitude&quot;</span><span class="p">):</span>
+            <span class="n">zs</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_surface_altitude</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">zs</span> <span class="o">=</span> <span class="n">zs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                <span class="n">ws</span><span class="o">.</span><span class="n">z_surface</span> <span class="o">=</span> <span class="n">zs</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Shape &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">zs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;of provided &quot;</span>
+                                <span class="s2">&quot;surface altitude is inconsistent with &quot;</span>
+                                <span class="s2">&quot;the horizontal dimensions of the &quot;</span>
+                                <span class="s2">&quot;atmosphere &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">z_surface</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">z_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+
+    <span class="k">def</span> <span class="nf">__get_absorbers__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absorbers</span><span class="p">),)</span> <span class="o">+</span> <span class="n">dimensions</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absorbers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">retrieval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fname</span> <span class="o">=</span> <span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__check_dimensions__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reshape__</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">dimensions</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Dimensions of &quot;</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; VMR field &quot;</span>
+                                    <span class="s2">&quot;inconcistent with dimensions of temperature &quot;</span>
+                                    <span class="s2">&quot;field.&quot;</span><span class="p">)</span>
+                <span class="n">ws</span><span class="o">.</span><span class="n">vmr_field</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">n_moments</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">moment_names</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span><span class="p">])</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">particle_bulkprop_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">n_moments</span><span class="p">,)</span>
+                                               <span class="o">+</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__get_scatterers__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">cloudbox_on</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ws</span><span class="o">.</span><span class="n">cloudboxSetFullAtm</span><span class="p">()</span>
+
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="n">ws</span><span class="o">.</span><span class="n">t_field</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scatterers</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__get_pressure__</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__get_altitude__</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__get_absorbers__</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__get_scatterers__</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_box</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1">#</span>
+    <span class="c1"># Checks</span>
+    <span class="c1">#</span>
+
+    <span class="k">def</span> <span class="nf">run_checks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+
+        <span class="n">ws</span><span class="o">.</span><span class="n">atmgeom_checkedCalc</span><span class="p">()</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">atmfields_checkedCalc</span><span class="p">(</span><span class="n">bad_partition_functions_ok</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">propmat_clearsky_agenda_checkedCalc</span><span class="p">()</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">propmat_clearsky_agenda_checkedCalc</span><span class="p">()</span>
+        <span class="n">ws</span><span class="o">.</span><span class="n">abs_xsec_agenda_checkedCalc</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_box</span><span class="o">.</span><span class="n">run_checks</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="o">.</span><span class="n">run_checks</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Atmosphere1D</span><span class="p">(</span><span class="n">Atmosphere</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">absorbers</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">scatterers</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">surface</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">levels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">levels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dimensions</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;The number of levels of the 1D atmosphere &quot;</span>
+                                <span class="s2">&quot;must be given by an integer.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dimensions</span> <span class="o">=</span> <span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span>
+                         <span class="n">absorbers</span> <span class="o">=</span> <span class="n">absorbers</span><span class="p">,</span>
+                         <span class="n">scatterers</span> <span class="o">=</span> <span class="n">scatterers</span><span class="p">,</span>
+                         <span class="n">surface</span> <span class="o">=</span> <span class="n">surface</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Simon Pfreundschuh
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

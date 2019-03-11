@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -418,7 +420,7 @@
 <span class="sd">        of these types.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="p">[]:</span>
@@ -440,6 +442,10 @@
 <span class="sd">        obj(object): The object to broadcast to the provided shape. Either a</span>
 <span class="sd">        numpy array or a (nested) list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="n">get_shape</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
@@ -455,7 +461,7 @@
                             <span class="s2">&quot; length of the provided shape tuple.&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="arts_property"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.arts_property">[docs]</a><span class="k">def</span> <span class="nf">arts_property</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wsv</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="arts_property"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.arts_property">[docs]</a><span class="k">def</span> <span class="nf">arts_property</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wsv</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">optional</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The :code:`arts_property` decorator.</span>
 
@@ -499,7 +505,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">class</span> <span class="nc">ArtsPropertySpecialization</span><span class="p">(</span><span class="n">ArtsProperty</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fdefault</span><span class="p">):</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">,</span> <span class="n">optional</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ArtsPropertySpecialization</span></div>
 
 <span class="n">ws</span> <span class="o">=</span> <span class="n">Workspace</span><span class="p">(</span><span class="n">verbosity</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
@@ -529,7 +535,7 @@
 <span class="sd">    fixes the :code:`group, shape` and :code:`wsv` values of the :code:`__init__`</span>
 <span class="sd">    method.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fdefault</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">wsv</span><span class="p">,</span> <span class="n">optional</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a :code:`ArtsProperty` instance.</span>
 
@@ -547,9 +553,13 @@
 <span class="sd">            wsv(typhon.arts.workspace.WorkspaceVariable): Workspace variable</span>
 <span class="sd">            corresponding to this ARTS property or :code:`None` if no such</span>
 <span class="sd">            WSV exists.</span>
+
+<span class="sd">            optional(Boolean): If True no Exception will be thrown if the</span>
+<span class="sd">            data_provider doesn&#39;t provide a get method for this property.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optional</span> <span class="o">=</span> <span class="n">optional</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">wsv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">wsv</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
@@ -696,6 +706,7 @@
 
         <span class="c1"># catch inconsistent number of dimensions.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+
             <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;The provided value for </span><span class="si">{0}</span><span class="s2"> has </span><span class="si">{1}</span><span class="s2"> dimensions but </span><span class="si">{2}</span><span class="s2"> were&quot;</span>\
                 <span class="s2">&quot; expected.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">who</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
@@ -739,10 +750,16 @@
         <span class="k">return</span> <span class="n">value</span></div>
 
     <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">objtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
         <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
 
-        <span class="k">return</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdefault</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">val</span>
 
     <span class="k">def</span> <span class="nf">__set__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -758,8 +775,9 @@
         <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">workspace</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">workspace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">workspace</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">workspace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -823,7 +841,7 @@
 <span class="sd">            in determining the value of the :code:`ArtsProperty`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ph</span><span class="o">.</span><span class="n">fixed</span><span class="p">:</span>
             <span class="n">getter_name</span> <span class="o">=</span> <span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">separator</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
 
             <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdefault</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
@@ -837,19 +855,29 @@
 
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_and_broadcast</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">:</span>
                     <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-                    <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-                    <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+                <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
 
             <span class="c1"># Check if there&#39;s a default value.</span>
             <span class="k">elif</span> <span class="ow">not</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+                <span class="n">ph</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">ph</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">default</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">:</span>
+                    <span class="n">owner</span><span class="o">.</span><span class="n">set_wsv</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsv</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
 
             <span class="c1"># No value - throw exception</span>
-            <span class="k">else</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">optional</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Neither a default value nor a get method &quot;</span>
                                 <span class="s2">&quot; has been provided for the ARTS property&quot;</span>
-                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)))</span></div>
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span></div>
+
 
 <div class="viewcode-block" id="PlaceHolder"><a class="viewcode-back" href="../../generated/parts.arts_object.html#parts.arts_object.PlaceHolder">[docs]</a><span class="k">class</span> <span class="nc">PlaceHolder</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1024,7 +1052,6 @@
         <span class="c1"># Copy output</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">wsm</span><span class="o">.</span><span class="n">outs</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">WorkspaceVariable</span><span class="o">.</span><span class="n">get_variable_name</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">wsm</span><span class="o">.</span><span class="n">ins</span><span class="p">:</span>
                 <span class="n">ws</span><span class="o">.</span><span class="n">Copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsvs</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">wsv</span><span class="p">[</span><span class="n">name</span><span class="p">])</span></div>
 
@@ -1106,26 +1133,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

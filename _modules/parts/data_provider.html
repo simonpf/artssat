@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -241,107 +243,59 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{0}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{1}</span><span class="s2">&#39;.&quot;</span>\
                                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span></div>
 
-<span class="c1">################################################################################</span>
-<span class="c1"># A priori providers</span>
-<span class="c1">################################################################################</span>
 
-<div class="viewcode-block" id="FixedApriori"><a class="viewcode-back" href="../../generated/parts.data_provider.html#parts.data_provider.FixedApriori">[docs]</a><span class="k">class</span> <span class="nc">FixedApriori</span><span class="p">(</span><span class="n">DataProviderBase</span><span class="p">):</span>
+<div class="viewcode-block" id="CombinedProvider"><a class="viewcode-back" href="../../generated/parts.data_provider.html#parts.data_provider.CombinedProvider">[docs]</a><span class="k">class</span> <span class="nc">CombinedProvider</span><span class="p">(</span><span class="n">DataProviderBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A priori provider for fixed a priori mean and covariance.</span>
-
-<span class="sd">    The :code:`FixedApriori` class provides get methods for a fixed a priori</span>
-<span class="sd">    mean and covariance matrix. It is intended to be used as a subprovider</span>
-<span class="sd">    to a main data provider.</span>
+<span class="sd">    The :code:`CombinedProvider` allows the combination of multiple data</span>
+<span class="sd">    providers. If a get method is requested from the data provider it is</span>
+<span class="sd">    forwarded to the combined providers. The lookup is performed in the</span>
+<span class="sd">    same order as the providers are provided to the constructor and the</span>
+<span class="sd">    first hit is returned.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">super</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">providers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">name</span><span class="p">,</span>
-                 <span class="n">xa</span><span class="p">,</span>
-                 <span class="n">covariance</span><span class="p">,</span>
-                 <span class="n">xr</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
-                 <span class="n">height_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">temperature_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">spatial_correlation</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="CombinedProvider.add"><a class="viewcode-back" href="../../generated/parts.data_provider.html#parts.data_provider.CombinedProvider.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a priori provider for quantity :code:`name`. The created</span>
-<span class="sd">        object will provide :code:`get_&lt;name&gt;_xa` and</span>
-<span class="sd">        :code:`get_&lt;name&gt;_covariance` methods that return fixed a priori vectors</span>
-<span class="sd">        :math:`x_a` and diagonal covariance matrices with the values given</span>
-<span class="sd">        by :code:`xa` and :code:`covariance`, respectively.</span>
+<span class="sd">        Add a provider to the combined data provider.</span>
 
 <span class="sd">        Arguments:</span>
 
-<span class="sd">            name(code:`str`): The name of the retrieval quantity for which the</span>
-<span class="sd">                a priori should be provided.</span>
+<span class="sd">            provider: The data provider to add. Must inherit</span>
+<span class="sd">                from :code:`DataProviderBase`.</span>
 
-<span class="sd">            xa(code:`float` or :code:`np.ndarray`): If a :code:`float` is given,</span>
-<span class="sd">                the a priori is assumed constant throughout the atmosphere. If a</span>
-<span class="sd">                vector is given this one is returned as the a priori profile.</span>
+<span class="sd">        Raises:</span>
 
-<span class="sd">            covariance(code:`float` or :code:`np.ndarray`): Diagonal values</span>
-<span class="sd">                of the covariance matrix to be returned. If only a single value</span>
-<span class="sd">                is given it is extended to the whole atmosphere.</span>
-
-<span class="sd">            height_mask(callable): Callable object that applies a height mask</span>
-<span class="sd">                to the a priori vector and the covariance matrix.</span>
-
-<span class="sd">            temperature_mask(callable): Same as height mask but for the</span>
-<span class="sd">                temperature profile of the atmosphere.</span>
-
-<span class="sd">            spatial_correlation: Callable that applies spatial correlation to</span>
-<span class="sd">                covariance matrix.</span>
+<span class="sd">            Exception: If :code: `provider` argument doesn´t inherit</span>
+<span class="sd">            from :code:`DataProviderBase`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subprovider</span><span class="p">,</span> <span class="n">DataProviderBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Data provider to add  objects must inherit from &quot;</span>
+                            <span class="s2">&quot;DataProviderBase.&quot;</span><span class="p">)</span>
+        <span class="n">subprovider</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">providers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">provider</span><span class="p">]</span></div>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 
-        <span class="n">xa_name</span> <span class="o">=</span> <span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_xa&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">xa_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_xa</span>
-        <span class="n">covariance_name</span> <span class="o">=</span> <span class="s2">&quot;get_&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_covariance&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">covariance_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_covariance</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;get_&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">xa</span>  <span class="o">=</span> <span class="n">xa</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">xr</span> <span class="o">=</span> <span class="n">xr</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">covariance</span> <span class="o">=</span> <span class="n">covariance</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">height_mask</span> <span class="o">=</span> <span class="n">height_mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature_mask</span> <span class="o">=</span> <span class="n">temperature_mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_correlation</span> <span class="o">=</span> <span class="n">spatial_correlation</span>
+            <span class="c1">#</span>
+            <span class="c1"># Get name from first list provider which has any of the</span>
+            <span class="c1"># has either a fitting attribute or get_method.</span>
+            <span class="c1">#</span>
 
-<div class="viewcode-block" id="FixedApriori.get_xa"><a class="viewcode-back" href="../../generated/parts.data_provider.html#parts.data_provider.FixedApriori.get_xa">[docs]</a>    <span class="k">def</span> <span class="nf">get_xa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function to which the :code:`get_&lt;name&gt;_xa` call is forwarded.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">providers</span><span class="p">:</span>
 
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">get_altitude</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xa</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_mask</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xr</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature_mask</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xr</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">x</span></div>
-
-<div class="viewcode-block" id="FixedApriori.get_covariance"><a class="viewcode-back" href="../../generated/parts.data_provider.html#parts.data_provider.FixedApriori.get_covariance">[docs]</a>    <span class="k">def</span> <span class="nf">get_covariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function to which the :code:`get_&lt;name&gt;_covariance` call is forwarded.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">get_altitude</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">get_temperature</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">covmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covariance</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_correlation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">covmat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_correlation</span><span class="p">(</span><span class="n">covmat</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">covmat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_mask</span><span class="o">.</span><span class="n">apply_matrix</span><span class="p">(</span><span class="n">covmat</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">covmat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature_mask</span><span class="o">.</span><span class="n">apply_matrix</span><span class="p">(</span><span class="n">covmat</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">covmat</span></div></div>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{0}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{1}</span><span class="s2">&#39;.&quot;</span>\
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span></div>
 </pre></div>
 
            </div>
@@ -371,26 +325,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

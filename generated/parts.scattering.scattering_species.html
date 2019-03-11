@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="parts.solvers" href="parts.scattering.solvers.html" />
     <link rel="prev" title="The Milbrandt-Yau (2005) PSD" href="parts.scattering.psd.my05.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -168,7 +170,7 @@ the quantity on the given workspace <code class="code docutils literal notransla
 <dl class="class">
 <dt id="parts.scattering.scattering_species.Moment">
 <em class="property">class </em><code class="descclassname">parts.scattering.scattering_species.</code><code class="descname">Moment</code><span class="sig-paren">(</span><em>species_name</em>, <em>moment_name</em>, <em>jacobian=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/scattering_species.html#Moment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.scattering_species.Moment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.atmospheric_quantity.AtmosphericQuantity</span></code>, <a class="reference internal" href="parts.retrieval.html#parts.retrieval.RetrievalQuantity" title="parts.retrieval.RetrievalQuantity"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalQuantity</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.atmosphere.atmospheric_quantity.AtmosphericQuantity</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalQuantity</span></code></p>
 <dl class="attribute">
 <dt id="parts.scattering.scattering_species.Moment.jacobian_class">
 <code class="descname">jacobian_class</code><a class="headerlink" href="#parts.scattering.scattering_species.Moment.jacobian_class" title="Permalink to this definition">¶</a></dt>
@@ -185,7 +187,7 @@ Jacobian calculation.</p>
 
 <dl class="method">
 <dt id="parts.scattering.scattering_species.Moment.set_from_x">
-<code class="descname">set_from_x</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/scattering_species.html#Moment.set_from_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.scattering_species.Moment.set_from_x" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_from_x</code><span class="sig-paren">(</span><em>ws</em>, <em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/scattering_species.html#Moment.set_from_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.scattering_species.Moment.set_from_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set method that sets the value of the retrieval quantity to a given
 a priori state.</p>
 </dd></dl>
@@ -195,7 +197,7 @@ a priori state.</p>
 <dl class="class">
 <dt id="parts.scattering.scattering_species.Retrieval">
 <em class="property">class </em><code class="descclassname">parts.scattering.scattering_species.</code><code class="descname">Retrieval</code><span class="sig-paren">(</span><em>quantity</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/parts/scattering/scattering_species.html#Retrieval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parts.scattering.scattering_species.Retrieval" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="parts.retrieval.html#parts.retrieval.RetrievalBase" title="parts.retrieval.RetrievalBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalBase</span></code></a>, <a class="reference internal" href="#parts.scattering.scattering_species.Jacobian" title="parts.scattering.scattering_species.Jacobian"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.scattering_species.Jacobian</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">parts.retrieval.RetrievalBase</span></code>, <a class="reference internal" href="#parts.scattering.scattering_species.Jacobian" title="parts.scattering.scattering_species.Jacobian"><code class="xref py py-class docutils literal notranslate"><span class="pre">parts.scattering.scattering_species.Jacobian</span></code></a></p>
 </dd></dl>
 
 
@@ -210,7 +212,7 @@ a priori state.</p>
         <a href="parts.scattering.solvers.html" class="btn btn-neutral float-right" title="parts.solvers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="parts.scattering.psd.my05.html" class="btn btn-neutral" title="The Milbrandt-Yau (2005) PSD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="parts.scattering.psd.my05.html" class="btn btn-neutral float-left" title="The Milbrandt-Yau (2005) PSD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -236,26 +238,16 @@ a priori state.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

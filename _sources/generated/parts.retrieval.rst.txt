@@ -1,3 +1,9 @@
+parts.retrieval
+===============
+
 .. automodule:: parts.retrieval
     :members:
     :show-inheritance:
+
+   parts.retrieval.a_priori
+
