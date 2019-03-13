@@ -9,7 +9,7 @@ def plot_psds(x, y, z, dz = None, chs = 0, ax = None):
         ax = plt.gca()
 
     n   = y.shape[1]
-    pal = sns.cubehelix_palette(n, )
+    pal = sns.cubehelix_palette(n, start = chs)
 
     if dz is None:
         dz = np.diff(z).mean() / 8.0
