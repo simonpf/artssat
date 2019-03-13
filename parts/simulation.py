@@ -1,7 +1,7 @@
 import numpy as np
 from typhon.arts.workspace     import Workspace
 from parts.sensor.sensor       import ActiveSensor, PassiveSensor
-from parts.scattering.solvers  import ScatteringSolver, RT4
+from parts.scattering.solvers  import ScatteringSolver, RT4, Disort
 from parts.jacobian            import JacobianCalculation
 from parts.retrieval           import RetrievalCalculation
 from parts.io                  import OutputFile
@@ -11,7 +11,7 @@ class ArtsSimulation:
                  atmosphere = None,
                  data_provider = None,
                  sensors = [],
-                 scattering_solver = RT4()):
+                 scattering_solver = RT4(nstreams = 12)):
 
         self._atmosphere        = atmosphere
         self._data_provider     = data_provider
@@ -143,8 +143,18 @@ class ArtsSimulation:
 
             s = self.sensors[i_active[0]]
 
-            f = s.make_y_calc_function(append = False)
-            f(ws)
+            if self.atmosphere.scattering:
+                f = s.make_y_calc_function(append = False)
+                f(ws)
+            else:
+                ws.y.value = s.y_min * np.ones(s.y_vector_length)
+                ws.y_f = s.f_grid[0] * np.ones(s.y_vector_length)
+                ws.y_pol = [0] * s.y_vector_length
+                ws.y_pos = 0.0 * np.ones((s.y_vector_length,
+                                          len(self.atmosphere.dimensions)))
+                ws.y_geo = 0.0 * np.ones((s.y_vector_length, 5))
+                ws.y_los = 0.0 * np.ones((s.y_vector_length,
+                                          min(len(self.atmosphere.dimensions), 2)))
 
             i += 1
             s.y = np.copy(ws.y.value[y_index:].reshape((-1, 1)))

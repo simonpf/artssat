@@ -113,6 +113,10 @@ class ScatteringSpecies:
         self._name = name
         self._psd  = psd
 
+        if hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
+            scattering_meta_data = scattering_data.meta
+            scattering_data = scattering_data.path
+
         if not scattering_data[-4:] in [".xml", "l.gz"]:
             scattering_data += ".xml"
 

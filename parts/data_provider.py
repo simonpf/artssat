@@ -104,8 +104,8 @@ class CombinedProvider(DataProviderBase):
     first hit is returned.
     """
     def __init__(self, *args):
-        self.super()
-        self.providers = list(*args)
+        super().__init__()
+        self.providers = list(args)
 
     def add(self, provider):
         """
