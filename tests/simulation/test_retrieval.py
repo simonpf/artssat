@@ -7,7 +7,6 @@ import pytest
 import parts
 from parts                       import ArtsSimulation
 from parts.atmosphere            import Atmosphere1D
-    RelativeHumidity
 from parts.atmosphere.surface    import Tessem
 from parts.jacobian              import Log10
 from parts.scattering            import ScatteringSpecies, D14
@@ -15,7 +14,8 @@ from parts.scattering.solvers    import RT4, Disort
 from parts.sensor                import CloudSat, ICI
 from parts.data_provider         import DataProviderBase
 from parts.retrieval.a_priori    import FixedAPriori, Diagonal
-from parts.atmosphere.absorption import O2, N2, H2O, Relative, \
+from parts.atmosphere.absorption import O2, N2, H2O, Relative,\
+    RelativeHumidity
 from examples.data_provider      import DataProvider
 
 import matplotlib.pyplot as plt
