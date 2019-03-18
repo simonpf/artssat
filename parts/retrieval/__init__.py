@@ -898,12 +898,3 @@ class RetrievalCalculation:
                 retrieval.run(*args, **kwargs)
                 self.results += [retrieval]
                 previous_run = retrieval
-
-
-    def store_results(self):
-        sim = self.results[-1].simulation
-        if not sim.output_file is None:
-            sim.output_file.store_retrieval_results(self)
-        else:
-            raise Exception("The output file must be initialized before results"
-                            " can be written to it.")

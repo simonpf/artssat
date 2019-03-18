@@ -1,13 +1,12 @@
 import os
-os.environ["ARTS_BUILD_PATH"] = "/home/simon/build/arts_debug/"
 
 import numpy as np
 import scipy as sp
 import pytest
 
+import parts
 from parts                       import ArtsSimulation
 from parts.atmosphere            import Atmosphere1D
-from parts.atmosphere.absorption import O2, N2, H2O, Relative, \
     RelativeHumidity
 from parts.atmosphere.surface    import Tessem
 from parts.jacobian              import Log10
@@ -16,18 +15,20 @@ from parts.scattering.solvers    import RT4, Disort
 from parts.sensor                import CloudSat, ICI
 from parts.data_provider         import DataProviderBase
 from parts.retrieval.a_priori    import FixedAPriori, Diagonal
-
+from parts.atmosphere.absorption import O2, N2, H2O, Relative, \
 from examples.data_provider      import DataProvider
-from tests.data                  import scattering_data, scattering_meta
-from parts.dashboard import dashboard, make_retrieval_panel
 
 import matplotlib.pyplot as plt
 
-#from IPython import get_ipython
-#ip = get_ipython()
-#ip.magic("load_ext autoreload")
+#
+# Functions and data for testing.
+#
 
-#ip.magic("%autoreload 2")
+import os
+import sys
+test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+sys.path.append(test_path)
+from utils.data import scattering_data, scattering_meta
 
 ################################################################################
 # A priori providers
@@ -295,7 +296,5 @@ def test_retrieval_runs():
 
     simulation.setup()
     simulation.run()
-
-
 
     return simulation.workspace.x.value

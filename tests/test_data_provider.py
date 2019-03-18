@@ -1,4 +1,5 @@
-from parts.data_provider import DataProviderBase
+from parts.data_provider import DataProviderBase, Constant, \
+    FunctorDataProvider, CombinedProvider
 
 ################################################################################
 # Data provider classes
@@ -62,3 +63,32 @@ def test_subproviders():
     dp.add(sp2)
 
     assert(dp.get_temperature_xa() == 300.0)
+
+def test_combined_provider():
+    """
+    Test priority with which getters are returned from the
+    CombinedDataProvider.
+    """
+    dp_1 = DataProvider()
+    dp_1.add(FunctorDataProvider("value", "temperature", lambda x: 2.0 * x))
+
+    dp_2 = DataProvider()
+    dp_2.add(FunctorDataProvider("value", "temperature", lambda x: 3.0 * x))
+
+    dp = CombinedProvider(dp_1, dp_2)
+    assert(dp.get_value() == 2.0 * dp.get_temperature())
+
+    dp = CombinedProvider(dp_2, dp_1)
+    assert(dp.get_value() == 3.0 * dp.get_temperature())
+
+def test_constant_provider():
+    dp = Constant("value", 100)
+    value = dp.get_value()
+    assert(value == 100)
+
+def test_functional_provider():
+    dp = DataProvider()
+    dp.add(FunctorDataProvider("value", "temperature", lambda x: 2.0 * x))
+    value = dp.get_value()
+    assert(value == 2.0 * dp.get_temperature())
+

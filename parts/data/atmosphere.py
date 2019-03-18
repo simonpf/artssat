@@ -6,7 +6,6 @@ This module contains standard data providers that provide clear sky
 atmospheres for different climatological regimes.
 """
 import numpy as np
-
 from parts.data_provider import DataProviderBase
 
 class Tropical(DataProviderBase):

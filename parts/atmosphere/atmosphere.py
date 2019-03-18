@@ -199,6 +199,10 @@ class Atmosphere:
 
     @scatterers.setter
     def scatterers(self, scatterers):
+
+        if not type(scatterers) is list:
+            raise ValueError("The 'scatterers' property can only be set to a list.")
+
         for s in scatterers:
             self.__dict__[s.name] = s
             self._required_data += [(n, self._dimensions, False) \
