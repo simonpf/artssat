@@ -454,7 +454,10 @@ class D14N(ArtsPSD):
 
     @property
     def moments(self):
-        return [self.intercept_parameter, self.mass_weighted_diameter]
+        try:
+            return [self.intercept_parameter, self.mass_weighted_diameter]
+        except:
+            return None
 
     @property
     def pnd_call_agenda(self):

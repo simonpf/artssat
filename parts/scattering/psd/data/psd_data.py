@@ -31,6 +31,9 @@ class SizeParameter:
         b(numpy.float): The :math:`b` exponent of the mass-size-relation
     """
 
+    def __eq__(self, other):
+        return self.a == other.a and self.b == other.b
+
     def __init__(self, a, b):
         """
         Create size parameter with given :math:`a` and :math:`b` parameters.
