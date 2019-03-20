@@ -7,6 +7,7 @@ from parts.retrieval           import RetrievalCalculation
 from parts.io                  import OutputFile
 
 class ArtsSimulation:
+
     def __init__(self,
                  atmosphere = None,
                  data_provider = None,
@@ -18,6 +19,7 @@ class ArtsSimulation:
         self._sensors           = sensors
         self._scattering_solver = scattering_solver
         self._data_provider     = data_provider
+        self._setup             = False
         self._workspace         = None
         self.output_file        = None
 
@@ -93,6 +95,8 @@ class ArtsSimulation:
 
         for s in self.sensors:
             s.setup(ws, self.atmosphere.scattering)
+
+        self._setup = True
 
     def check_dimensions(self, f, name):
         s = f.shape
@@ -204,6 +208,10 @@ class ArtsSimulation:
 
     def run(self, *args, **kwargs):
 
+        if not self._setup:
+            raise Exception("setup() member function must be executed before"
+                            " a simulation can be run.")
+
         self.args   = args
         self.kwargs = kwargs
 
@@ -221,9 +229,8 @@ class ArtsSimulation:
         else:
             self._run_forward_simulation()
 
-    def run_mpi(self, *args, callback = None):
+    def _run_ranges_mpi(self, ranges, *args, callback = None, **kwargs):
         from mpi4py import MPI
-        ranges = list(args)
 
         if len(ranges) > 1:
             raise Exception("Currently only 1-dimensional ranges are supported.")
@@ -243,14 +250,32 @@ class ArtsSimulation:
 
         print("run_mpi :: ", rank, n0 + r.start, dn)
         for i in range(r.start + n0, r.start + n0 + dn):
-            self.run(i)
+            self._run_ranges(ranges[1:], *args, i, **kwargs, callback = callback)
+
+
+    def _run_ranges(self, ranges, *args, callback = None, **kwargs):
+        if len(ranges) == 0:
+            print("running: ", *args)
+            self.run(*args, **kwargs)
 
             if not callback is None:
                 callback(self)
             else:
                 if not self.output_file is None:
-                    if hasattr(self, "retrieval"):
-                        self.retrieval.store_results()
+                    self.store_results()
+        else:
+            r = ranges[0]
+            for i in r:
+                self._run_ranges(ranges[1:], *args, i, **kwargs)
+
+
+    def run_ranges(self, *args, mpi = False, callback = None, **kwargs):
+
+        ranges = list(args)
+        if mpi:
+            self._run_ranges_mpi(ranges, **kwargs, callback = callback)
+        else:
+            self._run_ranges(ranges, **kwargs, callback = callback)
 
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)
@@ -259,3 +284,10 @@ class ArtsSimulation:
         self.output_file = OutputFile(filename,
                                       dimensions = dimensions,
                                       mode = mode)
+
+    def store_results(self):
+        if not self.output_file is None:
+            self.output_file.store_results(self)
+        else:
+            raise Exception("The output file must be initialized before results"
+                            " can be written to it.")

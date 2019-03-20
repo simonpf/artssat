@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import parts
 from parts import ArtsSimulation
 from parts.atmosphere import Atmosphere1D
 from parts.atmosphere.absorption import O2, N2, H2O
@@ -10,15 +11,17 @@ from parts.atmosphere.surface import Tessem
 from parts.sensor import CloudSat, ICI
 
 from examples.data_provider import DataProvider
-from tests.data import scattering_data, scattering_meta
 
 import matplotlib.pyplot as plt
 
 scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 
-#from IPython import get_ipython #ip = get_ipython() #ip.magic("%load_ext autoreload")
-#ip.magic("%autoreload 2")
 import os
+import sys
+test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+sys.path.append(test_path)
+from utils.data import scattering_data, scattering_meta
+
 
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
@@ -52,7 +55,7 @@ def test_simulation_scattering(scattering_solver):
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI(stokes_dimension = 1, channels = [1, -1])
+    ici = ICI(stokes_dimension = 1, channel_indices = [1, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -74,7 +77,7 @@ def test_simulation_scattering_jacobian():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               scatterers = [ice],
                               surface = Tessem())
-    ici = ICI(channels = [1, -1])
+    ici = ICI(channel_indices = [1, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -96,7 +99,7 @@ def test_simulation_scattering_combined(scattering_solver):
     ice.psd.t_min = 0.0
     ice.psd.t_max = 275.0
 
-    ici = ICI(channels = [0, -1], stokes_dimension = 1)
+    ici = ICI(channel_indices = [0, -1], stokes_dimension = 1)
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 
@@ -123,7 +126,7 @@ def test_simulation_absorption_jacobian():
                               surface = Tessem())
     o2, n2, h2o = atmosphere.absorbers
 
-    ici = ICI(channels = [0, -1])
+    ici = ICI(channel_indices = [0, -1])
     ici.sensor_line_of_sight = np.array([[135.0]])
     ici.sensor_position = np.array([[600e3]])
 

@@ -1,7 +1,36 @@
+"""
+parts.io
+========
+
+The `parts.io` module provides routines for the storing of simulations results.
+"""
 from netCDF4 import Dataset
+import numpy as np
 
 class OutputFile:
-    def __init__(self, filename, dimensions = None, mode = "w"):
+    """
+    Class to store results from an ARTS simulation to a NetCDF file.
+
+    """
+    def __init__(self,
+                 filename,
+                 dimensions = None,
+                 mode = "w",
+                 floating_point_format = "f4"):
+        """
+        Create output file to store simulation output to.
+
+        Arguments:
+
+            filename(str): Path of the output file.
+
+            dimensions(list): List of tuples :code:`(s, e, o)` containing
+                for each dimensions over which simulations will be produced
+                the start index :code:`s`, the end index :code:`e` and
+                the offset :code:`o`.
+
+            mode(str): String describing the mode to open the output file.
+        """
         try:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
@@ -10,21 +39,52 @@ class OutputFile:
         except:
             self.parallel = False
 
-        self.filename = filename
-        self.mode = mode
-        self.retrieval_output_initialized   = False
-        self.initialized_simulations = False
+        self.filename   = filename
+        self.mode       = mode
         self.dimensions = dimensions
+        self.f_fp       = floating_point_format
 
-    def initialize_retrieval_output(self, retrieval):
+        self.initialized = False
 
-        self.file_handle = Dataset(self.filename,
-                                   mode = self.mode,
-                                   parallel = self.parallel)
+    def _initialize_dimensions(self):
+        """
+        Initialize compute dimension in the output file.
+        """
+        # indices
+        for n, s, _ in self.dimensions:
+            self.file_handle.createDimension(n, s)
 
-        sim = retrieval.results[0].simulation
-        args   = sim.args
-        kwargs = sim.kwargs
+    def _initialize_forward_simulation_output(self, simulation):
+        """
+        Initializes output file for forward simulation results.
+        Create dict attribute :code:`variables` containing variables
+        corresponding to each sensor name.
+        """
+        self.variables = {}
+        root = self.file_handle
+        indices = [n for n, _, _ in self.dimensions]
+
+        for s in simulation.sensors:
+            dim = s.name + "_channels"
+            root.createDimension(dim, s.y_vector_length)
+            v = root.createVariable("y_" + s.name, self.f_fp,
+                                    dimensions = tuple(indices  + [dim]))
+            self.variables[s.name] = v
+
+    def _initialize_retrieval_output(self, simulation):
+        """
+        Initialize output file for results from a retrieval
+        calculation.
+
+        Arguments:
+
+            simulation: ArtsSimulation object from which to store the results.
+
+        """
+
+        retrieval = simulation.retrieval
+        args      = simulation.args
+        kwargs    = simulation.kwargs
 
         #if self.parallel:
         #    self.comm.Barrier()
@@ -33,14 +93,8 @@ class OutputFile:
         # Global dimensions
         #
 
-        # indices
-        indices = []
-        for n, s, _ in self.dimensions:
-            self.file_handle.createDimension(n, s)
-            indices += [n]
-
         # z grid
-        p = sim.workspace.p_grid.value
+        p = simulation.workspace.p_grid.value
         self.file_handle.createDimension("z", p.size)
 
         # oem diagnostices
@@ -51,17 +105,23 @@ class OutputFile:
         #
 
         self.groups = []
+        indices = [n for n, _, _ in self.dimensions]
 
-        for r in retrieval.results:
+        if not type(retrieval.results) == list:
+            results = [retrieval.results]
+        else:
+            results = retrieval.results
+
+        for r in results:
             group = self.file_handle.createGroup(r.name)
             self.groups += [group]
 
             # Retrieval quantities.
             for rq in retrieval.retrieval_quantities:
-                v = group.createVariable(rq.name, "f8", dimensions = tuple(indices + ["z"]))
+                v = group.createVariable(rq.name, self.f_fp, dimensions = tuple(indices + ["z"]))
 
             # OEM diagnostics.
-            v = group.createVariable("diagnostics", "f8",
+            v = group.createVariable("diagnostics", self.f_fp,
                                      dimensions = tuple(indices + ["oem_diagnostics"]))
 
             # Observations and fit.
@@ -70,26 +130,56 @@ class OutputFile:
                 m = j - i
                 d1 = s.name + "_channels"
                 group.createDimension(d1, m)
-                v = group.createVariable("y_" + s.name, "f8",
+                v = group.createVariable("y_" + s.name, self.f_fp,
                                               dimensions = tuple(indices  + [d1]))
-                v = group.createVariable("yf_" + s.name, "f8",
+                v = group.createVariable("yf_" + s.name, self.f_fp,
                                               dimensions = tuple(indices  + [d1]))
-        self.retrieval_output_initialized = True
 
-    def store_retrieval_results(self, retrieval):
+    def initialize(self, simulation):
+        """
+        Initialize output file.
 
-        if self.parallel:
-           self.comm.Barrier()
+        This creates all necessary dimensions and variables in the NetCDF4
+        output file. This function is run automatically before the first
+        entry is stored in the file.
+        """
+        self.file_handle = Dataset(self.filename,
+                                   mode = self.mode,
+                                   parallel = self.parallel)
 
-        # Initialize file structure
-        if not self.retrieval_output_initialized:
-            self.initialize_retrieval_output(retrieval)
+        self._initialize_dimensions()
 
-        sim = retrieval.results[0].simulation
-        args   = [a - o for a, (_, _, o) in zip(sim.args, self.dimensions)]
-        kwargs = sim.kwargs
+        if len(simulation.retrieval.retrieval_quantities) > 0:
+            self._initialize_retrieval_output(simulation)
+        else:
+            self._initialize_forward_simulation_output(simulation)
 
-        for g, r in zip(self.groups, retrieval.results):
+        self.initialized = True
+
+    def _store_forward_simulation_results(self, simulation):
+
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        kwargs = simulation.kwargs
+
+        for s in simulation.sensors:
+            var = self.variables[s.name]
+            y   = np.copy(s.y.ravel())
+            var.__setitem__(list(args) + [slice(0, None)], y)
+
+        retrieval = simulation.retrieval
+
+    def _store_retrieval_results(self, simulation):
+
+        retrieval = simulation.retrieval
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        kwargs = simulation.kwargs
+
+        if not type(retrieval.results) == list:
+            results = [retrieval.results]
+        else:
+            results = retrieval.results
+
+        for g, r in zip(self.groups, results):
             #
             # Retrieved quantities
             #
@@ -124,3 +214,14 @@ class OutputFile:
                 name = "yf_" + s.name
                 var = g[name]
                 var.__setitem__(list(args) + [slice(0, None)], yf)
+
+    def store_results(self, simulation):
+
+        # Initialize file structure
+        if not self.initialized:
+            self.initialize(simulation)
+
+        if len(simulation.retrieval.retrieval_quantities) > 0:
+            self._store_retrieval_results(simulation)
+        else:
+            self._store_forward_simulation_results(simulation)

@@ -187,6 +187,13 @@ class MY05(ArtsPSD):
         return ["number_density", "mass_density"]
 
     @property
+    def moments(self):
+        try:
+            return [self.number_density, self.mass_density]
+        except:
+            return None
+
+    @property
     def pnd_call_agenda(self):
         """
         The ARTS WSM implementing the MY05 PSD.

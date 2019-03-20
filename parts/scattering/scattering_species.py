@@ -48,6 +48,7 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     def __init__(self,
                  species_name,
                  moment_name,
+                 data = None,
                  jacobian = False):
 
         name = species_name + "_" + moment_name
@@ -57,6 +58,7 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         self._retrieval = None
         self._species_name = species_name
         self._moment_name  = moment_name
+        self._data = data
 
     #
     # Abstract methods
@@ -70,8 +72,20 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         pass
 
     def get_data(self, ws, provider, *args, **kwargs):
+
         if self.retrieval is None:
-            AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
+
+            if hasattr(provider, "get_" + self.name):
+                AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
+            else:
+                try:
+                    x = self.data
+                    pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
+                    ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] \
+                        = np.reshape(x, pbf_shape)
+                except Exception as e:
+                    raise Exception("Encountered error trying to get data for "
+                                    " moment {0}: {1}".format(self.name, e))
 
     #
     # Jacobian & retrieval
@@ -98,6 +112,10 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     #
     # Properties
     #
+
+    @property
+    def data(self):
+        return self._data
 
     def species_name(self):
         return self._species_name
@@ -129,10 +147,18 @@ class ScatteringSpecies:
             self._scattering_meta_data = scattering_meta_data
 
         self._moments = []
-        for m in self.psd.moment_names:
-            moment = Moment(self.name, m)
-            self._moments += [moment]
-            self.__dict__[m] = moment
+
+        try:
+            moment_data = self.psd.moments
+            for m, d in zip(self.psd.moment_names, moment_data):
+                moment = Moment(self.name, m, data = d)
+                self._moments += [moment]
+                self.__dict__[m] = moment
+        except:
+            for m in self.psd.moment_names:
+                moment = Moment(self.name, m)
+                self._moments += [moment]
+                self.__dict__[m] = moment
 
     @property
     def name(self):

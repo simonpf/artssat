@@ -94,7 +94,6 @@ class DataProviderBase:
             raise AttributeError("'{0}' object has no attribute '{1}'."\
                                  .format(type(self).__name__, name))
 
-
 class CombinedProvider(DataProviderBase):
     """
     The :code:`CombinedProvider` allows the combination of multiple data
@@ -147,3 +146,73 @@ class CombinedProvider(DataProviderBase):
 
             raise AttributeError("'{0}' object has no attribute '{1}'."\
                                  .format(type(self).__name__, name))
+
+class Constant(DataProviderBase):
+    """
+    Returns a data provider that returns a constant value for a given
+    quantity.
+    """
+    def __init__(self, name, value):
+        """
+        Create a data provider for quantity :code:`name` that
+        returns the fixed value :code:`value`.
+
+        Arguments:
+
+            name(:code:`str`): Name of the quantity to provide. The
+                created :class:`FunctorDataProvider` object will have
+                a member function name :code:`get_<name>`.
+
+            value: The value to return for the quantity :code:`quantity`.
+        """
+        super().__init__()
+        self.value = value
+        self.__dict__["get_" + name] = self.get
+
+    def get(self, *args, **kwargs):
+        return self.value
+
+class FunctorDataProvider(DataProviderBase):
+    """
+    The FunctorDataProvider turns a function into a data provider that
+    provides a get function for the results of the given function applied
+    to a variable from the parent provider.
+    """
+    def __init__(self, name, variable, f):
+        """
+        Create a data provider for quantity :code:`name` that
+        returns the result of function `f` applied to variable
+        `name` from the parent provider.
+
+        Arguments:
+
+            name(:code:`str`): Name of the quantity to provide. The
+                created :class:`FunctorDataProvider` object will have
+                a member function name :code:`get_<name>`.
+
+            variable(:code:`str`): The quantity to get from the parent
+                data provider. When its get function is called the
+                :code:`FunctorDataProvider` will call the :code:`get_<variable>`
+                function of the parent data provider and the values as
+                arguments to the function :code:`f`
+
+            f(:code:`function`): Function to apply to the values of
+                :code:`variable`. The results are returned as the values
+                of the quantity :code:`name` by the :code:`FunctionDataProvider`
+                object.
+        """
+        super().__init__()
+        self.variable   = variable
+        self.f          = f
+        self.__dict__["get_" + name] = self.get
+
+    def get(self, *args, **kwargs):
+        try:
+            f_get = getattr(self.owner, "get_" + self.variable)
+            x = f_get(*args, **kwargs)
+        except:
+            raise Exception("Could not get variable {} from data provider."
+                            .format(self.variable))
+
+        y = self.f(x)
+        return y
