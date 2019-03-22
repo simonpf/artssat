@@ -681,8 +681,6 @@ class RetrievalRun:
         self.setup_iteration_agenda()
         self.setup_a_priori(*args, **kwargs)
 
-        self.simulation.run_checks()
-
         y_blocks = []
         for s in self.sensors:
             if isinstance(s, ActiveSensor):
@@ -693,19 +691,24 @@ class RetrievalRun:
                 i, j = self.sensor_indices[s.name]
                 y_blocks += [self.y[i : j]]
 
-        y = np.concatenate(y_blocks)
-        self._y = y
-        ws.y  = y
-        ws.yf       = []
-        ws.jacobian = []
 
         try:
+
+            y = np.concatenate(y_blocks)
+            self._y = y
+            ws.y  = y
+            ws.yf       = []
+            ws.jacobian = []
+
+            self.simulation.run_checks()
+
             ws.OEM(**self.settings)
+
         except Exception as e:
             ws.oem_diagnostics = 9 * np.ones(5)
             ws.yf       = None
             ws.jacobian = None
-            ws.oem_errors = ["Error computing initial cost.", str(e)]
+            ws.oem_errors = ["Error in OEM computation.", str(e)]
 
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
