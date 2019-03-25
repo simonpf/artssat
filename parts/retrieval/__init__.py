@@ -495,7 +495,6 @@ class RetrievalRun:
 
         ws.retrievalDefInit()
 
-
         #
         # Need to store indices of retrieval quantities in x
         # for future reference.
@@ -524,8 +523,6 @@ class RetrievalRun:
 
                 self.rq_indices[rq] = (rq_index, rq_index + xa[-1].size)
                 rq_index += xa[-1].size
-
-                rq.set_from_x(ws, rq.retrieval.xa)
 
         #
         # Set values of retrieval quantities excluded from retrieval.
@@ -691,7 +688,6 @@ class RetrievalRun:
                 i, j = self.sensor_indices[s.name]
                 y_blocks += [self.y[i : j]]
 
-
         try:
 
             y = np.concatenate(y_blocks)
@@ -702,6 +698,9 @@ class RetrievalRun:
 
             self.simulation.run_checks()
 
+            print(ws.x.value)
+            print(ws.y.value)
+
             ws.OEM(**self.settings)
 
         except Exception as e:
@@ -710,6 +709,7 @@ class RetrievalRun:
             ws.jacobian = None
             ws.oem_errors = ["Error in OEM computation.", str(e)]
 
+        print(ws.x)
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
         self.yf              = np.copy(ws.yf.value)

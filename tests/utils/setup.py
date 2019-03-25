@@ -76,7 +76,7 @@ def arts_retrieval(scattering = False):
     else:
         q = simulation.atmosphere.absorbers[0]
         simulation.retrieval.add(q)
-        dp = FixedAPriori("O2", 0.21, Diagonal(0.005))
+        dp = FixedAPriori("O2", 0.3, Diagonal(0.005))
         simulation.data_provider.add(dp)
     simulation.data_provider.add(SensorNoiseAPriori(simulation.sensors))
     return simulation

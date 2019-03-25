@@ -15,7 +15,7 @@ class OutputFile:
     def __init__(self,
                  filename,
                  dimensions = None,
-                 mode = "w",
+                 mode = "wb",
                  floating_point_format = "f4"):
         """
         Create output file to store simulation output to.
@@ -38,6 +38,11 @@ class OutputFile:
             self.parallel = size > 1
         except:
             self.parallel = False
+
+        if self.parallel:
+            print("MPI IO!")
+        else:
+            print("NO MPI IO!")
 
         self.filename   = filename
         self.mode       = mode
@@ -85,9 +90,6 @@ class OutputFile:
         retrieval = simulation.retrieval
         args      = simulation.args
         kwargs    = simulation.kwargs
-
-        #if self.parallel:
-        #    self.comm.Barrier()
 
         #
         # Global dimensions
@@ -143,6 +145,9 @@ class OutputFile:
         output file. This function is run automatically before the first
         entry is stored in the file.
         """
+        if self.parallel:
+           self.comm.Barrier()
+
         self.file_handle = Dataset(self.filename,
                                    mode = self.mode,
                                    parallel = self.parallel)

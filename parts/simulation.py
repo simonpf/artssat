@@ -26,6 +26,15 @@ class ArtsSimulation:
         self.jacobian  = JacobianCalculation()
         self.retrieval = RetrievalCalculation()
 
+        try:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            size = self.comm.Get_size()
+            print("MPI ::", size)
+            self.parallel = size > 1
+        except:
+            self.parallel = False
+
 
     #
     # Properties
@@ -232,9 +241,6 @@ class ArtsSimulation:
     def _run_ranges_mpi(self, ranges, *args, callback = None, **kwargs):
         from mpi4py import MPI
 
-        if len(ranges) > 1:
-            raise Exception("Currently only 1-dimensional ranges are supported.")
-
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
@@ -269,10 +275,15 @@ class ArtsSimulation:
                 self._run_ranges(ranges[1:], *args, i, **kwargs)
 
 
-    def run_ranges(self, *args, mpi = False, callback = None, **kwargs):
+    def run_ranges(self, *args, mpi = None, callback = None, **kwargs):
+
+        if mpi is None:
+            parallel = self.parallel
+        else:
+            parallel = mpi
 
         ranges = list(args)
-        if mpi:
+        if parallel:
             self._run_ranges_mpi(ranges, **kwargs, callback = callback)
         else:
             self._run_ranges(ranges, **kwargs, callback = callback)

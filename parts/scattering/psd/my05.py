@@ -36,6 +36,15 @@ from parts.scattering.psd.data.psd_data      import D_max
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData
 
+
+
+settings = {"cloud_ice" : (0.0, 1.0, 440., 3.0),
+            "rain" : (0.0, 1.0, 523.5988, 3.0),
+            "snow" : (0.0, 1.0, 52.35988, 3.0),
+            "graupel" : (0.0, 1.0, 209.4395, 3.0),
+            "hail" : (0.0, 1.0, 471.2389, 3.0),
+            "cloud_water" : (1.0, 1.0, 523.5988, 3.0)}
+
 class MY05(ArtsPSD):
     r"""
     The :class:`MY05` class describes the size distributions of particles
@@ -69,6 +78,9 @@ class MY05(ArtsPSD):
 
             b(:code:`float`): :math:`b` coefficient of the mass-size relationship
 
+            hydrometeor_type: One of ["cloud_ice", "rain", "snow", "graupel", "hail"]
+                or None. If not None this will override the given settings for
+                nu, mu, a, b.
         """
         size_parameter = D_max(a, b)
         number_density = psd.get_moment(0)
@@ -76,7 +88,11 @@ class MY05(ArtsPSD):
 
         return MY05(nu, mu, a, b, None, number_density, mass_density)
 
-    def __init__(self, nu, mu, a, b,
+    def __init__(self,
+                 nu = None,
+                 mu = None,
+                 a  = None,
+                 b  = None,
                  hydrometeor_type = None,
                  number_density = None,
                  mass_density = None):
@@ -100,6 +116,13 @@ class MY05(ArtsPSD):
             the mass density for a given set of volume elements in an
             atmosphere.
         """
+        if not hydrometeor_type is None:
+            if hydrometeor_type in settings:
+                nu, mu, a, b = settings[hydrometeor_type]
+            else:
+                raise Exception("Expected keyword hydrometeor type to be one of"
+                                " {0} but got {1}.")
+
         self.nu = nu
         self.mu = mu
 
@@ -274,5 +297,16 @@ class MY05(ArtsPSD):
 
         """
         n0, lmbd, mu, nu = self._get_parameters()
+
+        shape = n0.shape
+        result_shape = shape + (1,)
+
+        n0   = np.reshape(n0, result_shape)
+        lmbd = np.broadcast_to(lmbd, shape).reshape(result_shape)
+        mu   = np.broadcast_to(mu, shape).reshape(result_shape)
+        nu   = np.broadcast_to(nu, shape).reshape(result_shape)
+
+        x = x.reshape((1,) * len(shape) + (-1,))
+
         y = n0 * x ** nu * np.exp(- lmbd * x ** mu)
         return PSDData(x, y, self.size_parameter)
