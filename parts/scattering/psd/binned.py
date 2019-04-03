@@ -19,18 +19,9 @@ class Binned(ArtsPSD):
 
     def convert_from(self, psd):
         """
-        Convert another psd to a Binned object using the same size
-        parameter.
-
-        raises:
-
-            ValueError if :code:`psd` is defined over a different
-            size paramter than the binned PSD.
+        Convert another psd to a Binned object.
         """
-        if psd.size_parameter == self.size_parameter:
-            raise ValueError("Conversion to binned PSD only possible from PSD "
-                             " with the same size parameter.")
-
+        self.size_parameter = psd.size_parameter
         y = psd.evaluate(self.x).data
         self.moments = [y[:, i] for i in range(self.x.size)]
 
@@ -86,15 +77,19 @@ class Binned(ArtsPSD):
             ws.Ignore(ws.pnd_agenda_input_t)
             ws.Ignore(ws.pnd_agenda_input_names)
             ws.Ignore(ws.dpnd_data_dx_names)
-            ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-            ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
             ws.Touch(ws.psd_data)
             ws.Touch(ws.dpsd_data_dx)
 
+            ws.scat_species_a = self.size_parameter.a
+            ws.scat_species_b = self.size_parameter.b
+
             xi = ws.psd_size_grid.value
             y  = ws.pnd_agenda_input.value
+            y  = np.maximum(y, 1e-12)
             yi = sp.interpolate.interp1d(self.x.ravel(),
-                                         y, axis = 1, fill_value = 0.0)(xi)
+                                         np.log10(y), axis = 1, fill_value = 0.0)(xi)
+            yi = 10.0 ** yi
+            yi[yi == 1e-12] == 0.0
 
             t = ws.pnd_agenda_input_t.value
             yi[t < self.t_min, :] = 0.0

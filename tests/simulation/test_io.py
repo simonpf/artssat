@@ -89,5 +89,4 @@ v_names_r = ["y_" + s.name for s in simulation.sensors] \
            + ["yf_" + s.name for s in simulation.sensors] \
            + ["diagnostics", "O2"]
 
-fh.close()
 
