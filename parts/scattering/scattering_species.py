@@ -177,6 +177,28 @@ class ScatteringSpecies:
     def scattering_data(self):
         return self._scattering_data
 
+    @scattering_data.setter
+    def scattering_data(self, scattering_data):
+
+        if type(scattering_data) == tuple:
+            scattering_data, scattering_meta_data = scattering_data
+        elif  hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
+            scattering_meta_data = scattering_data.meta
+            scattering_data = scattering_data.path
+        else:
+            scattering_meta_data = None
+
+        if not scattering_data[-4:] in [".xml", "l.gz"]:
+            scattering_data += ".xml"
+
+        self._scattering_data = scattering_data
+
+        if scattering_meta_data is None:
+            md = scattering_data[:-3] + "meta.xml"
+            self._scattering_meta_data = md
+        else:
+            self._scattering_meta_data = scattering_meta_data
+
     @property
     def scattering_meta_data(self):
         return self._scattering_meta_data

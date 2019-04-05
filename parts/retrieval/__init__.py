@@ -420,6 +420,8 @@ class RetrievalRun:
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, attribute)
+            if x is None:
+                return x
             x = x[i : j]
 
             if interpolate:
@@ -529,15 +531,14 @@ class RetrievalRun:
         #
 
         for rq in self.simulation.retrieval.retrieval_quantities:
-            if rq not in self.retrieval_quantities:
-                # Get result from previous run (x_p).
-                # If not available set to a priori.
-                x_p = self.get_result(rq)
-                if x_p is None:
-                    rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
-                    rq.retrieval.get_xa(data_provider, *args, **kwargs)
-                    x_p = rq.retrieval.xa
-                rq.set_from_x(ws, x_p)
+            # Get result from previous run (x_p).
+            # If not available set to a priori.
+            x_p = self.get_result(rq)
+            if x_p is None:
+                rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
+                rq.retrieval.get_xa(data_provider, *args, **kwargs)
+                x_p = rq.retrieval.xa
+            rq.set_from_x(ws, x_p)
 
         ws.retrievalDefClose()
 
@@ -697,10 +698,6 @@ class RetrievalRun:
             ws.jacobian = []
 
             self.simulation.run_checks()
-
-            print(ws.x.value)
-            print(ws.y.value)
-
             ws.OEM(**self.settings)
 
         except Exception as e:
