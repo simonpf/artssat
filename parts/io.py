@@ -39,11 +39,6 @@ class OutputFile:
         except:
             self.parallel = False
 
-        if self.parallel:
-            print("MPI IO!")
-        else:
-            print("NO MPI IO!")
-
         self.filename   = filename
         self.mode       = mode
         self.dimensions = dimensions
@@ -145,9 +140,6 @@ class OutputFile:
         output file. This function is run automatically before the first
         entry is stored in the file.
         """
-        if self.parallel:
-           self.comm.Barrier()
-
         self.file_handle = Dataset(self.filename,
                                    mode = self.mode,
                                    parallel = self.parallel)

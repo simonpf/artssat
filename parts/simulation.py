@@ -30,7 +30,6 @@ class ArtsSimulation:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             size = self.comm.Get_size()
-            print("MPI ::", size)
             self.parallel = size > 1
         except:
             self.parallel = False
@@ -248,20 +247,23 @@ class ArtsSimulation:
         r = ranges[0]
         n  = (r.stop - r.start) // r.step
         dn  = n // size
+
+        if n < size:
+            raise Exception("Need at least as many steps in outermost range as "
+                            " processors. Otherwise deadlocks occur.")
+
         n0  = rank * dn
         rem = n % size
         if rank < rem:
             dn = dn + 1
         n0 += min(rank, rem)
 
-        print("run_mpi :: ", rank, n0 + r.start, dn)
         for i in range(r.start + n0, r.start + n0 + dn):
             self._run_ranges(ranges[1:], *args, i, **kwargs, callback = callback)
 
 
     def _run_ranges(self, ranges, *args, callback = None, **kwargs):
         if len(ranges) == 0:
-            print("running: ", *args)
             self.run(*args, **kwargs)
 
             if not callback is None:
