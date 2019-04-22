@@ -10,7 +10,7 @@ from examples.data_provider import DataProvider
 from examples.sensors import ICI
 from parts.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
     TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori, \
-    SensorNoiseAPriori, ReducedVerticalGrid, FunctionalAPriori
+    SensorNoiseAPriori, ReducedVerticalGrid, FunctionalAPriori, MaskedRegularGrid
 
 def test_masks():
     data_provider    = DataProvider()
@@ -149,3 +149,5 @@ def test_functional_a_priori():
     a_priori = FunctionalAPriori("temperature", "temperature", f, covariance)
     data_provider.add(a_priori)
     assert(np.all(np.isclose(t ** 2, data_provider.get_temperature_xa())))
+
+

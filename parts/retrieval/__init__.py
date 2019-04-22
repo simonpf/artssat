@@ -412,6 +412,7 @@ class RetrievalRun:
         self.rq_indices     = {}
         self.retrieval_quantities = retrieval_quantities.copy()
         self.previous_run   = previous_run
+        self.data_provider  = simulation.data_provider
 
         self.x = None
 
@@ -490,7 +491,7 @@ class RetrievalRun:
         """
 
         ws            = self.simulation.workspace
-        data_provider = self.simulation.data_provider
+        data_provider = self.data_provider
 
         xa = []
         x0 = []
@@ -587,7 +588,7 @@ class RetrievalRun:
                           "iteration_index" : []}
 
         ws            = self.simulation.workspace
-        data_provider = self.simulation.data_provider
+        data_provider = self.data_provider
 
         s = self.sensors[0]
         ws.Copy(ws.sensor_los,  s._wsvs["sensor_los"])
@@ -603,7 +604,7 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
-        #agenda.append(debug_print)
+        agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
@@ -706,7 +707,6 @@ class RetrievalRun:
             ws.jacobian = None
             ws.oem_errors = ["Error in OEM computation.", str(e)]
 
-        print(ws.x)
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
         self.yf              = np.copy(ws.yf.value)

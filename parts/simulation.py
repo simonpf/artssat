@@ -293,10 +293,15 @@ class ArtsSimulation:
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)
 
-    def initialize_output_file(self, filename, dimensions, mode = "w"):
+    def initialize_output_file(self,
+                               filename,
+                               dimensions,
+                               mode = "w",
+                               full_retrieval_output = True):
         self.output_file = OutputFile(filename,
                                       dimensions = dimensions,
-                                      mode = mode)
+                                      mode = mode,
+                                      full_retrieval_output = full_retrieval_output)
 
     def store_results(self):
         if not self.output_file is None:

@@ -16,7 +16,8 @@ class OutputFile:
                  filename,
                  dimensions = None,
                  mode = "wb",
-                 floating_point_format = "f4"):
+                 floating_point_format = "f4",
+                 full_retrieval_output = True):
         """
         Create output file to store simulation output to.
 
@@ -44,6 +45,7 @@ class OutputFile:
         self.dimensions = dimensions
         self.f_fp       = floating_point_format
 
+        self.full_retrieval_output = full_retrieval_output
         self.initialized = False
 
     def _initialize_dimensions(self):
@@ -132,6 +134,23 @@ class OutputFile:
                 v = group.createVariable("yf_" + s.name, self.f_fp,
                                               dimensions = tuple(indices  + [d1]))
 
+            if self.full_retrieval_output:
+
+
+                n = simulation.workspace.x.value.size
+                m = simulation.workspace.y.value.size
+
+                group.createDimension("m", m)
+                group.createDimension("n", n)
+
+                group.createVariable("G", self.f_fp, dimensions = tuple(indices + ["n", "m"]))
+                group.createVariable("A", self.f_fp, dimensions = tuple(indices + ["n", "n"]))
+                group.createVariable("covmat_so", self.f_fp, dimensions = tuple(indices + ["n", "n"]))
+                group.createVariable("covmat_ss", self.f_fp, dimensions = tuple(indices + ["n", "n"]))
+                group.createVariable("jacobian", self.f_fp, dimensions = tuple(indices + ["m", "n"]))
+
+
+
     def initialize(self, simulation):
         """
         Initialize output file.
@@ -211,6 +230,30 @@ class OutputFile:
                 name = "yf_" + s.name
                 var = g[name]
                 var.__setitem__(list(args) + [slice(0, None)], yf)
+
+            #
+            # Remaining retrieval output
+            #
+
+            if self.full_retrieval_output and r.oem_diagnostics[0] <= 2.0:
+                ws = simulation.workspace
+
+                var = g["A"]
+                var.__setitem__(list(args) + [slice(0, None)] * 2, ws.avk.value)
+
+                var = g["G"]
+                var.__setitem__(list(args) + [slice(0, None)] * 2, ws.dxdy.value)
+
+                var = g["covmat_ss"]
+                var.__setitem__(list(args) + [slice(0, None)] * 2, ws.covmat_ss.value)
+
+                var = g["covmat_so"]
+                var.__setitem__(list(args) + [slice(0, None)] * 2, ws.covmat_so.value)
+
+                var = g["jacobian"]
+                var.__setitem__(list(args) + [slice(0, None)] * 2, ws.jacobian.value)
+
+                    
 
     def store_results(self, simulation):
 

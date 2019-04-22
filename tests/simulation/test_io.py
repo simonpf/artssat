@@ -37,6 +37,7 @@ def test_io_retrieval():
     Test storing of retrieval results to output file.
     """
     path = tempfile.mkdtemp()
+    path = "."
     output_file = os.path.join(path, "output.nc")
 
     simulation = arts_simulation()
@@ -61,4 +62,4 @@ def test_io_retrieval():
                 + ["yf_" + s.name for s in simulation.sensors] \
                 + ["diagnostics", "O2"]
 
-    shutil.rmtree(path)
+    #shutil.rmtree(path)

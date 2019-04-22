@@ -50,7 +50,10 @@ class SpatialCorrelation:
                  covariance,
                  correlation_length,
                  correlation_type = "exp",
-                 cutoff = 1e-2):
+                 cutoff = 1e-12,
+                 mask = None,
+                 mask_value = 1e-12,
+                 z = None):
         """
         Arguments:
 
@@ -68,10 +71,16 @@ class SpatialCorrelation:
         self.correlation_length = correlation_length
         self.correlation_type   = correlation_type
         self.cutoff = cutoff
+        self.mask = mask
+        self.mask_value = mask_value
+        self.z = z
 
     def get_covariance(self, data_provider, *args, **kwargs):
 
-        z = data_provider.get_altitude(*args, **kwargs)
+        if self.z is None:
+            z = data_provider.get_altitude(*args, **kwargs)
+        else:
+            z = self.z
         dz = np.abs(z.reshape(-1, 1) - z.reshape(1, -1))
 
         if self.correlation_type == "exp":
@@ -86,7 +95,15 @@ class SpatialCorrelation:
         if isinstance(covmat, sp.sparse.spmatrix):
             covmat = covmat.todense()
 
-        return corr @ covmat
+        covmat = corr @ covmat
+
+        if not self.mask is None:
+            inds = np.logical_not(self.mask(data_provider, *args, **kwargs))
+            inds2 = np.logical_and(inds.reshape(-1, 1), inds.reshape(1, -1))
+            covmat[inds2] = 0.0
+            covmat[inds, inds] = self.mask_value
+
+        return np.asarray(covmat)
 
 class Thikhonov:
     """
@@ -518,44 +535,46 @@ class ReducedVerticalGrid(APrioriProviderBase):
         retrieval_p_name = "get_" + a_priori.name + "_p_grid"
         self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
 
-    def _get_grid(self, *args, **kwargs):
+    def _get_grids(self, *args, **kwargs):
         f_name = "get_" + self.quantity
         try:
-            grid = getattr(self.owner, f_name)(*args, **kwargs)
+            old_grid = getattr(self.owner, f_name)(*args, **kwargs)
         except:
             raise Exception("Data provider does not provide get function "
                             "for quantity {} required to determine original "
                             "size of retrieval grid."
                             .format(self.quantity))
-        return grid
+        return old_grid, self.new_grid
 
 
     def _interpolate(self, y, *args, **kwargs):
-        old_grid = self._get_grid(*args, **kwargs)
+        old_grid, new_grid = self._get_grids(*args, **kwargs)
+        print(old_grid.shape, y.shape)
         if self.quantity == "pressure":
             f = sp.interpolate.interp1d(old_grid[::-1], y[::-1],
                                         axis = 0,
                                         bounds_error = False,
                                         fill_value = (y[-1], y[0]))
-            yi = f(self.new_grid[::-1])[::-1]
+            yi = f(new_grid[::-1])[::-1]
         else:
             f = sp.interpolate.interp1d(old_grid, y,
                                         axis = 0,
                                         bounds_error = False,
                                         fill_value = (y[0], y[-1]))
-            yi = f(self.new_grid)
+            yi = f(new_grid)
         return yi
 
     def _interpolate_matrix(self, y, *args, **kwargs):
-        old_grid = self._get_grid(*args, **kwargs)
+        old_grid, new_grid = self._get_grids(*args, **kwargs)
+        print(old_grid.shape, new_grid.shape, y.shape)
         if self.quantity == "pressure":
             f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1],
-                                        bounds_error = False)
-            yi = f(self.new_grid[::-1], self.new_grid[::-1])[::-1, ::-1]
+                                        bounds_error = False, fill_value = np.nan)
+            yi = f(new_grid[::-1], new_grid[::-1])[::-1, ::-1]
         else:
             f = sp.interpolate.interp2d(old_grid, old_grid, y,
                                         bounds_error = False)
-            yi = f(self.new_grid, self.new_grid)
+            yi = f(new_grid, new_grid)
         return yi
 
     def get_xa(self, *args, **kwargs):
@@ -585,7 +604,60 @@ class ReducedVerticalGrid(APrioriProviderBase):
 
     def get_retrieval_p_grid(self, *args, **kwargs):
         if self.quantity == "pressure":
-            return self.new_grid
+            return self._get_grids(*args, **kwargs)[1]
         else:
             p = self.owner.get_pressure(*args, **kwargs)
             return self._interpolate(p, *args, **kwargs)
+
+
+class MaskedRegularGrid(ReducedVerticalGrid):
+
+    def __init__(self,
+                 a_priori,
+                 n_points,
+                 mask,
+                 quantity = "pressure",
+                 covariance = None):
+
+        super().__init__(a_priori, None, quantity, covariance)
+        self.n_points = n_points
+        self.mask = mask
+
+        retrieval_p_name = "get_" + a_priori.name + "_p_grid"
+        self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
+
+    def _get_grids(self, *args, **kwargs):
+        mask = self.mask
+        f_name = "get_" + self.quantity
+        try:
+            old_grid = getattr(self.owner, f_name)(*args, **kwargs)
+        except:
+            raise Exception("Data provider does not provide get function "
+                            "for quantity {} required to determine original "
+                            "size of retrieval grid."
+                            .format(self.quantity))
+
+        mask = self.mask(self.owner, *args, **kwargs)
+        i_first = np.where(mask)[0][0]
+        i_last = np.where(mask)[0][-1]
+
+        if i_first > 0:
+            left = 1
+        else:
+            left = 0
+
+        right = left + self.n_points
+
+        if i_last < mask.size - 1:
+            n = right + 1
+        else:
+            n = right
+
+        new_grid = np.zeros(n)
+        new_grid[left : right] = np.linspace(old_grid[i_first], old_grid[i_last], self.n_points)
+        if left > 0:
+            new_grid[0] = old_grid[i_first - 1]
+        if right < n:
+            new_grid[-1] = old_grid[i_last + 1]
+
+        return old_grid, new_grid
