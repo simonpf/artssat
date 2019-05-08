@@ -136,6 +136,19 @@ class MY05(ArtsPSD):
 
         super().__init__(D_max(a, b))
 
+    def convert_from(self, psd):
+        r"""
+        Convert given psd to MY05 PSD with :math:`\nu,\mu,a` and :math:`b`
+        parameters of this instance.
+
+        Parameters:
+
+            psd: Other PSD providing :code:`get_moment` and :code:`get_mass_density`
+            member functions.
+        """
+        self.number_density = psd.get_moment(0)
+        self.mass_density   = psd.get_mass_density()
+
     def _get_parameters(self):
         """
         Checks if parameters of the PSD are available and tries to broadcast
@@ -230,7 +243,7 @@ class MY05(ArtsPSD):
 
     def get_moment(self, p, reference_size_parameter = None):
         r"""
-        Analytically computes the :math:`p` th moment :maht:`M(p)` of the PSD
+        Analytically computes the :math:`p` th moment :math:`M(p)` of the PSD
         using
 
         .. math::

@@ -729,9 +729,13 @@ class RetrievalRun:
             self.covmat_ss = None
 
         if self.oem_diagnostics[0] == 9.0:
-            self.oem_errors = ws.oem_errors.value
-            print("Error in OEM calculation:")
-            print(self.oem_errors)
+            try:
+                self.oem_errors = ws.oem_errors.value
+                print("Error in OEM calculation:")
+                print(self.oem_errors)
+            except Exception as e:
+                self.oem_errors = ["Error in OEM computation.", str(e)]
+
         else:
             self.oem_errors = None
 
