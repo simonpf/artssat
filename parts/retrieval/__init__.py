@@ -425,7 +425,7 @@ class RetrievalRun:
                 return x
             x = x[i : j]
 
-            if transformat_back:
+            if transform_back:
                 x = q.transformation.invert(x)
 
             if interpolate:
