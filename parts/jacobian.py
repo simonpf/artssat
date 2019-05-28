@@ -77,7 +77,7 @@ class Transformation(metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         pass
 
     @abstractmethod
@@ -95,7 +95,7 @@ class Log10(Transformation):
     def __init__(self):
         Transformation.__init__(self)
 
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         ws.jacobianSetFuncTransformation(transformation_func = "log10")
 
     def __call__(self, x):
@@ -111,7 +111,7 @@ class Log(Transformation):
     def __init__(self):
         pass
 
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         ws.jacobianSetFuncTransformation(transformation_func = "log")
 
     def __call__(self, x):
@@ -122,12 +122,12 @@ class Log(Transformation):
 
 class Atanh(Transformation):
 
-    def __init__(self):
+    def __init__(self, z_min = 0.0, z_max = 1.0):
         Transformation.__init__(self)
         ArtsObject.__init__(self)
 
-        self.z_min = 0.0
-        self.z_max = 1.0
+        self.z_min = z_min
+        self.z_max = z_max
 
     @arts_property("Numeric")
     def z_min(self):
@@ -137,7 +137,7 @@ class Atanh(Transformation):
     def z_max(self):
         return 1.2
 
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         ws.jacobianSetFuncTransformation(transformation_func = "atanh",
                                          z_min = self.z_min,
                                          z_max = self.z_max)
@@ -155,13 +155,43 @@ class Identity(Transformation):
     def __init__(self):
         pass
 
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         pass
 
     def __call__(self, x):
         return x
 
     def invert(self, y):
+        return y
+
+class Composition(Transformation):
+    """
+    Composition of multiple transformations.
+
+    The forward transformation is applied left to right
+    as provided to the constructor.
+
+    Arguments:
+        *args: Sequence of transformations.
+    """
+    def __init__(self, *args):
+        if not all([isinstance(a, Transformation) for a in args]):
+            raise Exception("All provided transformation must implement the "
+                            "abstract base class.")
+        self.transformations = args
+
+    def setup(self, ws, data_provider, *args, **kwargs):
+        for t in self.transformations:
+            t.setup(ws, data_provider, *args, **kwargs)
+
+    def __call__(self, x):
+        for t in self.transformations:
+            x = t(x)
+        return x
+
+    def invert(self, y):
+        for t in self.transformations[::-1]:
+            y = t.invert(y)
         return y
 
 ################################################################################

@@ -7,6 +7,7 @@ object that can be used to build a priori data providers.
 """
 from parts.data_provider import DataProviderBase
 from parts.sensor import ActiveSensor, PassiveSensor
+from parts.jacobian import Transformation
 import numpy as np
 import scipy as sp
 import scipy.sparse
@@ -515,13 +516,64 @@ class SensorNoiseAPriori(DataProviderBase):
 # Reduced retrieval grids
 ################################################################################
 
+class PiecewiseLinear(Transformation):
+    def __init__(self, grid):
+        self.grid = grid
+
+    def setup(self, ws, data_provider, *args, **kwargs):
+        old_grid, new_grid = self.grid._get_grids(*args, **kwargs)
+        m = new_grid.size
+        n = old_grid.size
+        A = np.zeros((m, n))
+
+        print(old_grid, new_grid)
+
+        z = new_grid[0]
+        zr = new_grid[1]
+        conditions = [old_grid <= z, old_grid > z]
+        values = [1.0, lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
+        A[0, :] = np.piecewise(old_grid, conditions, values)
+
+        for i in range(1, new_grid.size - 1):
+            zl = new_grid[i - 1]
+            z = new_grid[i]
+            zr = new_grid[i + 1]
+            conditions = [old_grid < z,
+                          old_grid == z,
+                          old_grid > z]
+            values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0),
+                      1.0,
+                      lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
+            A[i, :] = np.piecewise(old_grid, conditions, values)
+
+        z = new_grid[-1]
+        zl = new_grid[-2]
+        conditions = [old_grid < z, old_grid >= z]
+        values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0), 1.0]
+        A[-1, :] = np.piecewise(old_grid, conditions, values)
+        b = np.zeros(n)
+
+        self.A = A
+        self.b = b
+
+        ws.jacobianSetAffineTransformation(transformation_matrix = A, offset_vector = b)
+
+    def __call__(self, x):
+        A_ = A / np.sum(A, axis = -1, keepdims = True)
+        return A_ @ (x - self.b)
+
+    def invert(self, x):
+        return self.A.T @ x + self.b
+
+
 class ReducedVerticalGrid(APrioriProviderBase):
 
     def __init__(self,
                  a_priori,
                  grid,
                  quantity = "pressure",
-                 covariance = None):
+                 covariance = None,
+                 provide_retrieval_grid = True):
 
         if covariance is None:
             super().__init__(a_priori.name, a_priori)
@@ -533,7 +585,8 @@ class ReducedVerticalGrid(APrioriProviderBase):
         self._covariance = covariance
 
         retrieval_p_name = "get_" + a_priori.name + "_p_grid"
-        self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
+        if provide_retrieval_grid:
+            self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
 
     def _get_grids(self, *args, **kwargs):
         f_name = "get_" + self.quantity
@@ -617,14 +670,17 @@ class MaskedRegularGrid(ReducedVerticalGrid):
                  n_points,
                  mask,
                  quantity = "pressure",
-                 covariance = None):
+                 covariance = None,
+                 provide_retrieval_grid = True):
 
-        super().__init__(a_priori, None, quantity, covariance)
+        super().__init__(a_priori, None, quantity, covariance,
+                         provide_retrieval_grid = provide_retrieval_grid)
         self.n_points = n_points
         self.mask = mask
 
         retrieval_p_name = "get_" + a_priori.name + "_p_grid"
-        self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
+        if provide_retrieval_grid:
+            self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
 
     def _get_grids(self, *args, **kwargs):
         mask = self.mask

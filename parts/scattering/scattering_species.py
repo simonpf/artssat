@@ -103,8 +103,9 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
 
         grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
         grids = [g for g in grids if g.size > 0]
-        y = self.retrieval.interpolate_to_grids(x, grids)
-        x = self.transformation.invert(y)
+
+        x = self.transformation.invert(x)
+        x = self.retrieval.interpolate_to_grids(x, grids)
 
         pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
         ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(x, pbf_shape)

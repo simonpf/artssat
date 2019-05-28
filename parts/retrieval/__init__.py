@@ -239,12 +239,12 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
                             "the covariance or the precision matrix of retrieval"
                             "quantity {0}." .format(self.quantity.name))
 
+        self.quantity.transformation.setup(ws, data_provider, *args, **kwargs)
+
         if not covmat is None:
             ws.covmat_sxAddBlock(block = covmat)
         if not precmat is None:
             ws.covmat_sxAddInverseBlock(block = precmat)
-
-        self.quantity.transformation.setup(ws)
 
     def get_iteration_preparations(self, index):
 
@@ -416,7 +416,7 @@ class RetrievalRun:
 
         self.x = None
 
-    def get_result(self, q, attribute = "x", interpolate = False):
+    def get_result(self, q, attribute = "x", interpolate = False, transform_back = False):
 
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
@@ -424,6 +424,9 @@ class RetrievalRun:
             if x is None:
                 return x
             x = x[i : j]
+
+            if transformat_back:
+                x = q.transformation.invert(x)
 
             if interpolate:
                 ws = self.simulation.workspace

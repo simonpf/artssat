@@ -201,10 +201,9 @@ class OutputFile:
             #
 
             for rq in retrieval.retrieval_quantities:
-                x = r.get_result(rq, interpolate = True)
+                x = r.get_result(rq, interpolate = True, transform_back = True)
                 if x is None:
-                    x = r.get_xa(rq, interpolate = True)
-                x = rq.transformation.invert(x)
+                    x = r.get_xa(rq, interpolate = True, transform_back = True)
                 var = g.variables[rq.name]
                 var.__setitem__(list(args) + [slice(0, None)], x)
 
