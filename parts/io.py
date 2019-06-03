@@ -228,7 +228,11 @@ class OutputFile:
 
                 name = "yf_" + s.name
                 var = g[name]
-                var.__setitem__(list(args) + [slice(0, None)], yf)
+                try:
+                    var.__setitem__(list(args) + [slice(0, None)], yf)
+                except:
+                    print("Error storing yf: ", r.yf.shape, i, j)
+                    pass
 
             #
             # Remaining retrieval output
@@ -252,7 +256,7 @@ class OutputFile:
                 var = g["jacobian"]
                 var.__setitem__(list(args) + [slice(0, None)] * 2, ws.jacobian.value)
 
-                    
+
 
     def store_results(self, simulation):
 
