@@ -95,12 +95,12 @@ class SpatialCorrelation:
         covmat = self.covariance.get_covariance(data_provider, *args, **kwargs)
         if isinstance(covmat, sp.sparse.spmatrix):
             covmat = covmat.todense()
-
-        covmat = corr @ covmat
+        diag = np.sqrt(covmat.diagonal())
+        covmat = corr * np.array((diag.T * diag))
 
         if not self.mask is None:
             inds = np.logical_not(self.mask(data_provider, *args, **kwargs))
-            inds2 = np.logical_and(inds.reshape(-1, 1), inds.reshape(1, -1))
+            inds2 = np.logical_or(inds.reshape(-1, 1), inds.reshape(1, -1))
             covmat[inds2] = 0.0
             covmat[inds, inds] = self.mask_value
 
@@ -526,31 +526,38 @@ class PiecewiseLinear(Transformation):
         n = old_grid.size
         A = np.zeros((m, n))
 
-        print(old_grid, new_grid)
+        if m == 3:
+            zl = new_grid[0]
+            zr = new_grid[-1]
+            A[0, old_grid < zl] = 1.0
+            A[1, np.logical_and(old_grid >= zl, old_grid < zr)] = 1.0
+            A[2, old_grid >= zr] = 1.0
+        else:
 
-        z = new_grid[0]
-        zr = new_grid[1]
-        conditions = [old_grid <= z, old_grid > z]
-        values = [1.0, lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
-        A[0, :] = np.piecewise(old_grid, conditions, values)
+            z = new_grid[0]
+            zr = new_grid[1]
+            conditions = [old_grid <= z, old_grid > z]
+            values = [1.0, lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
+            A[0, :] = np.piecewise(old_grid, conditions, values)
 
-        for i in range(1, new_grid.size - 1):
-            zl = new_grid[i - 1]
-            z = new_grid[i]
-            zr = new_grid[i + 1]
-            conditions = [old_grid < z,
-                          old_grid == z,
-                          old_grid > z]
-            values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0),
-                      1.0,
-                      lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
-            A[i, :] = np.piecewise(old_grid, conditions, values)
+            for i in range(1, new_grid.size - 1):
+                zl = new_grid[i - 1]
+                z = new_grid[i]
+                zr = new_grid[i + 1]
+                conditions = [old_grid < z,
+                            old_grid == z,
+                            old_grid > z]
+                values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0),
+                        1.0,
+                        lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
+                A[i, :] = np.piecewise(old_grid, conditions, values)
 
-        z = new_grid[-1]
-        zl = new_grid[-2]
-        conditions = [old_grid < z, old_grid >= z]
-        values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0), 1.0]
-        A[-1, :] = np.piecewise(old_grid, conditions, values)
+            z = new_grid[-1]
+            zl = new_grid[-2]
+            conditions = [old_grid < z, old_grid >= z]
+            values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0), 1.0]
+            A[-1, :] = np.piecewise(old_grid, conditions, values)
+
         b = np.zeros(n)
 
         self.A = A
