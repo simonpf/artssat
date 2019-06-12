@@ -678,7 +678,8 @@ class MaskedRegularGrid(ReducedVerticalGrid):
                  mask,
                  quantity = "pressure",
                  covariance = None,
-                 provide_retrieval_grid = True):
+                 provide_retrieval_grid = True,
+                 transition = None):
 
         super().__init__(a_priori, None, quantity, covariance,
                          provide_retrieval_grid = provide_retrieval_grid)
@@ -719,8 +720,15 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         new_grid = np.zeros(n)
         new_grid[left : right] = np.linspace(old_grid[i_first], old_grid[i_last], self.n_points)
         if left > 0:
-            new_grid[0] = old_grid[i_first - 1]
+            if transition is None:
+                new_grid[0] = old_grid[i_first - 1]
+            else:
+                new_grid[0] = new_grid[1] - transition
+
         if right < n:
-            new_grid[-1] = old_grid[i_last + 1]
+            if transition is None:
+                new_grid[-1] = old_grid[i_last + 1]
+            else:
+                new_grid[-1] = new_grid[-2] + transition
 
         return old_grid, new_grid
