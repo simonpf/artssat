@@ -690,6 +690,8 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         if provide_retrieval_grid:
             self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
 
+        self.transition = transition
+
     def _get_grids(self, *args, **kwargs):
         mask = self.mask
         f_name = "get_" + self.quantity
@@ -720,15 +722,15 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         new_grid = np.zeros(n)
         new_grid[left : right] = np.linspace(old_grid[i_first], old_grid[i_last], self.n_points)
         if left > 0:
-            if transition is None:
+            if self.transition is None:
                 new_grid[0] = old_grid[i_first - 1]
             else:
-                new_grid[0] = new_grid[1] - transition
+                new_grid[0] = new_grid[1] - self.transition
 
         if right < n:
-            if transition is None:
+            if self.transition is None:
                 new_grid[-1] = old_grid[i_last + 1]
             else:
-                new_grid[-1] = new_grid[-2] + transition
+                new_grid[-1] = new_grid[-2] + self.transition
 
         return old_grid, new_grid
