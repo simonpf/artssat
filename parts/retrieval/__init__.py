@@ -705,6 +705,7 @@ class RetrievalRun:
             ws.OEM(**self.settings)
 
         except Exception as e:
+            print(e)
             ws.oem_diagnostics = 9 * np.ones(5)
             ws.yf       = None
             ws.jacobian = None

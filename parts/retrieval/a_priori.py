@@ -421,8 +421,8 @@ class FixedAPriori(APrioriProviderBase):
 
 class FunctionalAPriori(APrioriProviderBase):
     """
-    Returns an a priori profile that does not depend on the atmospheric
-    state.
+    Returns an a priori profile that is a functional  transform
+    of some variable.
     """
     def __init__(self,
                  name,
@@ -453,6 +453,39 @@ class FunctionalAPriori(APrioriProviderBase):
             xa[mask] = self.mask_value
 
         return xa
+
+################################################################################
+# Reference A Priori
+################################################################################
+
+class ReferenceAPriori(APrioriProviderBase):
+    """
+    Forwards value from data provider as a priori state. Useful for
+    testing of retrieval implementation.
+    """
+    def __init__(self,
+                 name,
+                 covariance,
+                 mask = None,
+                 mask_value = 1e-12,
+                 transformation = None,
+                 variable = None):
+        super().__init__(name, covariance)
+        self.mask       = mask
+        self.mask_value = mask_value
+        self.transformation = transformation
+
+        if not variable is None:
+            self.variable = variable
+        else:
+            self.variable = name
+
+    def get_xa(self, *args, **kwargs):
+        f_get = getattr(self.owner, "get_" + self.variable)
+        x = f_get(*args, **kwargs)
+        if not self.transformation is None:
+            x = self.transformation(x)
+        return x
 
 ################################################################################
 # Sensor a priori

@@ -92,14 +92,15 @@ class Log10(Transformation):
     """
     The decadal logarithm transformation $f(x) = \log_{10}(x)$.
     """
-    def __init__(self):
+    def __init__(self, minimum = 1e-20):
         Transformation.__init__(self)
+        self.minimum = minimum
 
     def setup(self, ws, data_provider, *args, **kwargs):
         ws.jacobianSetFuncTransformation(transformation_func = "log10")
 
     def __call__(self, x):
-        return np.log10(x)
+        return np.log10(np.maximum(x, self.minimum))
 
     def invert(self, y):
         return 10.0 ** y
@@ -143,6 +144,8 @@ class Atanh(Transformation):
                                          z_max = self.z_max)
 
     def __call__(self, x):
+        x = np.minimum(x, 0.99 * self.z_max)
+        x = np.maximum(x, self.z_min)
         return np.arctanh(2.0 * (x - self.z_min) / (self.z_max - self.z_min) - 1)
 
     def invert(self, y):
