@@ -216,6 +216,10 @@ class APrioriProviderBase(DataProviderBase):
         xa_name = "get_" + name + "_xa"
         self.__dict__[xa_name] = self.get_xa
 
+        if hasattr(self, "get_x0"):
+            x0_name = "get_" + name + "_x0"
+            self.__dict__[x0_name] = self.get_x0
+
         if hasattr(covariance, "get_covariance"):
             covariance_name = "get_" + name + "_covariance"
             self.__dict__[covariance_name] = self.get_covariance
@@ -468,11 +472,13 @@ class ReferenceAPriori(APrioriProviderBase):
                  covariance,
                  mask = None,
                  mask_value = 1e-12,
+                 a_priori = None,
                  transformation = None,
                  variable = None):
         super().__init__(name, covariance)
         self.mask       = mask
         self.mask_value = mask_value
+        self.a_priori = a_priori
         self.transformation = transformation
 
         if not variable is None:
@@ -481,10 +487,29 @@ class ReferenceAPriori(APrioriProviderBase):
             self.variable = name
 
     def get_xa(self, *args, **kwargs):
+        if not self.a_priori is None:
+            self.a_priori.owner = self.owner
+            return self.a_priori.get_xa(*args, **kwargs)
+        else:
+            f_get = getattr(self.owner, "get_" + self.variable)
+            x = f_get(*args, **kwargs)
+            if not self.transformation is None:
+                x = self.transformation(x)
+            return x
+
+    def get_x0(self, *args, **kwargs):
+        print("returning x0!")
+
         f_get = getattr(self.owner, "get_" + self.variable)
         x = f_get(*args, **kwargs)
         if not self.transformation is None:
             x = self.transformation(x)
+
+        if not self.a_priori is None:
+            if hasattr(self.a_priori, "mask") and not self.a_priori.mask is None:
+                mask = np.logical_not(self.a_priori.mask(self.owner, *args, **kwargs))
+                x[mask] = self.a_priori.mask_value
+
         return x
 
 ################################################################################
@@ -674,6 +699,11 @@ class ReducedVerticalGrid(APrioriProviderBase):
         self.a_priori.owner = self.owner
         xa = self.a_priori.get_xa(*args, **kwargs)
         return self._interpolate(xa, *args, **kwargs)
+
+    def get_x0(self, *args, **kwargs):
+        self.a_priori.owner = self.owner
+        x0 = self.a_priori.get_x0(*args, **kwargs)
+        return self._interpolate(x0, *args, **kwargs)
 
     def get_covariance(self, *args, **kwargs):
         if self._covariance is None:
