@@ -702,7 +702,10 @@ class ReducedVerticalGrid(APrioriProviderBase):
 
     def get_x0(self, *args, **kwargs):
         self.a_priori.owner = self.owner
-        x0 = self.a_priori.get_x0(*args, **kwargs)
+        if hasattr(self.a_priori, "get_x0"):
+            x0 = self.a_priori.get_x0(*args, **kwargs)
+        else:
+            x0 = self.a_priori.get_xa(*args, **kwargs)
         return self._interpolate(x0, *args, **kwargs)
 
     def get_covariance(self, *args, **kwargs):
