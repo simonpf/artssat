@@ -183,6 +183,15 @@ class Composition(Transformation):
                             "abstract base class.")
         self.transformations = args
 
+
+        if any([hasattr(t, "initialize") for t in self.transformations]):
+            self.__dict__["initialize"] = self._initialize
+
+    def _initialize(self, data_provider, *args, **kwargs):
+        for t in self.transformations:
+            if hasattr(t, "initialize"):
+                t.initialize(data_provider, *args, **kwargs)
+
     def setup(self, ws, data_provider, *args, **kwargs):
         for t in self.transformations:
             t.setup(ws, data_provider, *args, **kwargs)

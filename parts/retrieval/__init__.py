@@ -536,6 +536,12 @@ class RetrievalRun:
 
         for rq in self.simulation.retrieval.retrieval_quantities:
 
+            # Need to setup transformation in case RQ has not yet been
+            # retrieved.
+            t = rq.transformation
+            if hasattr(t, "initialize"):
+                t.initialize(data_provider, *args, **kwargs)
+
             # Get result from previous run (x_p).
             # If not available set to a priori.
             x_p = self.get_result(rq)
@@ -706,7 +712,6 @@ class RetrievalRun:
             ws.OEM(**self.settings)
 
         except Exception as e:
-            print(e)
             ws.oem_diagnostics = 9 * np.ones(5)
             ws.yf       = None
             ws.jacobian = None

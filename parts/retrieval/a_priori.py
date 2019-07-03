@@ -498,7 +498,6 @@ class ReferenceAPriori(APrioriProviderBase):
             return x
 
     def get_x0(self, *args, **kwargs):
-        print("returning x0!")
 
         f_get = getattr(self.owner, "get_" + self.variable)
         x = f_get(*args, **kwargs)
@@ -578,7 +577,7 @@ class PiecewiseLinear(Transformation):
     def __init__(self, grid):
         self.grid = grid
 
-    def setup(self, ws, data_provider, *args, **kwargs):
+    def initialize(self, data_provider, *args, **kwargs):
         old_grid, new_grid = self.grid._get_grids(*args, **kwargs)
         m = new_grid.size
         n = old_grid.size
@@ -621,7 +620,10 @@ class PiecewiseLinear(Transformation):
         self.A = A
         self.b = b
 
-        ws.jacobianSetAffineTransformation(transformation_matrix = A, offset_vector = b)
+    def setup(self, ws, data_provider, *args, **kwargs):
+        self.initialize(data_provider, *args, **kwargs)
+        ws.jacobianSetAffineTransformation(transformation_matrix = self.A,
+                                           offset_vector = self.b)
 
     def __call__(self, x):
         A_ = A / np.sum(A, axis = -1, keepdims = True)
@@ -667,7 +669,6 @@ class ReducedVerticalGrid(APrioriProviderBase):
 
     def _interpolate(self, y, *args, **kwargs):
         old_grid, new_grid = self._get_grids(*args, **kwargs)
-        print(old_grid.shape, y.shape)
         if self.quantity == "pressure":
             f = sp.interpolate.interp1d(old_grid[::-1], y[::-1],
                                         axis = 0,
@@ -684,7 +685,6 @@ class ReducedVerticalGrid(APrioriProviderBase):
 
     def _interpolate_matrix(self, y, *args, **kwargs):
         old_grid, new_grid = self._get_grids(*args, **kwargs)
-        print(old_grid.shape, new_grid.shape, y.shape)
         if self.quantity == "pressure":
             f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1],
                                         bounds_error = False, fill_value = np.nan)
