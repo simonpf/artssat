@@ -535,6 +535,7 @@ class RetrievalRun:
         #
 
         for rq in self.simulation.retrieval.retrieval_quantities:
+
             # Get result from previous run (x_p).
             # If not available set to a priori.
             x_p = self.get_result(rq)

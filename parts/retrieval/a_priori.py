@@ -770,8 +770,13 @@ class MaskedRegularGrid(ReducedVerticalGrid):
                             .format(self.quantity))
 
         mask = self.mask(self.owner, *args, **kwargs)
-        i_first = np.where(mask)[0][0]
-        i_last = np.where(mask)[0][-1]
+
+        if len(np.where(mask)[0]) > 0:
+            i_first = np.where(mask)[0][0]
+            i_last = np.where(mask)[0][-1]
+        else:
+            i_first = 0
+            i_last  = len(mask) - 1
 
         if i_first > 0:
             left = 1
