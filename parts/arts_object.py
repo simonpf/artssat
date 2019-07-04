@@ -515,6 +515,7 @@ class ArtsProperty:
         group of the :code:``
 
         """
+        print(self.group)
         if type(self.group) == str:
             converted = WorkspaceVariable.convert(self.group, value)
 
@@ -555,6 +556,7 @@ class ArtsProperty:
         if self.shape is None:
             return value
 
+        print(value, self.shape)
         # catch inconsistent number of dimensions.
         if not len(shape) == len(self.shape):
 

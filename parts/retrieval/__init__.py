@@ -117,7 +117,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,))
+    @arts_property("Vector", shape = (dim.Joker,))
     def xa(self):
         """
         The mean of the Gaussian a priori distribution assumed for the
@@ -125,7 +125,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,), optional = True)
+    @arts_property("Vector", shape = (dim.Joker,), optional = True)
     def x0(self):
         """
         Optional start value for the retrieval iteration.
@@ -166,7 +166,9 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         try:
             fname = "get_" + self.quantity.name + "_xa"
             xa_fun = getattr(data_provider, fname)
+            xa = xa_fun(*args, **kwargs)
             self.xa = xa_fun(*args, **kwargs)
+
         except AttributeError:
             raise Exception("The data provider must provide a get method for "
                            "the a priori state of retrieval quantity {0}."
