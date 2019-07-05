@@ -445,9 +445,6 @@ class RetrievalRun:
 
     def get_xa(self, q, interpolate = True, transform_back = False):
 
-        if transform_back:
-            x = q.transformation.invert(x)
-
         if interpolate:
             ws = self.simulation.workspace
             grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
@@ -455,6 +452,9 @@ class RetrievalRun:
             xa = q.retrieval.interpolate_to_grids(q.retrieval.xa, grids)
         else:
             xa = q.retrieval.xa
+
+        if transform_back:
+            xa = q.transformation.invert(xa)
 
         return xa
 

@@ -806,5 +806,4 @@ class MaskedRegularGrid(ReducedVerticalGrid):
             else:
                 new_grid[-1] = new_grid[-2] + self.transition
 
-        print(old_grid, new_grid)
         return old_grid, new_grid
