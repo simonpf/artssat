@@ -946,7 +946,7 @@ class CloudSat(ActiveSensor):
                          range_bins = range_bins)
         self.instrument_pol       = [1]
         self.instrument_pol_array = [[1]]
-        self.extinction_scaling   = 1.0
+        self.extinction_scaling   = 0.0
         self.y_min = -30.0
 
 ici = ICI()

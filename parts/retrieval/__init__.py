@@ -445,16 +445,18 @@ class RetrievalRun:
 
     def get_xa(self, q, interpolate = True, transform_back = False):
 
+        if transform_back:
+            print(q.retrieval.xa)
+            xa = q.transformation.invert(q.retrieval.xa)
+            print(xa)
+        else:
+            xa = q.retrieval.xa
+
         if interpolate:
             ws = self.simulation.workspace
             grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
             grids = [g for g in grids if g.size > 0]
-            xa = q.retrieval.interpolate_to_grids(q.retrieval.xa, grids)
-        else:
-            xa = q.retrieval.xa
-
-        if transform_back:
-            xa = q.transformation.invert(xa)
+            xa = q.retrieval.interpolate_to_grids(xa, grids)
 
         return xa
 
@@ -549,11 +551,13 @@ class RetrievalRun:
             if hasattr(t, "initialize"):
                 t.initialize(data_provider, *args, **kwargs)
 
+            # Get data for retrieval quantity.
+            rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
+
             # Get result from previous run (x_p).
             # If not available set to a priori.
             x_p = self.get_result(rq)
             if x_p is None:
-                rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
                 rq.retrieval.get_xa(data_provider, *args, **kwargs)
                 x_p = rq.retrieval.xa
             rq.set_from_x(ws, x_p)
