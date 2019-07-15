@@ -235,7 +235,7 @@ class JacobianCalculation:
         jq.jacobian = jq.jacobian_class(jq, len(self.jacobian_quantities))
         self.jacobian_quantities += [jq]
 
-    def setup(self, ws):
+    def setup(self, ws, data_provider, *args, **kwargs):
         """
         Setup the Jacobian calculations on the given workspace.
 
@@ -250,6 +250,9 @@ class JacobianCalculation:
             ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
             on which to setup the Jacobian calculation.
 
+            data_provider: The data provider object providing the data for
+            the simulation.
+
         """
         if not self.jacobian_quantities:
             ws.jacobianOff()
@@ -257,7 +260,7 @@ class JacobianCalculation:
             ws.jacobianInit()
             for jq in self.jacobian_quantities:
                 jq.jacobian.setup(ws)
-                jq.transformation.setup(ws)
+                jq.transformation.setup(ws, data_provider, *args, **kwargs)
             ws.jacobianClose()
 
 
@@ -336,7 +339,9 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
         super().__init__()
         self.quantity = quantity
         self.index    = index
-        self.quantity.transformation = Identity()
+
+        if self.quantity.transformation is None:
+            self.quantity.transformation = Identity()
 
     @property
     def name(self):

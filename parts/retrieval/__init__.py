@@ -446,9 +446,7 @@ class RetrievalRun:
     def get_xa(self, q, interpolate = True, transform_back = False):
 
         if transform_back:
-            print(q.retrieval.xa)
             xa = q.transformation.invert(q.retrieval.xa)
-            print(xa)
         else:
             xa = q.retrieval.xa
 
@@ -868,13 +866,13 @@ class RetrievalCalculation:
 
         # Determine sensor indices of y vector
         i_start = 0
-        sensor_indices = {}
+        self.sensor_indices = {}
         for s in simulation.active_sensors:
             s.get_data(simulation.workspace, simulation.data_provider, *args, **kwargs)
-            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            self.sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
             i_start += s.y_vector_length
         for s in simulation.passive_sensors:
-            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            self.sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
             i_start += s.y_vector_length
 
         self._y = self._get_y_vector(simulation, *args, **kwargs)
@@ -891,7 +889,7 @@ class RetrievalCalculation:
                                      simulation,
                                      self._y,
                                      self.settings,
-                                     sensor_indices,
+                                     self.sensor_indices,
                                      self.retrieval_quantities)
             retrieval.run(*args, **kwargs)
             self.results = retrieval
@@ -913,7 +911,7 @@ class RetrievalCalculation:
                                          simulation,
                                          self._y,
                                          self.settings,
-                                         sensor_indices,
+                                         self.sensor_indices,
                                          self.retrieval_quantities,
                                          previous_run = previous_run)
 

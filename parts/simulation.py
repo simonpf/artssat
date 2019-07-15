@@ -118,19 +118,23 @@ class ArtsSimulation:
                     in zip(s, self.dimensions)]):
             raise Exception(err)
 
-    def _run_forward_simulation(self):
+    def _run_forward_simulation(self, sensors = []):
 
         ws = self.workspace
 
         # Jacobian setup
-        self.jacobian.setup(ws)
+        self.jacobian.setup(ws, self.data_provider, *self.args, **self.kwargs)
 
         # Run atmospheric checks
         self.atmosphere.run_checks(ws)
 
         i_active = []
         i_passive = []
-        for i,s in enumerate(self.sensors):
+
+        if len(sensors) == 0:
+            sensors = self.sensors
+
+        for i,s in enumerate(sensors):
             if isinstance(s, ActiveSensor):
                 i_active += [i]
             if isinstance(s, PassiveSensor):
@@ -153,7 +157,7 @@ class ArtsSimulation:
             # TODO: Get around the need to fix this.
             ws.stokes_dim = s.stokes_dimension
 
-            s = self.sensors[i_active[0]]
+            s = sensors[i_active[0]]
 
             if self.atmosphere.scattering:
                 f = s.make_y_calc_function(append = False)
@@ -174,7 +178,7 @@ class ArtsSimulation:
 
 
         # Simulate passive sensors
-        for s in [self.sensors[i] for i in i_passive]:
+        for s in [sensors[i] for i in i_passive]:
 
             # TODO: Get around the need to fix this.
             ws.stokes_dim = s.stokes_dimension
@@ -235,6 +239,7 @@ class ArtsSimulation:
 
             self.retrieval.run(self, *args, **kwargs)
         else:
+
             self._run_forward_simulation()
 
     def _run_ranges_mpi(self, ranges, *args, callback = None, **kwargs):

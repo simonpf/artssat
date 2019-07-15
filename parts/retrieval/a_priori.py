@@ -227,6 +227,10 @@ class APrioriProviderBase(DataProviderBase):
             precision_name = "get_" + name + "_precision"
             self.__dict__[precision_name] = self.get_precision
 
+        if hasattr(self, "get_mask"):
+            precision_name = "get_" + name + "_mask"
+            self.__dict__[precision_name] = self.get_mask
+
         self.name = name
         self._covariance = covariance
 
@@ -400,10 +404,19 @@ class FixedAPriori(APrioriProviderBase):
                  covariance,
                  mask = None,
                  mask_value = 1e-12):
+
+        if not mask is None:
+            if not hasattr(self, "get_mask"):
+                self.__dict__["get_mask"] = self._get_mask
+
         super().__init__(name, covariance)
         self._xa   = np.array(xa)
         self.mask = mask
         self.mask_value = mask_value
+
+    def _get_mask(self, *args, **kwargs):
+        mask = self.mask(self.owner, *args, **kwargs)
+        return mask.astype(np.float)
 
     def get_xa(self, *args, **kwargs):
 
@@ -435,11 +448,19 @@ class FunctionalAPriori(APrioriProviderBase):
                  covariance,
                  mask = None,
                  mask_value = 1e-12):
+
+        if not mask is None:
+            self.__dict__["get_mask"] = self._get_mask
+
         super().__init__(name, covariance)
         self.variable   = variable
         self.f          = f
         self.mask       = mask
         self.mask_value = mask_value
+
+    def _get_mask(self, *args, **kwargs):
+        mask = self.mask(self.owner, *args, **kwargs)
+        return mask.astype(np.float)
 
     def get_xa(self, *args, **kwargs):
 
@@ -642,6 +663,11 @@ class ReducedVerticalGrid(APrioriProviderBase):
                  covariance = None,
                  provide_retrieval_grid = True):
 
+        if hasattr(a_priori, "mask"):
+            if not a_priori.mask is None:
+                if not hasattr(self, "get_mask"):
+                    self.__dict__["get_mask"] = self._get_mask
+
         if covariance is None:
             super().__init__(a_priori.name, a_priori)
         else:
@@ -695,6 +721,12 @@ class ReducedVerticalGrid(APrioriProviderBase):
             yi = f(new_grid, new_grid)
         return yi
 
+    def _get_mask(self, *args, **kwargs):
+        mask = self.a_priori.get_mask(*args, **kwargs).astype(np.float)
+        mask_i = self._interpolate(xa, *args, **kwargs)
+        mask_i[mask_i > 0.0] = 1.0
+        return mask_i
+
     def get_xa(self, *args, **kwargs):
         self.a_priori.owner = self.owner
         xa = self.a_priori.get_xa(*args, **kwargs)
@@ -747,6 +779,10 @@ class MaskedRegularGrid(ReducedVerticalGrid):
                  provide_retrieval_grid = True,
                  transition = None):
 
+        if not a_priori.mask is None:
+            if not hasattr(self, "get_mask"):
+                self.__dict__["get_mask"] = self._get_mask
+
         super().__init__(a_priori, None, quantity, covariance,
                          provide_retrieval_grid = provide_retrieval_grid)
         self.n_points = n_points
@@ -757,6 +793,35 @@ class MaskedRegularGrid(ReducedVerticalGrid):
             self.__dict__[retrieval_p_name] = self.get_retrieval_p_grid
 
         self.transition = transition
+
+    def _get_mask(self, *args, **kwargs):
+        mask = self.mask(self.owner, *args, **kwargs)
+
+        if len(np.where(mask)[0]) > 0:
+            i_first = np.where(mask)[0][0]
+            i_last = np.where(mask)[0][-1]
+        else:
+            i_first = 0
+            i_last  = len(mask)
+
+        n_points = max(min(self.n_points, i_last - i_first), 1)
+
+        if i_first > 0:
+            left = 1
+        else:
+            left = 0
+
+        right = left + n_points
+
+        if i_last < mask.size - 1:
+            n = right + 1
+        else:
+            n = right
+
+        mask = np.ones((n,))
+        mask[:left] = 0.0
+        mask[right:] = 0.0
+        return mask
 
     def _get_grids(self, *args, **kwargs):
         mask = self.mask

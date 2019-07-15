@@ -23,7 +23,8 @@ class Binned(ArtsPSD):
         """
         self.size_parameter = psd.size_parameter
         y = psd.evaluate(self.x).data
-        self.moments = [y[:, i] for i in range(self.x.size)]
+        inds = (slice(None),) * (len(y.shape) - 1)
+        self.moments = [y[inds + (i,)] for i in range(self.x.size)]
 
     def __init__(self,
                  x,

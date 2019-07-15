@@ -101,6 +101,12 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
 
     def set_from_x(self, ws, x):
 
+        if not self.retrieval.limit_high == None:
+            x = np.minimum(x, self.retrieval.limit_high)
+
+        if not self.retrieval.limit_low == None:
+            x = np.maximum(x, self.retrieval.limit_low)
+
         grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
         grids = [g for g in grids if g.size > 0]
 
