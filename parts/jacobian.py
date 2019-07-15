@@ -283,6 +283,7 @@ class JacobianQuantity(metaclass = ABCMeta):
     """
 
     def __init__(self):
+        self._transformation = None
         self._jacobian = None
 
     @abstractproperty
@@ -310,6 +311,21 @@ class JacobianQuantity(metaclass = ABCMeta):
                              "own jacobian_class.")
         else:
             self._jacobian = j
+
+    @property
+    def transformation(self):
+        """
+        The transformation to be applied to the retrieval quantity.
+        """
+        return self._transformation
+
+    @transformation.setter
+    def transformation(self, t):
+        if not isinstance(t, Transformation):
+            raise TypeError("The transformation of a retrieval quantity must"\
+                            " be of type Transformation.")
+        else:
+            self._transformation = t
 
 ################################################################################
 # JacobianBase

@@ -52,7 +52,9 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
                  jacobian = False):
 
         name = species_name + "_" + moment_name
-        super().__init__(name, (0, 0, 0), jacobian)
+        AtmosphericQuantity.__init__(self, name, (0, 0, 0), jacobian)
+        RetrievalQuantity.__init__(self)
+
 
         self._jacobian = None
         self._retrieval = None

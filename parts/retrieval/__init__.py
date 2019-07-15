@@ -301,25 +301,9 @@ class RetrievalQuantity(JacobianQuantity):
     """
 
     def __init__(self):
-        self._transformation = None
         self._fixed          = None
         self._retrieval      = None
         super().__init__()
-
-    @property
-    def transformation(self):
-        """
-        The transformation to be applied to the retrieval quantity.
-        """
-        return self._transformation
-
-    @transformation.setter
-    def transformation(self, t):
-        if not isinstance(t, Transformation):
-            raise TypeError("The transformation of a retrieval quantity must"\
-                            " be of type Transformation.")
-        else:
-            self._transformation = t
 
     @property
     def fixed(self):
