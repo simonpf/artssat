@@ -719,6 +719,19 @@ class ReducedVerticalGrid(APrioriProviderBase):
             f = sp.interpolate.interp2d(old_grid, old_grid, y,
                                         bounds_error = False)
             yi = f(new_grid, new_grid)
+
+        if (yi.shape[0] > 1) and (yi.shape[1] > 1):
+            # Check for degeneracy at boundaries.
+            if np.all(yi[0, :] == yi[1, :]):
+                yi[0, 0] = yi[1, 1]
+                yi[0, 1:] = 0.0
+                yi[1:, 0] = 0.0
+
+                # Check for degeneracy at boundaries.
+                if np.all(yi[-1, :] == yi[-2, :]):
+                    yi[-1, -1] = yi[-2, -2]
+                    yi[-1, 1:] = 0.0
+                    yi[1:, -1] = 0.0
         return yi
 
     def _get_mask(self, *args, **kwargs):
@@ -746,8 +759,10 @@ class ReducedVerticalGrid(APrioriProviderBase):
             covmat = self.a_priori.get_covariance(*args, **kwargs)
             if isinstance(covmat, sp.sparse.spmatrix):
                 covmat = covmat.todense()
+            print("interpolating matrix")
             return self._interpolate_matrix(covmat, *args, **kwargs)
         else:
+            print("not interpolating matrix")
             return self._covariance.get_covariance(self.owner, *args, **kwargs)
 
     def get_precision(self, *args, **kwargs):
