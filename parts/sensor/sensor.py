@@ -417,7 +417,8 @@ class Sensor(ArtsObject):
 
         """
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
-        if self.sensor_response == []:
+        if isinstance(self.sensor_response, list) and self.sensor_response == []:
+            print("sensor_responseInit ", self.name)
             self.call_wsm(ws, wsm["sensor_responseInit"])
         self.call_wsm(ws, wsm["sensor_checkedCalc"])
 

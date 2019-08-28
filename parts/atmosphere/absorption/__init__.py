@@ -344,7 +344,7 @@ class H2O(AbsorptionSpecies):
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
-                 model = None,
+                 model = "PWR98",
                  on_the_fly = True,
                  zeeman = False):
         super().__init__("H2O",
@@ -352,7 +352,7 @@ class H2O(AbsorptionSpecies):
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
-                         model = "PWR98",
+                         model = model,
                          on_the_fly = on_the_fly,
                          zeeman = zeeman)
 

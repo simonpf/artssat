@@ -99,7 +99,7 @@ class ArtsSimulation:
         ws.Copy(ws.iy_surface_agenda, ws.iy_surface_agenda__UseSurfaceRtprop)
         ws.Copy(ws.iy_main_agenda, ws.iy_main_agenda__Emission)
 
-        self.atmosphere.setup(ws)
+        self.atmosphere.setup(ws, self.sensors)
 
         for s in self.sensors:
             s.setup(ws, self.atmosphere.scattering)

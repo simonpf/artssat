@@ -8,6 +8,7 @@ import numpy as np
 from parts.atmosphere.cloud_box import CloudBox
 from parts.jacobian import  JacobianBase
 from parts.retrieval import RetrievalBase, RetrievalQuantity
+from parts.atmosphere.catalogs import LineCatalog, Perrin
 
 class TemperatureJacobian(JacobianBase):
     def __init__(self,
@@ -127,6 +128,8 @@ class Atmosphere:
             self._required_data += surface.required_data
             self.surface_data_indices = range(nd, len(self._required_data))
 
+        self._catalog = Perrin()
+
     #
     # Dimensions
     #
@@ -175,6 +178,24 @@ class Atmosphere:
     @property
     def cloud_box(self):
         return self._cloud_box
+
+    #
+    # Catalog
+    #
+
+    @property
+    def catalog(self):
+        """
+        Line catalog from which to read absorption line data.
+        """
+        return self._catalog
+
+    @catalog.setter
+    def catalog(self, c):
+        if isinstance(c, LineCatalog) or c is None:
+            self._catalog = c
+        else:
+            raise ValueError("Line catalog must be of type LineCatalog.")
 
     #
     # Jacobian
@@ -249,17 +270,25 @@ class Atmosphere:
     # Setup
     #
 
-    def __setup_absorption__(self, ws):
+    def __setup_absorption__(self, ws, sensors):
         species = []
         for i, a in enumerate(self._absorbers):
             a.setup(ws, i)
             species += [a.get_tag_string()]
 
         ws.abs_speciesSet(species = species)
-        ws.abs_lines_per_speciesSetEmpty()
+
+        if not self.catalog is None:
+            self.catalog.setup(ws, sensors)
+            ws.abs_lines_per_speciesCreateFromLines()
+        else:
+            ws.abs_lines_per_speciesSetEmpty()
+
         ws.Copy(ws.abs_xsec_agenda, ws.abs_xsec_agenda__noCIA)
         ws.Copy(ws.propmat_clearsky_agenda,
                 ws.propmat_clearsky_agenda__OnTheFly)
+
+
 
     def __setup_scattering__(self, ws):
         ws.ScatSpeciesInit()
@@ -269,7 +298,7 @@ class Atmosphere:
             pb_names += s.moment_names
         ws.particle_bulkprop_names = pb_names
 
-    def setup(self, ws):
+    def setup(self, ws, sensors):
 
         if len(self.dimensions) == 1:
             ws.AtmosphereSet1D()
@@ -278,7 +307,7 @@ class Atmosphere:
         if len(self.dimensions) == 3:
             ws.AtmosphereSet3D()
 
-        self.__setup_absorption__(ws)
+        self.__setup_absorption__(ws, sensors)
         self.__setup_scattering__(ws)
 
         self.surface.setup(ws)

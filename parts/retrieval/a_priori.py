@@ -795,32 +795,9 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         self.transition = transition
 
     def _get_mask(self, *args, **kwargs):
-        mask = self.mask(self.owner, *args, **kwargs)
-
-        if len(np.where(mask)[0]) > 0:
-            i_first = np.where(mask)[0][0]
-            i_last = np.where(mask)[0][-1]
-        else:
-            i_first = 0
-            i_last  = len(mask)
-
-        n_points = max(min(self.n_points, i_last - i_first), 1)
-
-        if i_first > 0:
-            left = 1
-        else:
-            left = 0
-
-        right = left + n_points
-
-        if i_last < mask.size - 1:
-            n = right + 1
-        else:
-            n = right
-
-        mask = np.ones((n,))
-        mask[:left] = 0.0
-        mask[right:] = 0.0
+        mask = np.ones((self.n_points + 2,))
+        mask[1] = 0.0
+        mask[-1] = 0.0
         return mask
 
     def _get_grids(self, *args, **kwargs):
@@ -843,32 +820,26 @@ class MaskedRegularGrid(ReducedVerticalGrid):
             i_first = 0
             i_last  = len(mask)
 
-        n_points = max(min(self.n_points, i_last - i_first), 1)
-
-        if i_first > 0:
-            left = 1
-        else:
-            left = 0
-
-        right = left + n_points
-
-        if i_last < mask.size - 1:
-            n = right + 1
-        else:
-            n = right
-
+        n = self.n_points + 2
         new_grid = np.zeros((n,))
-        new_grid[left : right] = np.linspace(old_grid[i_first], old_grid[i_last], n_points)
-        if left > 0:
-            if self.transition is None:
-                new_grid[0] = old_grid[i_first - 1]
+        new_grid[1 : -1] = np.linspace(old_grid[i_first], old_grid[i_last],
+                                       self.n_points)
+        # Left
+        if self.transition is None:
+            if i_first > 0:
+                new_grid[-1] = old_grid[i_first - 1]
             else:
-                new_grid[0] = new_grid[1] - self.transition
+                new_grid[0] = 2 * new_grid[1] - new_grid[2]
+        else:
+            new_grid[0] = new_grid[1] - self.transition
 
-        if right < n:
-            if self.transition is None:
+        # Right
+        if self.transition is None:
+            if i_last < old_grid.size - 1:
                 new_grid[-1] = old_grid[i_last + 1]
             else:
-                new_grid[-1] = new_grid[-2] + self.transition
+                new_grid[-1] = 2.0 * new_grid[-2] - new_grid[-3]
+        else:
+            new_grid[-1] = new_grid[-2] + self.transition
 
         return old_grid, new_grid
