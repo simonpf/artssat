@@ -727,11 +727,11 @@ class ReducedVerticalGrid(APrioriProviderBase):
                 yi[0, 1:] = 0.0
                 yi[1:, 0] = 0.0
 
-                # Check for degeneracy at boundaries.
-                if np.all(yi[-1, :] == yi[-2, :]):
-                    yi[-1, -1] = yi[-2, -2]
-                    yi[-1, 1:] = 0.0
-                    yi[1:, -1] = 0.0
+            # Check for degeneracy at boundaries.
+            if np.all(yi[-1, :] == yi[-2, :]):
+                yi[-1, -1] = yi[-2, -2]
+                yi[-1, :-1] = 0.0
+                yi[:-1, -1] = 0.0
         return yi
 
     def _get_mask(self, *args, **kwargs):
