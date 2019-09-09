@@ -417,7 +417,8 @@ class Sensor(ArtsObject):
 
         """
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
-        if self.sensor_response == []:
+        if isinstance(self.sensor_response, list) and self.sensor_response == []:
+            print("sensor_responseInit ", self.name)
             self.call_wsm(ws, wsm["sensor_responseInit"])
         self.call_wsm(ws, wsm["sensor_checkedCalc"])
 
@@ -790,37 +791,147 @@ class PassiveSensor(Sensor):
         return f
 
 
+################################################################################
+# Ice cloud imager (ICI).
+################################################################################
+
 class ICI(PassiveSensor):
+    """
+    The Ice Cloud Imager (ICI) sensor.
+
+    Attributes:
+
+        channels(:code:`list`): List of channels that are available
+            from ICI
+
+        nedt(:code:`list`): Noise equivalent temperature differences for the
+            channels in :code:`channels`.
+    """
     channels = np.array([1.749100000000000e+11,
                          1.799100000000000e+11,
                          1.813100000000000e+11,
-                         1.853100000000000e+11,
-                         1.867100000000000e+11,
-                         1.917100000000000e+11,
                          2.407000000000000e+11,
-                         2.457000000000000e+11,
                          3.156500000000000e+11,
                          3.216500000000000e+11,
                          3.236500000000000e+11,
-                         3.266500000000000e+11,
-                         3.286500000000000e+11,
-                         3.346500000000000e+11,
                          4.408000000000000e+11,
                          4.450000000000000e+11,
                          4.466000000000000e+11,
-                         4.494000000000000e+11,
-                         4.510000000000000e+11,
-                         4.552000000000000e+11,
-                         6.598000000000000e+11,
-                         6.682000000000000e+11])
+                         6.598000000000000e+11])
+
+    nedt = np.array([0.8, 0.8, 0.8,       # 183 GHz
+                     0.7 * np.sqrt(0.5),  # 243 GHz
+                     1.2, 1.3, 1.5,       # 325 GHz
+                     1.4, 1.6, 2.0,       # 448 GHz
+                     1.6 * np.sqrt(0.5)]) # 664 GHz
+
     def __init__(self,
                  name = "ici",
-                 channels = None,
-                 stokes_dimension = 2):
-        if channels is None:
-            channels = ICI.channels
+                 channel_indices = None,
+                 stokes_dimension = 1):
+        """
+        This creates an instance of the ICI sensor to be used within a
+        :code:`parts` simulation.
+
+        Arguments:
+
+            name(:code:`str`): The name of the sensor used within the parts
+                simulation.
+
+            channel_indices(:code:`list`): List of channel indices to be used
+                in the simulation/retrieval.
+
+            stokes_dimension(:code:`int`): The stokes dimension to use for
+                the retrievals.
+        """
+        if channel_indices is None:
+            channels  = ICI.channels
+            self.nedt = ICI.nedt
         else:
-            channels = ICI.channels[channels]
+            channels  = ICI.channels[channel_indices]
+            self.nedt = self.nedt[channel_indices]
+        super().__init__(name, channels, stokes_dimension = stokes_dimension)
+
+################################################################################
+# Microwave imager (MWI).
+################################################################################
+
+class MWI(PassiveSensor):
+    """
+    The Microwave Imager (MWI) sensor.
+
+    Attributes:
+
+        channels(:code:`list`): The list of the channels available from the
+            MWI sensor.
+
+        nedt(:code:`list`): The noise equivalent temperature differences for
+            the channels in :code:`channels`.
+    """
+    channels = np.array([18.7e9,
+                         23.8e9,
+                         31.4e9,
+                         50.3e9,
+                         52.6e9,
+                         53.24e9,
+                         53.75e9,
+                         89.0e9,
+                         115.5503e9,
+                         116.6503e9,
+                         117.3503e9,
+                         117.5503e9,
+                         164.75e9,
+                         176.31e9,
+                         177.21e9,
+                         178.41e9,
+                         179.91e9,
+                         182.01e9])
+
+    nedt = np.array([0.8 * np.sqrt(0.5), #18 GHz
+                     0.7 * np.sqrt(0.5), #24 GHz
+                     0.9 * np.sqrt(0.5), #31 GHz
+                     1.1 * np.sqrt(0.5), #50 GHz
+                     1.1 * np.sqrt(0.5),
+                     1.1 * np.sqrt(0.5),
+                     1.1 * np.sqrt(0.5),
+                     1.1 * np.sqrt(0.5), #89 GHz
+                     1.3, #118 GHz
+                     1.3,
+                     1.3,
+                     1.3,
+                     1.2, #165 GHz
+                     1.3, #183 GHz
+                     1.2,
+                     1.2,
+                     1.2,
+                     1.3])
+
+    def __init__(self,
+                 name = "mwi",
+                 channel_indices = None,
+                 stokes_dimension = 1):
+        """
+        Create an MWI instance to be used within a :code:`parts` simulation.
+
+        Arguments:
+
+            name(:code:`str`): The name of the sensor to be used within the
+                parts simulation.
+
+            channel_indices(:code:`list`): List of channel indices to be used
+                for the simulation.
+
+            stokes_dimension(:code:`int`): The Stokes dimension to be used for
+                the simulation.
+        """
+        if channel_indices is None:
+            channels  = MWI.channels
+            self.nedt = MWI.nedt
+        else:
+            channels  = MWI.channels[channel_indices]
+            self.nedt = MWI.nedt[channel_indices]
+
+        self.channels = channels
         super().__init__(name, channels, stokes_dimension = stokes_dimension)
 
 class CloudSat(ActiveSensor):
@@ -834,5 +945,9 @@ class CloudSat(ActiveSensor):
                          f_grid = np.array([94e9]),
                          stokes_dimension = stokes_dimension,
                          range_bins = range_bins)
+        self.instrument_pol       = [1]
+        self.instrument_pol_array = [[1]]
+        self.extinction_scaling   = 0.0
+        self.y_min = -30.0
 
 ici = ICI()

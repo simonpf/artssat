@@ -298,8 +298,8 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
         grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
         grids = [g for g in grids if g.size > 0]
-        y = self.retrieval.interpolate_to_grids(x, grids)
-        x = self.transformation.invert(y)
+        x = self.transformation.invert(x)
+        x = self.retrieval.interpolate_to_grids(x, grids)
         x = x.reshape(ws.vmr_field.value.shape[1:])
 
         unit = self.retrieval.unit
@@ -344,7 +344,7 @@ class H2O(AbsorptionSpecies):
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
-                 model = None,
+                 model = "PWR98",
                  on_the_fly = True,
                  zeeman = False):
         super().__init__("H2O",
@@ -352,7 +352,7 @@ class H2O(AbsorptionSpecies):
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
-                         model = "PWR98",
+                         model = model,
                          on_the_fly = on_the_fly,
                          zeeman = zeeman)
 

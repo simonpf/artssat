@@ -13,7 +13,7 @@ as follows:
                 {\Gamma(\frac{\alpha + 4}{\beta})^{(5 + \alpha)}}
     X^\alpha \exp \left \{- \left (X \frac{\Gamma(\frac{\alpha + 5}{\beta})}
                                         {\Gamma(\frac{\alpha + 4}{\beta})}
-                                   \right )^\beta \right \},
+                                   \right )^\beta \right \}
 
 The parameter X is defined as  the volume equivalent sphere diameter
 :math:`D_{eq}` normalized by the mass-weighted mean diameter:
@@ -27,15 +27,15 @@ The PSD is thus parametrized by four parameters:
     - :math:`D_m`, the *mass-weighted mean diameter*
     - the shape parameters :math:`\alpha` and :math:`\beta`
 
-Of these, :math:`\alpha` and :math:`\beta` are assumed constant, while
-:math:`N_0` and :math:`D_m` are the free parameters that descibe
-the particles throughout the atmosphere.
+Of these, :math:`\alpha` and :math:`\beta` are generally assumed fixed, while
+:math:`N_0` and :math:`D_m` are the predictive parameters that describe
+the distribution of particles withing a given atmospheric volume.
 
-The particle mass density :math:`\rho_m` per bulk volume can be computed
+The particle mass density :math:`m` per bulk volume can be computed
 from :math:`N_0` and :math:`D_m` using:
 
 .. math::
-    \rho_m = \frac{\Gamma(4)}{4^4}\frac{\pi \rho}{6}N_0^*D_m^4
+    m = \frac{\Gamma(4)}{4^4}\frac{\pi \rho}{6}N_0^*D_m^4
 
 In this module, two implementations of the D14 PSD are provided:
 
@@ -137,9 +137,8 @@ def evaluate_d14(x, n0, dm, alpha, beta):
 class D14(ArtsPSD):
     """
 
-    Implementation of the D14 PSD that uses mass density :math:`\rho_m`  and
-    the mass-weighted mean diamter :math:`D_m` as free parameters.
-
+    Implementation of the D14 PSD that uses mass density :math:`m` and
+    mass-weighted mean diameter :math:`D_m` as free parameters.
     """
 
     @classmethod
@@ -148,23 +147,34 @@ class D14(ArtsPSD):
         Create an instance of the D14 PSD from existing PSD data.
 
         Parameters:
+
             :code:`psd`: A numeric or analytic representation of
                 a PSD.
 
-            alpha(:code:`numpy.ndarray`): The :math:`alpha` parameter of
+            alpha(:class:`numpy.ndarray`): The :math:`\alpha` parameter of
             the to use for the D14 PSD.
 
-            beta(:code:`numpy.ndarray`): The :math:`beta` parameter of
+            beta(:class:`numpy.ndarray`): The :math:`\beta` parameter of
             the to use for the D14 PSD.
 
-            rho(:code:`numpy.float`): The density to use for the D14 PSD
+            rho(:class:`numpy.float`): The average density of the hydrometeors,
+            should be somewhere in between :math:`916.7 kg\m^{-3}` and
+            :math:`1000 kg\m^{-3}`.
         """
         new_psd = D14(alpha, beta, rho)
         new_psd.convert_from(psd)
         return new_psd
 
     def convert_from(self, psd):
+        """
+        Converts a given psd to a :class:`D14` PSD with the :math:`\alpha, \beta`
+        and :math:`\rho` this :class`D14` instance.
 
+        Arguments:
+
+            psd: Another psd object providing :code:`get_mass_density` and
+            `get_moment` member functions to compute moments of the PSD.
+        """
         md = psd.get_mass_density()
 
         m4 = psd.get_moment(4.0, reference_size_parameter = self.size_parameter)
@@ -367,7 +377,7 @@ class D14N(ArtsPSD):
     """
 
     Implementation of the D14 PSD that uses the intercept parameter :math:`N_0^*`
-    and the mass-weighted mean diamter :math:`D_m` as free parameters.
+    and the mass-weighted mean diameter :math:`D_m` as free parameters.
 
     """
 
@@ -454,7 +464,10 @@ class D14N(ArtsPSD):
 
     @property
     def moments(self):
-        return [self.intercept_parameter, self.mass_weighted_diameter]
+        try:
+            return [self.intercept_parameter, self.mass_weighted_diameter]
+        except:
+            return None
 
     @property
     def pnd_call_agenda(self):

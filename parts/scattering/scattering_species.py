@@ -48,15 +48,19 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     def __init__(self,
                  species_name,
                  moment_name,
+                 data = None,
                  jacobian = False):
 
         name = species_name + "_" + moment_name
-        super().__init__(name, (0, 0, 0), jacobian)
+        AtmosphericQuantity.__init__(self, name, (0, 0, 0), jacobian)
+        RetrievalQuantity.__init__(self)
+
 
         self._jacobian = None
         self._retrieval = None
         self._species_name = species_name
         self._moment_name  = moment_name
+        self._data = data
 
     #
     # Abstract methods
@@ -70,8 +74,20 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         pass
 
     def get_data(self, ws, provider, *args, **kwargs):
+
         if self.retrieval is None:
-            AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
+
+            if hasattr(provider, "get_" + self.name):
+                AtmosphericQuantity.get_data(self, ws, provider, *args, **kwargs)
+            else:
+                try:
+                    x = self.data
+                    pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
+                    ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] \
+                        = np.reshape(x, pbf_shape)
+                except Exception as e:
+                    raise Exception("Encountered error trying to get data for "
+                                    " moment {0}: {1}".format(self.name, e))
 
     #
     # Jacobian & retrieval
@@ -87,10 +103,17 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
 
     def set_from_x(self, ws, x):
 
+        if not self.retrieval.limit_high == None:
+            x = np.minimum(x, self.retrieval.limit_high)
+
+        if not self.retrieval.limit_low == None:
+            x = np.maximum(x, self.retrieval.limit_low)
+
         grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
         grids = [g for g in grids if g.size > 0]
-        y = self.retrieval.interpolate_to_grids(x, grids)
-        x = self.transformation.invert(y)
+
+        x = self.transformation.invert(x)
+        x = self.retrieval.interpolate_to_grids(x, grids)
 
         pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
         ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(x, pbf_shape)
@@ -98,6 +121,10 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     #
     # Properties
     #
+
+    @property
+    def data(self):
+        return self._data
 
     def species_name(self):
         return self._species_name
@@ -113,6 +140,10 @@ class ScatteringSpecies:
         self._name = name
         self._psd  = psd
 
+        if hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
+            scattering_meta_data = scattering_data.meta
+            scattering_data = scattering_data.path
+
         if not scattering_data[-4:] in [".xml", "l.gz"]:
             scattering_data += ".xml"
 
@@ -125,10 +156,18 @@ class ScatteringSpecies:
             self._scattering_meta_data = scattering_meta_data
 
         self._moments = []
-        for m in self.psd.moment_names:
-            moment = Moment(self.name, m)
-            self._moments += [moment]
-            self.__dict__[m] = moment
+
+        try:
+            moment_data = self.psd.moments
+            for m, d in zip(self.psd.moment_names, moment_data):
+                moment = Moment(self.name, m, data = d)
+                self._moments += [moment]
+                self.__dict__[m] = moment
+        except:
+            for m in self.psd.moment_names:
+                moment = Moment(self.name, m)
+                self._moments += [moment]
+                self.__dict__[m] = moment
 
     @property
     def name(self):
@@ -146,6 +185,28 @@ class ScatteringSpecies:
     @property
     def scattering_data(self):
         return self._scattering_data
+
+    @scattering_data.setter
+    def scattering_data(self, scattering_data):
+
+        if type(scattering_data) == tuple:
+            scattering_data, scattering_meta_data = scattering_data
+        elif  hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
+            scattering_meta_data = scattering_data.meta
+            scattering_data = scattering_data.path
+        else:
+            scattering_meta_data = None
+
+        if not scattering_data[-4:] in [".xml", "l.gz"]:
+            scattering_data += ".xml"
+
+        self._scattering_data = scattering_data
+
+        if scattering_meta_data is None:
+            md = scattering_data[:-3] + "meta.xml"
+            self._scattering_meta_data = md
+        else:
+            self._scattering_meta_data = scattering_meta_data
 
     @property
     def scattering_meta_data(self):

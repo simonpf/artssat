@@ -31,6 +31,9 @@ class SizeParameter:
         b(numpy.float): The :math:`b` exponent of the mass-size-relation
     """
 
+    def __eq__(self, other):
+        return self.a == other.a and self.b == other.b
+
     def __init__(self, a, b):
         """
         Create size parameter with given :math:`a` and :math:`b` parameters.
@@ -75,7 +78,8 @@ class SizeParameter:
             the size grid :code:`x`.
 
         """
-        return np.trapz(self.a * x ** self.b * y, x)
+        print(np.shape(self.a * x ** self.b * y))
+        return np.trapz(self.a * x ** self.b * y, x = x, axis = -1)
 
 class Area(SizeParameter):
     def __ini__(self, a, b):

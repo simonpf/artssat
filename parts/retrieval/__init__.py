@@ -117,7 +117,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,))
+    @arts_property("Vector", shape = (dim.Joker,))
     def xa(self):
         """
         The mean of the Gaussian a priori distribution assumed for the
@@ -125,7 +125,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", shape = (dim.Joker,), optional = True)
+    @arts_property("Vector", shape = (dim.Joker,), optional = True)
     def x0(self):
         """
         Optional start value for the retrieval iteration.
@@ -166,7 +166,9 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         try:
             fname = "get_" + self.quantity.name + "_xa"
             xa_fun = getattr(data_provider, fname)
+            xa = xa_fun(*args, **kwargs)
             self.xa = xa_fun(*args, **kwargs)
+
         except AttributeError:
             raise Exception("The data provider must provide a get method for "
                            "the a priori state of retrieval quantity {0}."
@@ -239,12 +241,12 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
                             "the covariance or the precision matrix of retrieval"
                             "quantity {0}." .format(self.quantity.name))
 
+        self.quantity.transformation.setup(ws, data_provider, *args, **kwargs)
+
         if not covmat is None:
             ws.covmat_sxAddBlock(block = covmat)
         if not precmat is None:
             ws.covmat_sxAddInverseBlock(block = precmat)
-
-        self.quantity.transformation.setup(ws)
 
     def get_iteration_preparations(self, index):
 
@@ -299,25 +301,9 @@ class RetrievalQuantity(JacobianQuantity):
     """
 
     def __init__(self):
-        self._transformation = None
         self._fixed          = None
         self._retrieval      = None
         super().__init__()
-
-    @property
-    def transformation(self):
-        """
-        The transformation to be applied to the retrieval quantity.
-        """
-        return self._transformation
-
-    @transformation.setter
-    def transformation(self, t):
-        if not isinstance(t, Transformation):
-            raise TypeError("The transformation of a retrieval quantity must"\
-                            " be of type Transformation.")
-        else:
-            self._transformation = t
 
     @property
     def fixed(self):
@@ -412,15 +398,21 @@ class RetrievalRun:
         self.rq_indices     = {}
         self.retrieval_quantities = retrieval_quantities.copy()
         self.previous_run   = previous_run
+        self.data_provider  = simulation.data_provider
 
         self.x = None
 
-    def get_result(self, q, attribute = "x", interpolate = False):
+    def get_result(self, q, attribute = "x", interpolate = False, transform_back = False):
 
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, attribute)
+            if x is None:
+                return x
             x = x[i : j]
+
+            if transform_back:
+                x = q.transformation.invert(x)
 
             if interpolate:
                 ws = self.simulation.workspace
@@ -435,14 +427,19 @@ class RetrievalRun:
         else:
             return None
 
-    def get_xa(self, q, interpolate = True):
+    def get_xa(self, q, interpolate = True, transform_back = False):
+
+        if transform_back:
+            xa = q.transformation.invert(q.retrieval.xa)
+        else:
+            xa = q.retrieval.xa
+
         if interpolate:
             ws = self.simulation.workspace
             grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
             grids = [g for g in grids if g.size > 0]
-            xa = q.retrieval.interpolate_to_grids(q.retrieval.xa, grids)
-        else:
-            xa = q.retrieval.xa
+            xa = q.retrieval.interpolate_to_grids(xa, grids)
+
         return xa
 
     def get_avk(self, q):
@@ -488,13 +485,12 @@ class RetrievalRun:
         """
 
         ws            = self.simulation.workspace
-        data_provider = self.simulation.data_provider
+        data_provider = self.data_provider
 
         xa = []
         x0 = []
 
         ws.retrievalDefInit()
-
 
         #
         # Need to store indices of retrieval quantities in x
@@ -525,19 +521,32 @@ class RetrievalRun:
                 self.rq_indices[rq] = (rq_index, rq_index + xa[-1].size)
                 rq_index += xa[-1].size
 
-                rq.set_from_x(ws, rq.retrieval.xa)
-
         #
         # Set values of retrieval quantities excluded from retrieval.
         #
 
         for rq in self.simulation.retrieval.retrieval_quantities:
-            if rq not in self.retrieval_quantities:
-                rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
+
+            # Need to setup transformation in case RQ has not yet been
+            # retrieved.
+            t = rq.transformation
+            if hasattr(t, "initialize"):
+                t.initialize(data_provider, *args, **kwargs)
+
+            # Get data for retrieval quantity.
+            rq.retrieval.get_data(ws, data_provider, *args, **kwargs)
+
+            # Get result from previous run (x_p).
+            # If not available set to a priori.
+            x_p = self.get_result(rq)
+            if x_p is None:
                 rq.retrieval.get_xa(data_provider, *args, **kwargs)
-                rq.set_from_x(ws, rq.retrieval.xa)
+                x_p = rq.retrieval.xa
+            rq.set_from_x(ws, x_p)
 
         ws.retrievalDefClose()
+
+
 
         self.xa = np.concatenate(xa)
         self.x0 = np.concatenate(x0)
@@ -584,7 +593,7 @@ class RetrievalRun:
                           "iteration_index" : []}
 
         ws            = self.simulation.workspace
-        data_provider = self.simulation.data_provider
+        data_provider = self.data_provider
 
         s = self.sensors[0]
         ws.Copy(ws.sensor_los,  s._wsvs["sensor_los"])
@@ -676,8 +685,6 @@ class RetrievalRun:
         self.setup_iteration_agenda()
         self.setup_a_priori(*args, **kwargs)
 
-        self.simulation.run_checks()
-
         y_blocks = []
         for s in self.sensors:
             if isinstance(s, ActiveSensor):
@@ -688,19 +695,22 @@ class RetrievalRun:
                 i, j = self.sensor_indices[s.name]
                 y_blocks += [self.y[i : j]]
 
-        y = np.concatenate(y_blocks)
-        self._y = y
-        ws.y  = y
-        ws.yf       = []
-        ws.jacobian = []
-
         try:
+
+            y = np.concatenate(y_blocks)
+            self._y = y
+            ws.y  = y
+            ws.yf       = []
+            ws.jacobian = []
+
+            self.simulation.run_checks()
             ws.OEM(**self.settings)
+
         except Exception as e:
             ws.oem_diagnostics = 9 * np.ones(5)
             ws.yf       = None
             ws.jacobian = None
-            ws.oem_errors = ["Error computing initial cost.", str(e)]
+            ws.oem_errors = ["Error in OEM computation.", str(e)]
 
         self.x               = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
@@ -724,9 +734,13 @@ class RetrievalRun:
             self.covmat_ss = None
 
         if self.oem_diagnostics[0] == 9.0:
-            self.oem_errors = ws.oem_errors.value
-            print("Error in OEM calculation:")
-            print(self.oem_errors)
+            try:
+                self.oem_errors = ws.oem_errors.value
+                print("Error in OEM calculation:")
+                print(self.oem_errors)
+            except Exception as e:
+                self.oem_errors = ["Error in OEM computation.", str(e)]
+
         else:
             self.oem_errors = None
 
@@ -838,13 +852,13 @@ class RetrievalCalculation:
 
         # Determine sensor indices of y vector
         i_start = 0
-        sensor_indices = {}
+        self.sensor_indices = {}
         for s in simulation.active_sensors:
             s.get_data(simulation.workspace, simulation.data_provider, *args, **kwargs)
-            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            self.sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
             i_start += s.y_vector_length
         for s in simulation.passive_sensors:
-            sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
+            self.sensor_indices[s.name] = (i_start, i_start + s.y_vector_length)
             i_start += s.y_vector_length
 
         self._y = self._get_y_vector(simulation, *args, **kwargs)
@@ -861,7 +875,7 @@ class RetrievalCalculation:
                                      simulation,
                                      self._y,
                                      self.settings,
-                                     sensor_indices,
+                                     self.sensor_indices,
                                      self.retrieval_quantities)
             retrieval.run(*args, **kwargs)
             self.results = retrieval
@@ -883,7 +897,7 @@ class RetrievalCalculation:
                                          simulation,
                                          self._y,
                                          self.settings,
-                                         sensor_indices,
+                                         self.sensor_indices,
                                          self.retrieval_quantities,
                                          previous_run = previous_run)
 
@@ -893,12 +907,3 @@ class RetrievalCalculation:
                 retrieval.run(*args, **kwargs)
                 self.results += [retrieval]
                 previous_run = retrieval
-
-
-    def store_results(self):
-        sim = self.results[-1].simulation
-        if not sim.output_file is None:
-            sim.output_file.store_retrieval_results(self)
-        else:
-            raise Exception("The output file must be initialized before results"
-                            " can be written to it.")

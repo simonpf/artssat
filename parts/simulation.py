@@ -1,28 +1,38 @@
 import numpy as np
 from typhon.arts.workspace     import Workspace
 from parts.sensor.sensor       import ActiveSensor, PassiveSensor
-from parts.scattering.solvers  import ScatteringSolver, RT4
+from parts.scattering.solvers  import ScatteringSolver, RT4, Disort
 from parts.jacobian            import JacobianCalculation
 from parts.retrieval           import RetrievalCalculation
 from parts.io                  import OutputFile
 
 class ArtsSimulation:
+
     def __init__(self,
                  atmosphere = None,
                  data_provider = None,
                  sensors = [],
-                 scattering_solver = RT4()):
+                 scattering_solver = RT4(nstreams = 12)):
 
         self._atmosphere        = atmosphere
         self._data_provider     = data_provider
         self._sensors           = sensors
         self._scattering_solver = scattering_solver
         self._data_provider     = data_provider
+        self._setup             = False
         self._workspace         = None
         self.output_file        = None
 
         self.jacobian  = JacobianCalculation()
         self.retrieval = RetrievalCalculation()
+
+        try:
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            size = self.comm.Get_size()
+            self.parallel = size > 1
+        except:
+            self.parallel = False
 
 
     #
@@ -89,10 +99,12 @@ class ArtsSimulation:
         ws.Copy(ws.iy_surface_agenda, ws.iy_surface_agenda__UseSurfaceRtprop)
         ws.Copy(ws.iy_main_agenda, ws.iy_main_agenda__Emission)
 
-        self.atmosphere.setup(ws)
+        self.atmosphere.setup(ws, self.sensors)
 
         for s in self.sensors:
             s.setup(ws, self.atmosphere.scattering)
+
+        self._setup = True
 
     def check_dimensions(self, f, name):
         s = f.shape
@@ -106,19 +118,23 @@ class ArtsSimulation:
                     in zip(s, self.dimensions)]):
             raise Exception(err)
 
-    def _run_forward_simulation(self):
+    def _run_forward_simulation(self, sensors = []):
 
         ws = self.workspace
 
         # Jacobian setup
-        self.jacobian.setup(ws)
+        self.jacobian.setup(ws, self.data_provider, *self.args, **self.kwargs)
 
         # Run atmospheric checks
         self.atmosphere.run_checks(ws)
 
         i_active = []
         i_passive = []
-        for i,s in enumerate(self.sensors):
+
+        if len(sensors) == 0:
+            sensors = self.sensors
+
+        for i,s in enumerate(sensors):
             if isinstance(s, ActiveSensor):
                 i_active += [i]
             if isinstance(s, PassiveSensor):
@@ -141,10 +157,20 @@ class ArtsSimulation:
             # TODO: Get around the need to fix this.
             ws.stokes_dim = s.stokes_dimension
 
-            s = self.sensors[i_active[0]]
+            s = sensors[i_active[0]]
 
-            f = s.make_y_calc_function(append = False)
-            f(ws)
+            if self.atmosphere.scattering:
+                f = s.make_y_calc_function(append = False)
+                f(ws)
+            else:
+                ws.y.value = s.y_min * np.ones(s.y_vector_length)
+                ws.y_f = s.f_grid[0] * np.ones(s.y_vector_length)
+                ws.y_pol = [0] * s.y_vector_length
+                ws.y_pos = 0.0 * np.ones((s.y_vector_length,
+                                          len(self.atmosphere.dimensions)))
+                ws.y_geo = 0.0 * np.ones((s.y_vector_length, 5))
+                ws.y_los = 0.0 * np.ones((s.y_vector_length,
+                                          min(len(self.atmosphere.dimensions), 2)))
 
             i += 1
             s.y = np.copy(ws.y.value[y_index:].reshape((-1, 1)))
@@ -152,7 +178,7 @@ class ArtsSimulation:
 
 
         # Simulate passive sensors
-        for s in [self.sensors[i] for i in i_passive]:
+        for s in [sensors[i] for i in i_passive]:
 
             # TODO: Get around the need to fix this.
             ws.stokes_dim = s.stokes_dimension
@@ -194,6 +220,10 @@ class ArtsSimulation:
 
     def run(self, *args, **kwargs):
 
+        if not self._setup:
+            raise Exception("setup() member function must be executed before"
+                            " a simulation can be run.")
+
         self.args   = args
         self.kwargs = kwargs
 
@@ -209,14 +239,11 @@ class ArtsSimulation:
 
             self.retrieval.run(self, *args, **kwargs)
         else:
+
             self._run_forward_simulation()
 
-    def run_mpi(self, *args, callback = None):
+    def _run_ranges_mpi(self, ranges, *args, callback = None, **kwargs):
         from mpi4py import MPI
-        ranges = list(args)
-
-        if len(ranges) > 1:
-            raise Exception("Currently only 1-dimensional ranges are supported.")
 
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
@@ -225,27 +252,65 @@ class ArtsSimulation:
         r = ranges[0]
         n  = (r.stop - r.start) // r.step
         dn  = n // size
+
+        if n < size:
+            raise Exception("Need at least as many steps in outermost range as "
+                            " processors. Otherwise deadlocks occur.")
+
         n0  = rank * dn
         rem = n % size
         if rank < rem:
             dn = dn + 1
         n0 += min(rank, rem)
 
-        print("run_mpi :: ", rank, n0 + r.start, dn)
         for i in range(r.start + n0, r.start + n0 + dn):
-            self.run(i)
+            self._run_ranges(ranges[1:], *args, i, **kwargs, callback = callback)
+
+
+    def _run_ranges(self, ranges, *args, callback = None, **kwargs):
+        if len(ranges) == 0:
+            self.run(*args, **kwargs)
 
             if not callback is None:
                 callback(self)
             else:
                 if not self.output_file is None:
-                    if hasattr(self, "retrieval"):
-                        self.retrieval.store_results()
+                    self.store_results()
+        else:
+            r = ranges[0]
+            for i in r:
+                self._run_ranges(ranges[1:], *args, i, **kwargs)
+
+
+    def run_ranges(self, *args, mpi = None, callback = None, **kwargs):
+
+        if mpi is None:
+            parallel = self.parallel
+        else:
+            parallel = mpi
+
+        ranges = list(args)
+        if parallel:
+            self._run_ranges_mpi(ranges, **kwargs, callback = callback)
+        else:
+            self._run_ranges(ranges, **kwargs, callback = callback)
 
     def run_checks(self):
         self.atmosphere.run_checks(self.workspace)
 
-    def initialize_output_file(self, filename, dimensions, mode = "w"):
+    def initialize_output_file(self,
+                               filename,
+                               dimensions,
+                               mode = "w",
+                               full_retrieval_output = True):
         self.output_file = OutputFile(filename,
                                       dimensions = dimensions,
-                                      mode = mode)
+                                      mode = mode,
+                                      full_retrieval_output = full_retrieval_output)
+
+    def store_results(self):
+        if not self.output_file is None:
+            self.output_file.store_results(self)
+        else:
+            raise Exception("The output file must be initialized before results"
+                            " can be written to it.")

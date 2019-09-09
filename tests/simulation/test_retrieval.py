@@ -1,32 +1,34 @@
 import os
-os.environ["ARTS_BUILD_PATH"] = "/home/simon/build/arts_debug/"
 
 import numpy as np
 import scipy as sp
 import pytest
 
+import parts
 from parts                       import ArtsSimulation
 from parts.atmosphere            import Atmosphere1D
-from parts.atmosphere.absorption import O2, N2, H2O, Relative, \
-    RelativeHumidity
 from parts.atmosphere.surface    import Tessem
 from parts.jacobian              import Log10
 from parts.scattering            import ScatteringSpecies, D14
 from parts.scattering.solvers    import RT4, Disort
 from parts.sensor                import CloudSat, ICI
-from parts.data_provider         import DataProviderBase, FixedApriori
-
+from parts.data_provider         import DataProviderBase
+from parts.retrieval.a_priori    import FixedAPriori, Diagonal
+from parts.atmosphere.absorption import O2, N2, H2O, Relative,\
+    RelativeHumidity
 from examples.data_provider      import DataProvider
-from tests.data                  import scattering_data, scattering_meta
-from parts.dashboard import dashboard, make_retrieval_panel
 
 import matplotlib.pyplot as plt
 
-from IPython import get_ipython
-ip = get_ipython()
-#ip.magic("load_ext autoreload")
+#
+# Functions and data for testing.
+#
 
-#ip.magic("%autoreload 2")
+import os
+import sys
+test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+sys.path.append(test_path)
+from utils.data import scattering_data, scattering_meta
 
 ################################################################################
 # A priori providers
@@ -115,7 +117,7 @@ def test_scattering_retrieval_passive():
     ice.mass_density.limit_low = -10
     simulation.retrieval.settings["max_iter"] = 1
 
-    ice_a_priori         = FixedApriori("ice_mass_density", -6, 2.0)
+    ice_a_priori         = FixedAPriori("ice_mass_density", -6, Diagonal(2.0))
     data_provider.add(ice_a_priori)
 
     n = simulation.sensors[0].f_grid.size * simulation.sensors[0].stokes_dimension
@@ -143,7 +145,7 @@ def test_scattering_retrieval_active():
     ice.mass_density.transformation = Log10()
 
     # Ice a priori
-    ice_a_priori         = FixedApriori("ice_mass_density", -6, 2.0)
+    ice_a_priori         = FixedAPriori("ice_mass_density", -6, Diagonal(2.0))
     data_provider.add(ice_a_priori)
 
     # Observation error a priori
@@ -182,9 +184,9 @@ def test_scattering_combined_retrieval():
 
     # Ice a prioris
 
-    ice_a_priori         = FixedApriori("ice_mass_density", -6, 2.0)
+    ice_a_priori         = FixedAPriori("ice_mass_density", -6, Diagonal(2.0))
     data_provider.add(ice_a_priori)
-    ice_a_priori         = FixedApriori("ice_mass_weighted_diameter", -3, 2.0)
+    ice_a_priori         = FixedAPriori("ice_mass_weighted_diameter", -3, Diagonal(2.0))
     data_provider.add(ice_a_priori)
 
     # Observation errors
@@ -218,7 +220,7 @@ def test_simulation_absorption_retrieval():
     simulation.run()
 
     # H2O a priori
-    h2o_a_priori         = FixedApriori("H2O", 0.5, 0.01)
+    h2o_a_priori         = FixedAPriori("H2O", 0.5, Diagonal(0.01))
     data_provider.add(h2o_a_priori)
 
     n = simulation.sensors[0].f_grid.size * simulation.sensors[0].stokes_dimension
@@ -260,11 +262,11 @@ def test_retrieval_runs():
 
     data_provider.get_O2 = get_o2.__get__(data_provider)
     # H2O a priori
-    h2o_a_priori         = FixedApriori("H2O", 0.5, 0.01)
+    h2o_a_priori         = FixedAPriori("H2O", 0.5, Diagonal(0.01))
     data_provider.add(h2o_a_priori)
 
     # O2 a priori
-    o2_a_priori         = FixedApriori("O2", 1.0, 0.001)
+    o2_a_priori         = FixedAPriori("O2", 1.0, Diagonal(0.001))
     data_provider.add(o2_a_priori)
 
     # observation error a priori
@@ -294,7 +296,5 @@ def test_retrieval_runs():
 
     simulation.setup()
     simulation.run()
-
-
 
     return simulation.workspace.x.value
