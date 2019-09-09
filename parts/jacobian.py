@@ -291,6 +291,7 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
 
     def __init__(self, quantity, index):
 
+        super().__init__()
         self.quantity = quantity
         self.index    = index
         self.quantity.transformation = Identity()
