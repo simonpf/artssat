@@ -115,7 +115,8 @@ class Thikhonov:
                  diagonal   = 0.0,
                  mask       = None,
                  mask_value = 1e12,
-                 z_scaling  = True):
+                 z_scaling  = True,
+                 z_grid = None):
         """
         Arguments:
             scaling(:code:`np.float`): Scalar to scale the precision matrix with.
@@ -134,6 +135,7 @@ class Thikhonov:
         self.mask       = mask
         self.mask_value = mask_value
         self.z_scaling  = z_scaling
+        self.z_grid = z_grid
 
     def get_covariance(self, data_provider, *args, **kwargs):
         precmat = self.get_precision(data_provider, *args, **kwargs)
@@ -142,7 +144,12 @@ class Thikhonov:
 
     def get_precision(self, data_provider, *args, **kwargs):
 
-        z = data_provider.get_altitude(*args, **kwargs)
+        if self.z_grid is None:
+            z = data_provider.get_altitude(*args, **kwargs)
+            z_old = None
+        else:
+            z = self.z_grid
+            z_old = data_provider.get_altitude(*args, **kwargs)
         n = z.size
 
         du2 = np.ones(n - 2)
@@ -162,7 +169,15 @@ class Thikhonov:
             d += self.diagonal
 
         if not self.mask is None:
-            mask = np.logical_not(self.mask(data_provider, *args, **kwargs))
+            mask = self.mask(data_provider, *args, **kwargs).astype(np.float)
+            if not z_old is None:
+                f = sp.interpolate.interp1d(z_old, mask,
+                                            axis = 0,
+                                            bounds_error = False,
+                                            fill_value = (mask[0], mask[-1]))
+                mask = f(z) > 0.5
+
+            mask = np.logical_not(mask)
             du1[mask[:-1]] = 0
             du2[mask[:-2]] = 0
             dl1[mask[1:]]  = 0
@@ -176,7 +191,6 @@ class Thikhonov:
         precmat *= self.scaling
 
         if self.z_scaling:
-            z = data_provider.get_altitude(*args, **kwargs)
             zf = (np.diff(z) / np.diff(z).mean()) ** 2.0
             zf1 = np.zeros(z.shape)
             zf1[1:]  += zf
@@ -735,10 +749,13 @@ class ReducedVerticalGrid(APrioriProviderBase):
         return yi
 
     def _get_mask(self, *args, **kwargs):
-        mask = self.a_priori.get_mask(*args, **kwargs).astype(np.float)
-        mask_i = self._interpolate(xa, *args, **kwargs)
-        mask_i[mask_i > 0.0] = 1.0
-        return mask_i
+        try:
+            mask = self.a_priori._get_mask(*args, **kwargs)
+            mask_i = self._interpolate(mask, *args, **kwargs)
+            mask_i[mask_i > 0.0] = 1.0
+            return mask_i
+        except:
+            return np.ones(self.new_grid.shape, dtype = np.bool)
 
     def get_xa(self, *args, **kwargs):
         self.a_priori.owner = self.owner
@@ -759,10 +776,13 @@ class ReducedVerticalGrid(APrioriProviderBase):
             covmat = self.a_priori.get_covariance(*args, **kwargs)
             if isinstance(covmat, sp.sparse.spmatrix):
                 covmat = covmat.todense()
-            print("interpolating matrix")
-            return self._interpolate_matrix(covmat, *args, **kwargs)
+            covmat = self._interpolate_matrix(covmat, *args, **kwargs)
+            mask = ReducedVerticalGrid._get_mask(self, *args, **kwargs)
+            for i in np.where(np.logical_not(mask))[0]:
+                covmat[i, i + 1 :] = 0.0
+                covmat[i+1 :, i] = 0.0
+            return covmat
         else:
-            print("not interpolating matrix")
             return self._covariance.get_covariance(self.owner, *args, **kwargs)
 
     def get_precision(self, *args, **kwargs):
@@ -773,7 +793,7 @@ class ReducedVerticalGrid(APrioriProviderBase):
                 precmat = precmat.todense()
             return self._interpolate_matrix(precmat, *args, **kwargs)
         else:
-            return self._covariance.get_precision(self.owner, *args **kwargs)
+            return self._covariance.get_precision(self.owner, *args, **kwargs)
 
     def get_retrieval_p_grid(self, *args, **kwargs):
         if self.quantity == "pressure":
