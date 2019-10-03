@@ -194,13 +194,16 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
     def __init__(self,
                  name,
-                 catalog = None,
+                 from_catalog = True,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
                  model = None,
                  on_the_fly = True,
-                 zeeman = False):
+                 zeeman = False,
+                 lineshape = "no_shape",
+                 normalization = "no_norm",
+                 cutoff = -1):
 
         AtmosphericQuantity.__init__(self,
                                      name,
@@ -209,7 +212,7 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
         self._dimensions = (0, 0, 0)
 
-        self._catalog         = catalog
+        self._from_catalog    = from_catalog
         self._cia             = cia
         self._frequency_range = frequency_range
         self._isotopologues   = isotopologues
@@ -218,6 +221,11 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
         self._on_the_fly      = on_the_fly
         self._retrieval       = None
         self._zeeman          = zeeman
+
+        self._lineshape = lineshape
+        self._normalization = normalization
+        self._cutoff = -1
+
 
     #
     # Abstract properties
@@ -231,8 +239,8 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
     #
 
     @property
-    def catalog(self):
-        return self._catalog
+    def from_catalog(self):
+        return self._from_catalog
 
     @property
     def cia(self):
@@ -258,29 +266,76 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
     def zeeman(self):
         return self._zeeman
 
-    def get_tag_string(self):
+    @property
+    def lineshape(self):
+        return self._lineshape
+
+    @property
+    def cutoff(self):
+        return self._cutoff
+
+    @property
+    def normalization(self):
+        return self._normalization
+
+    def _get_tag_string(self,
+                        zeeman = False,
+                        isotopologue = None,
+                        model = None,
+                        frequency_range = None):
 
         ts = self._name
         ts += "-"
 
-        if self._zeeman:
+        if zeeman:
             ts += "Z"
             ts += "-"
 
-        if not self._isotopologues is None:
-            ts += self._isotopologues
+        if not isotopologue is None:
+            ts += isotopologues
             ts += "-"
 
-        if self._model:
-            ts += self._model
+        if not model is None:
+            ts += model
             ts += "-"
 
-        if self._frequency_range:
-           ts += str(self._frequency_range[0])
+        if not frequency_range is None:
+           ts += frequency_range[0]
            ts += "-"
-           ts += str(self._frequency_range[1])
-
+           ts += frequency_range[1]
         return ts
+
+    def get_tag_string(self):
+
+        tss = []
+
+        if self.from_catalog:
+            tss += [self._name]
+
+        z = self._zeeman
+
+        if type(self._isotopologues) is list:
+            isotopologues = self._isotopologues
+        else:
+            isotopologues = [self._isotopologues]
+
+        if type(self._model) is list:
+            models = self._model
+        else:
+            models = [self._model]
+
+        if type(self._frequency_range) is list:
+            frequency_ranges = self._frequency_range
+        else:
+            frequency_ranges = [self._frequency_range]
+
+
+        for i in isotopologues:
+            for m in models:
+                for fr in frequency_ranges:
+                    tss += [self._get_tag_string(z, i, m, fr)]
+
+        return ",".join(tss)
 
     #
     # Jacobian & retrieval
@@ -340,75 +395,99 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
 class H2O(AbsorptionSpecies):
     def __init__(self,
-                 catalog = None,
+                 from_catalog = True,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
                  model = "PWR98",
                  on_the_fly = True,
-                 zeeman = False):
+                 zeeman = False,
+                 lineshape = "Voigt_Kuntz6",
+                 normalization = "VVH",
+                 cutoff = -1):
         super().__init__("H2O",
-                         catalog = catalog,
+                         from_catalog = from_catalog,
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
                          model = model,
                          on_the_fly = on_the_fly,
-                         zeeman = zeeman)
+                         zeeman = zeeman,
+                         lineshape = lineshape,
+                         normalization = normalization,
+                         cutoff = cutoff)
 
 class N2(AbsorptionSpecies):
     def __init__(self,
-                 catalog = None,
+                 from_catalog = True,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
                  model = "SelfContStandardType",
                  on_the_fly = True,
-                 zeeman = False):
+                 zeeman = False,
+                 lineshape = "Voigt_Kuntz6",
+                 normalization = "VVH",
+                 cutoff = -1):
         super().__init__("N2",
-                         catalog = catalog,
+                         from_catalog = from_catalog,
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
                          model = model,
                          on_the_fly = on_the_fly,
-                         zeeman = zeeman)
+                         zeeman = zeeman,
+                         lineshape = lineshape,
+                         normalization = normalization,
+                         cutoff = cutoff)
 
 class O2(AbsorptionSpecies):
     def __init__(self,
-                 catalog = None,
+                 from_catalog = True,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
                  model = "PWR93",
                  on_the_fly = True,
-                 zeeman = False):
+                 zeeman = False,
+                 lineshape = "Voigt_Kuntz6",
+                 normalization = "VVH",
+                 cutoff = -1):
         super().__init__("O2",
-                         catalog = catalog,
+                         from_catalog = from_catalog,
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
                          model = model,
                          on_the_fly = on_the_fly,
-                         zeeman = zeeman)
+                         zeeman = zeeman,
+                         lineshape = lineshape,
+                         normalization = normalization,
+                         cutoff = cutoff)
 
 class CloudWater(AbsorptionSpecies):
     def __init__(self,
-                 catalog = None,
+                 from_catalog = True,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
                  model = "MPM93",
                  on_the_fly = True,
-                 zeeman = False):
+                 zeeman = False,
+                 lineshape = "Voigt_Kuntz6",
+                 normalization = "VVH",
+                 cutoff = -1):
         super().__init__("cloud_water",
-                         catalog = catalog,
+                         from_catalog = from_catalog,
                          cia = cia,
                          frequency_range = frequency_range,
                          isotopologues = isotopologues,
                          model = model,
                          on_the_fly = on_the_fly,
-                         zeeman = zeeman)
+                         zeeman = zeeman,
+                         lineshape = lineshape,
+                         normalization = normalization,
+                         cutoff = cutoff)
 
     def get_tag_string(self):
 

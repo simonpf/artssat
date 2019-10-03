@@ -48,8 +48,17 @@ class Perrin(LineCatalog):
             f_min = min(s.f_grid.min(), f_min)
             f_max = max(s.f_grid.max(), f_max)
 
-        print(f_max / 1e9, f_min / 1e9)
-
         workspace.abs_linesReadFromSplitArtscat(basename = self.path,
                                                 fmin = f_min,
                                                 fmax = f_max)
+
+
+class Aer(LineCatalog):
+    def __init__(self, path):
+
+        self.path = path
+
+    def setup(self, workspace, sensors):
+        workspace.ReadXML(workspace.abs_lines, self.path)
+        workspace.abs_lines_per_speciesCreateFromLines()
+        workspace.abs_lines_per_speciesAddMirrorLines()

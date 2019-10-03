@@ -102,7 +102,8 @@ class Atmosphere:
                  dimensions,
                  absorbers = [],
                  scatterers = [],
-                 surface = None):
+                 surface = None,
+                 catalog = None):
 
         self.__set_dimensions__(dimensions)
         self._required_data = [("p_grid", dimensions[:1], False),
@@ -128,7 +129,7 @@ class Atmosphere:
             self._required_data += surface.required_data
             self.surface_data_indices = range(nd, len(self._required_data))
 
-        self._catalog = Perrin()
+        self._catalog = catalog
 
     #
     # Dimensions
@@ -272,15 +273,28 @@ class Atmosphere:
 
     def __setup_absorption__(self, ws, sensors):
         species = []
+        lineshapes = []
+        normalizations = []
+        cutoffs = []
+
         for i, a in enumerate(self._absorbers):
             a.setup(ws, i)
             species += [a.get_tag_string()]
+            lineshapes += [a.lineshape]
+            normalizations += [a.normalization]
+            cutoffs += [a.cutoff]
 
         ws.abs_speciesSet(species = species)
+        ws.abs_lineshape_per_tgDefine(shape = lineshapes,
+                                      normalizationfactor = normalizations,
+                                      cutoff = np.array(cutoffs))
+
+        # Set the line shape
 
         if not self.catalog is None:
             self.catalog.setup(ws, sensors)
             ws.abs_lines_per_speciesCreateFromLines()
+            ws.abs_lines_per_speciesAddMirrorLines()
         else:
             ws.abs_lines_per_speciesSetEmpty()
 
