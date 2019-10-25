@@ -238,15 +238,15 @@ class D14(ArtsPSD):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdD14(n0Star = -999.0,
-                      Dm     = np.nan,
-                      iwc    = np.nan,
-                      rho    = self.rho,
-                      alpha  = self.alpha,
-                      beta   = self.beta,
-                      t_min  = self.t_min,
-                      Dm_min = self.dm_min,
-                      t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(n0Star = -999.0,
+                                Dm     = np.nan,
+                                iwc    = np.nan,
+                                rho    = self.rho,
+                                alpha  = self.alpha,
+                                beta   = self.beta,
+                                t_min  = self.t_min,
+                                Dm_min = self.dm_min,
+                                t_max  = self.t_max)
         return pnd_call
 
     def _get_parameters(self):
@@ -473,15 +473,15 @@ class D14N(ArtsPSD):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdD14(n0Star = np.nan,
-                      Dm     = np.nan,
-                      iwc    = -999.0,
-                      rho    = self.rho,
-                      alpha  = self.alpha,
-                      beta   = self.beta,
-                      t_min  = self.t_min,
-                      Dm_min = self.dm_min,
-                      t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(n0Star = np.nan,
+                                Dm     = np.nan,
+                                iwc    = -999.0,
+                                rho    = self.rho,
+                                alpha  = self.alpha,
+                                beta   = self.beta,
+                                t_min  = self.t_min,
+                                Dm_min = self.dm_min,
+                                t_max  = self.t_max)
         return pnd_call
 
     def _get_parameters(self):
@@ -667,15 +667,15 @@ class D14MN(D14N):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdD14(n0Star = np.nan,
-                      Dm     = -999.0,
-                      iwc    = np.nan,
-                      rho    = self.rho,
-                      alpha  = self.alpha,
-                      beta   = self.beta,
-                      t_min  = self.t_min,
-                      Dm_min = self.dm_min,
-                      t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(n0Star = np.nan,
+                                Dm     = -999.0,
+                                iwc    = np.nan,
+                                rho    = self.rho,
+                                alpha  = self.alpha,
+                                beta   = self.beta,
+                                t_min  = self.t_min,
+                                Dm_min = self.dm_min,
+                                t_max  = self.t_max)
         return pnd_call
 
     def _get_parameters(self):

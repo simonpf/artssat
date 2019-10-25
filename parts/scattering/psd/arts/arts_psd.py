@@ -92,6 +92,10 @@ class ArtsPSD:
 
         @arts_agenda
         def pnd_agenda(ws):
+            ws.Ignore(ws.pnd_agenda_input_t)
+            ws.Ignore(ws.pnd_agenda_input)
+            ws.Ignore(ws.pnd_agenda_input_names)
+            ws.Ignore(ws.dpnd_data_dx_names)
             ws.ScatSpeciesSizeMassInfo(species_index = ws.agenda_array_index,
                                        x_unit = size_parameter,
                                        x_fit_start = self.x_fit_start)

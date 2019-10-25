@@ -512,7 +512,7 @@ class ActiveSensor(Sensor):
         at some point.
         """
 
-        args = self.get_wsm_args(wsm["iyActiveSingleScat"])
+        args = self.get_wsm_args(wsm["iyActiveSingleScat2"])
 
         @arts_agenda
         def iy_main_agenda(ws):
@@ -667,7 +667,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid(*args, t_interp_order = self.t_interp_order)
+            ws.iyHybrid2(*args, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)

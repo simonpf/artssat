@@ -765,7 +765,7 @@ class RetrievalCalculation:
         self.settings = {"method" : "lm",
                          "max_start_cost" : np.inf,
                          "x_norm" : np.zeros(0),
-                         "max_iter" : 10,
+                         "max_iter" : 20,
                          "stop_dx" : 0.1,
                          "lm_ga_settings" : np.array([1000.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
                          "clear_matrices" : 0,
