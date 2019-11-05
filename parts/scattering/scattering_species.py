@@ -2,6 +2,7 @@ import numpy as np
 from parts.atmosphere.atmospheric_quantity \
     import AtmosphericQuantity, extend_dimensions
 from parts.arts_object import add_property
+from parts.scattering.psd.arts.arts_psd import ArtsPSD
 
 from parts.jacobian  import JacobianBase
 from parts.retrieval import RetrievalBase, RetrievalQuantity
@@ -181,6 +182,12 @@ class ScatteringSpecies:
     @property
     def psd(self):
         return self._psd
+
+    @psd.setter
+    def psd(self, psd):
+        if not isinstance(psd, ArtsPSD):
+            raise ValueError("PSD of scattering species must implement the ArtsPsd ABC.")
+        self._psd = psd
 
     @property
     def scattering_data(self):

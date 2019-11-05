@@ -667,7 +667,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid2(*args, t_interp_order = self.t_interp_order)
+            ws.iyHybrid(*args, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)

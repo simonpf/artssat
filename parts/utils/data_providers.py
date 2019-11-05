@@ -52,7 +52,7 @@ class NetCDFDataProvider(DataProviderBase):
                 return v
         return get
 
-    def __init__(self, path, *args, **kwargs):
+    def __init__(self, path, *args, group = None, **kwargs):
         """
         Arguments:
 
@@ -63,9 +63,14 @@ class NetCDFDataProvider(DataProviderBase):
         self.fixed_dimensions = {}
         self.offsets = {}
 
-        for name in self.file_handle.variables:
+        if group is None:
+            group = self.file_handle
+        else:
+            group = self.file_handle.groups[group]
+
+        for name in group.variables:
             fname = "get_" + name
-            v = self.file_handle.variables[name]
+            v = group.variables[name]
             self.__dict__[fname] = NetCDFDataProvider._make_getter(v,
                                                                    self.fixed_dimensions,
                                                                    self.offsets)
