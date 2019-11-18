@@ -609,7 +609,7 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
-        agenda.append(debug_print)
+        #agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)

@@ -387,7 +387,7 @@ class Sensor(ArtsObject):
             ws.Copy(wsvs["scat_data"], ws.scat_data)
 
         args = self.get_wsm_args(wsm["scat_data_checkedCalc"])
-        ws.scat_data_checkedCalc(*args)
+        ws.scat_data_checkedCalc(*args, check_level = "sane")
         wsvs["scat_data_checked"].value = ws.scat_data_checked
 
         #
@@ -418,7 +418,6 @@ class Sensor(ArtsObject):
         """
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
         if isinstance(self.sensor_response, list) and self.sensor_response == []:
-            print("sensor_responseInit ", self.name)
             self.call_wsm(ws, wsm["sensor_responseInit"])
         self.call_wsm(ws, wsm["sensor_checkedCalc"])
 

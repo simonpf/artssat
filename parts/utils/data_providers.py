@@ -65,6 +65,9 @@ class NetCDFDataProvider(DataProviderBase):
 
         if group is None:
             group = self.file_handle
+        elif type(group) == int:
+            k = list(self.file_handle.groups.keys())[group]
+            group = self.file_handle.groups[k]
         else:
             group = self.file_handle.groups[group]
 
