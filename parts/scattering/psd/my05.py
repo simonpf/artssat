@@ -236,9 +236,9 @@ class MY05(ArtsPSD):
         """
         @arts_agenda
         def pnd_call(ws):
-            ws.psdMY05(hydrometeor_type = self.hydrometeor_type,
-                       t_min = self.t_min,
-                       t_max = self.t_max)
+            ws.psdMilbrandtYau05(hydrometeor_type = self.hydrometeor_type,
+                                 t_min = self.t_min,
+                                 t_max = self.t_max)
         return pnd_call
 
     def get_moment(self, p, reference_size_parameter = None):
