@@ -203,7 +203,9 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
                  zeeman = False,
                  lineshape = "no_shape",
                  normalization = "no_norm",
-                 cutoff = -1):
+                 cutoff = -1,
+                 cutoff_type = "ByBand"):
+
 
         AtmosphericQuantity.__init__(self,
                                      name,
@@ -224,7 +226,8 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
         self._lineshape = lineshape
         self._normalization = normalization
-        self._cutoff = -1
+        self._cutoff = cutoff
+        self._cutoff_type = cutoff_type
 
 
     #
@@ -273,6 +276,10 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
     @property
     def cutoff(self):
         return self._cutoff
+
+    @property
+    def cutoff_type(self):
+        return self._cutoff_type
 
     @property
     def normalization(self):
@@ -402,9 +409,10 @@ class H2O(AbsorptionSpecies):
                  model = "PWR98",
                  on_the_fly = True,
                  zeeman = False,
-                 lineshape = "Voigt_Kuntz6",
+                 lineshape = "VP",
                  normalization = "VVH",
-                 cutoff = -1):
+                 cutoff = -1,
+                 cutoff_type = "ByBand"):
         super().__init__("H2O",
                          from_catalog = from_catalog,
                          cia = cia,
@@ -415,7 +423,8 @@ class H2O(AbsorptionSpecies):
                          zeeman = zeeman,
                          lineshape = lineshape,
                          normalization = normalization,
-                         cutoff = cutoff)
+                         cutoff = cutoff,
+                         cutoff_type = cutoff_type)
 
 class N2(AbsorptionSpecies):
     def __init__(self,
@@ -426,9 +435,10 @@ class N2(AbsorptionSpecies):
                  model = "SelfContStandardType",
                  on_the_fly = True,
                  zeeman = False,
-                 lineshape = "Voigt_Kuntz6",
+                 lineshape = "VP",
                  normalization = "VVH",
-                 cutoff = -1):
+                 cutoff = -1,
+                 cutoff_type = "ByBand"):
         super().__init__("N2",
                          from_catalog = from_catalog,
                          cia = cia,
@@ -439,7 +449,8 @@ class N2(AbsorptionSpecies):
                          zeeman = zeeman,
                          lineshape = lineshape,
                          normalization = normalization,
-                         cutoff = cutoff)
+                         cutoff = cutoff,
+                         cutoff_type = cutoff_type)
 
 class O2(AbsorptionSpecies):
     def __init__(self,
@@ -450,9 +461,10 @@ class O2(AbsorptionSpecies):
                  model = "PWR93",
                  on_the_fly = True,
                  zeeman = False,
-                 lineshape = "Voigt_Kuntz6",
+                 lineshape = "VP",
                  normalization = "VVH",
-                 cutoff = -1):
+                 cutoff = -1,
+                 cutoff_type = "ByBand"):
         super().__init__("O2",
                          from_catalog = from_catalog,
                          cia = cia,
@@ -463,7 +475,8 @@ class O2(AbsorptionSpecies):
                          zeeman = zeeman,
                          lineshape = lineshape,
                          normalization = normalization,
-                         cutoff = cutoff)
+                         cutoff = cutoff,
+                         cutoff_type = cutoff_type)
 
 class CloudWater(AbsorptionSpecies):
     def __init__(self,
@@ -474,9 +487,10 @@ class CloudWater(AbsorptionSpecies):
                  model = "MPM93",
                  on_the_fly = True,
                  zeeman = False,
-                 lineshape = "Voigt_Kuntz6",
+                 lineshape = "VP",
                  normalization = "VVH",
-                 cutoff = -1):
+                 cutoff = -1,
+                 cutoff_type = "ByBand"):
         super().__init__("cloud_water",
                          from_catalog = from_catalog,
                          cia = cia,
@@ -487,7 +501,8 @@ class CloudWater(AbsorptionSpecies):
                          zeeman = zeeman,
                          lineshape = lineshape,
                          normalization = normalization,
-                         cutoff = cutoff)
+                         cutoff = cutoff,
+                         cutoff_type = cutoff_type)
 
     def get_tag_string(self):
 

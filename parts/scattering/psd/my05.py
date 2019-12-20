@@ -121,7 +121,8 @@ class MY05(ArtsPSD):
                 nu, mu, a, b = settings[hydrometeor_type]
             else:
                 raise Exception("Expected keyword hydrometeor type to be one of"
-                                " {0} but got {1}.")
+                                " {0} but got '{1}'.".format(list(settings.keys()),
+                                                           hydrometeor_type))
 
         self.nu = nu
         self.mu = mu

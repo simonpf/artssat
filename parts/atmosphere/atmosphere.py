@@ -278,19 +278,10 @@ class Atmosphere:
         cutoffs = []
 
         for i, a in enumerate(self._absorbers):
-            a.setup(ws, i)
             species += [a.get_tag_string()]
-            lineshapes += [a.lineshape]
-            normalizations += [a.normalization]
-            cutoffs += [a.cutoff]
-
         ws.abs_speciesSet(species = species)
-        ws.abs_lineshape_per_tgDefine(shape = lineshapes,
-                                      normalizationfactor = normalizations,
-                                      cutoff = np.array(cutoffs))
 
         # Set the line shape
-
         if not self.catalog is None:
             self.catalog.setup(ws, sensors)
             ws.abs_lines_per_speciesCreateFromLines()
@@ -298,11 +289,22 @@ class Atmosphere:
         else:
             ws.abs_lines_per_speciesSetEmpty()
 
+        for i, a in enumerate(self._absorbers):
+            tag = a.get_tag_string()
+            normalization = a.normalization
+            cutoff = np.float32(a.cutoff)
+            cutoff_type = a.cutoff_type
+            ws.abs_lines_per_speciesSetCutoffForSpecies(option = cutoff_type,
+                                                        value = cutoff,
+                                                        species_tag = tag)
+            lineshape = a.lineshape
+            ws.abs_linesSetLineShapeType(option = lineshape, species_tag = tag)
+
+
         ws.Copy(ws.abs_xsec_agenda, ws.abs_xsec_agenda__noCIA)
         ws.Copy(ws.propmat_clearsky_agenda,
                 ws.propmat_clearsky_agenda__OnTheFly)
-
-
+        ws.lbl_checkedCalc()
 
     def __setup_scattering__(self, ws):
         ws.ScatSpeciesInit()

@@ -78,7 +78,6 @@ class SizeParameter:
             the size grid :code:`x`.
 
         """
-        print(np.shape(self.a * x ** self.b * y))
         return np.trapz(self.a * x ** self.b * y, x = x, axis = -1)
 
 class Area(SizeParameter):
