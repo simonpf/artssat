@@ -48,9 +48,9 @@ class Perrin(LineCatalog):
             f_min = min(s.f_grid.min(), f_min)
             f_max = max(s.f_grid.max(), f_max)
 
-        workspace.abs_linesReadFromSplitArtscat(basename = self.path,
-                                                fmin = f_min,
-                                                fmax = f_max)
+        workspace.ReadSplitARTSCAT(basename = self.path,
+                                   fmin = f_min,
+                                   fmax = f_max)
 
 
 class Aer(LineCatalog):
@@ -59,6 +59,7 @@ class Aer(LineCatalog):
         self.path = path
 
     def setup(self, workspace, sensors):
-        workspace.ReadXML(workspace.abs_lines, self.path)
-        workspace.abs_lines_per_speciesCreateFromLines()
-        workspace.abs_lines_per_speciesAddMirrorLines()
+        try:
+            workspace.ReadXML(workspace.abs_lines, self.path)
+        except:
+            workspace.ReadARTSCAT(filename = self.path)

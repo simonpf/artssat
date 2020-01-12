@@ -44,6 +44,7 @@ Reference
 
 import numpy as np
 import scipy as sp
+import matplotlib.pyplot as plt
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
@@ -426,6 +427,36 @@ class RetrievalRun:
             return self.previous_run.get_result(q, attribute = attribute)
         else:
             return None
+
+    def plot_result(self,
+                    q,
+                    ax = None,
+                    transform_back = True,
+                    include_prior = True):
+
+        x = self.get_result(q,
+                            interpolate = True,
+                            transform_back = transform_back)
+        if x is None:
+            s = "No result for retrieval quantity {} available.".format(q.name)
+            raise Exception(s)
+
+        if ax is None:
+            _, ax = plt.subplots(1, 1)
+
+        z = self.simulation.workspace.z_field.value.ravel()
+
+        ls = ax.plot(x, z, label = q.name)
+
+        if include_prior:
+            xa = self.get_xa(q,
+                             interpolate = True,
+                             transform_back = transform_back)
+            ax.plot(x, z, label = q.name, c = ls[0].get_color(), ls = "--")
+
+        return ax
+
+
 
     def get_xa(self, q, interpolate = True, transform_back = False):
 

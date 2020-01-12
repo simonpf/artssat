@@ -285,7 +285,7 @@ class Atmosphere:
         if not self.catalog is None:
             self.catalog.setup(ws, sensors)
             ws.abs_lines_per_speciesCreateFromLines()
-            ws.abs_lines_per_speciesAddMirrorLines()
+            ws.abs_lines_per_speciesSetMirroring(option = "Same")
         else:
             ws.abs_lines_per_speciesSetEmpty()
 
@@ -298,7 +298,11 @@ class Atmosphere:
                                                         value = cutoff,
                                                         species_tag = tag)
             lineshape = a.lineshape
-            ws.abs_linesSetLineShapeType(option = lineshape, species_tag = tag)
+            ws.abs_lines_per_speciesSetNormalizationForSpecies(option = normalization,
+                                                               species_tag = tag)
+            ws.abs_lines_per_speciesSetLineShapeTypeForSpecies(option = lineshape,
+                                                               species_tag = tag)
+
 
 
         ws.Copy(ws.abs_xsec_agenda, ws.abs_xsec_agenda__noCIA)
