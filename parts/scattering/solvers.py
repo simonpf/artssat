@@ -95,7 +95,7 @@ class RT4(ScatteringSolver):
     def robust(self):
         return self._robust
 
-    def make_solver_call(self, sensor):
+    def make_solver_call(self, atmosphere, sensor):
 
         args = sensor.get_wsm_args(wsm["RT4Calc"])
         def run_solver(ws):
@@ -123,17 +123,25 @@ class Disort(ScatteringSolver):
         self._new_optprop = new_optprop
         self._Npfct = Npfct
 
-    def make_solver_call(self, sensor):
+    def make_solver_call(self, atmosphere, sensor):
 
-        args = sensor.get_wsm_args(wsm["DisortCalcWithARTSSurface"])
+        st = atmosphere.surface.surface_temperature_field[0, 0]
+        args = sensor.get_wsm_args(wsm["DisortCalc"])
         args_scat_data = sensor.get_wsm_args(wsm["scat_data_checkedCalc"])
+
         def run_solver(ws):
             ws.Ignore(ws.atmosphere_dim)
             ws.DOAngularGridsSet(N_za_grid = 38, N_aa_grid = 1, za_grid_opt_file = "")
-            ws.DisortCalcWithARTSSurface(*args, nstreams = self._nstreams,
-                                         pfct_method = self._pfct_method,
-                                         new_optprop = self._new_optprop,
-                                         Npfct = self._Npfct)
+
+            ws.rtp_pos = np.array([1, 0, 0])
+            ws.AgendaExecute(ws.surface_rtprop_agenda)
+
+            ws.surface_scalar_reflectivity = ws.surface_rmatrix.value[0,0]
+            ws.NumericSet(ws.surface_skin_t, st)
+            ws.DisortCalc(*args, nstreams = self._nstreams,
+                          pfct_method = self._pfct_method,
+                          new_optprop = self._new_optprop,
+                          Npfct = self._Npfct)
 
         return run_solver
 

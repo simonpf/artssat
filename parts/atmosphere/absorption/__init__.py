@@ -194,7 +194,7 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
     def __init__(self,
                  name,
-                 from_catalog = True,
+                 from_catalog = False,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
@@ -367,6 +367,10 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
         unit = self.retrieval.unit
         x = unit.to_arts(ws, x)
 
+        if self._wsv_index is None:
+            raise Exception("Absorber's wsv_index is unknown. This is likely "
+                            "its setup(...) routine has not been called.")
+
         ws.vmr_field.value[self._wsv_index, :, :, :] = x
 
     #
@@ -402,7 +406,7 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
 
 class H2O(AbsorptionSpecies):
     def __init__(self,
-                 from_catalog = True,
+                 from_catalog = False,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
@@ -410,7 +414,7 @@ class H2O(AbsorptionSpecies):
                  on_the_fly = True,
                  zeeman = False,
                  lineshape = "VP",
-                 normalization = "VVH",
+                 normalization = "VVW",
                  cutoff = -1,
                  cutoff_type = "ByBand"):
         super().__init__("H2O",
@@ -428,7 +432,7 @@ class H2O(AbsorptionSpecies):
 
 class N2(AbsorptionSpecies):
     def __init__(self,
-                 from_catalog = True,
+                 from_catalog = False,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
@@ -454,7 +458,7 @@ class N2(AbsorptionSpecies):
 
 class O2(AbsorptionSpecies):
     def __init__(self,
-                 from_catalog = True,
+                 from_catalog = False,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
@@ -462,7 +466,7 @@ class O2(AbsorptionSpecies):
                  on_the_fly = True,
                  zeeman = False,
                  lineshape = "VP",
-                 normalization = "VVH",
+                 normalization = "VVW",
                  cutoff = -1,
                  cutoff_type = "ByBand"):
         super().__init__("O2",
@@ -480,7 +484,7 @@ class O2(AbsorptionSpecies):
 
 class CloudWater(AbsorptionSpecies):
     def __init__(self,
-                 from_catalog = True,
+                 from_catalog = False,
                  cia = None,
                  frequency_range = None,
                  isotopologues = None,
@@ -488,7 +492,7 @@ class CloudWater(AbsorptionSpecies):
                  on_the_fly = True,
                  zeeman = False,
                  lineshape = "VP",
-                 normalization = "VVH",
+                 normalization = "RQ",
                  cutoff = -1,
                  cutoff_type = "ByBand"):
         super().__init__("cloud_water",

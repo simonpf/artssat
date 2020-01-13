@@ -50,6 +50,10 @@ class Tessem(Surface):
                 ("surface_wind_speed", ("n_lat", "n_lon"), True)]
 
     @property
+    def surface_temperature_field(self):
+        return self._surface_temperature_field.value
+
+    @property
     def surface_salinity(self):
         return self._surface_salinity.value
 

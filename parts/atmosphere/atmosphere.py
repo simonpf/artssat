@@ -278,6 +278,7 @@ class Atmosphere:
         cutoffs = []
 
         for i, a in enumerate(self._absorbers):
+            a.setup(ws, i)
             species += [a.get_tag_string()]
         ws.abs_speciesSet(species = species)
 
@@ -287,6 +288,10 @@ class Atmosphere:
             ws.abs_lines_per_speciesCreateFromLines()
             ws.abs_lines_per_speciesSetMirroring(option = "Same")
         else:
+            for a in self._absorbers:
+                if a.from_catalog:
+                    raise Exception("Absorber {} has from_catalog set to true "
+                                    "but no catalog is provided".format(a.name))
             ws.abs_lines_per_speciesSetEmpty()
 
         for i, a in enumerate(self._absorbers):

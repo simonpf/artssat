@@ -185,7 +185,7 @@ class ArtsSimulation:
 
             # Run scattering solver
             if self.atmosphere.scattering:
-                f = self.scattering_solver.make_solver_call(s)
+                f = self.scattering_solver.make_solver_call(self.atmosphere, s)
                 f(ws)
 
             f = s.make_y_calc_function(append = i > 0,

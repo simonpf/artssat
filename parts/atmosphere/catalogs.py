@@ -52,7 +52,6 @@ class Perrin(LineCatalog):
                                    fmin = f_min,
                                    fmax = f_max)
 
-
 class Aer(LineCatalog):
     def __init__(self, path):
 

@@ -428,36 +428,6 @@ class RetrievalRun:
         else:
             return None
 
-    def plot_result(self,
-                    q,
-                    ax = None,
-                    transform_back = True,
-                    include_prior = True):
-
-        x = self.get_result(q,
-                            interpolate = True,
-                            transform_back = transform_back)
-        if x is None:
-            s = "No result for retrieval quantity {} available.".format(q.name)
-            raise Exception(s)
-
-        if ax is None:
-            _, ax = plt.subplots(1, 1)
-
-        z = self.simulation.workspace.z_field.value.ravel()
-
-        ls = ax.plot(x, z, label = q.name)
-
-        if include_prior:
-            xa = self.get_xa(q,
-                             interpolate = True,
-                             transform_back = transform_back)
-            ax.plot(x, z, label = q.name, c = ls[0].get_color(), ls = "--")
-
-        return ax
-
-
-
     def get_xa(self, q, interpolate = True, transform_back = False):
 
         if transform_back:
@@ -483,6 +453,149 @@ class RetrievalRun:
             return self.previous_run.get_result(q, attribute = "avk")
         else:
             return None
+
+    #
+    # Plotting functions
+    #
+
+    def plot_result(self,
+                    q,
+                    ax = None,
+                    transform_back = True,
+                    include_prior = True):
+        """
+        Plot retrieved results of given quantity.
+
+        Works only in 1-dimensional atmospheres.
+
+        Args:
+            q: The retrieval quantity of which to plot the results
+            ax: matplotilib Axes object in which to plot the results. If
+                 None, a new axes object is constructed using suplots(1, 1).
+            transform_back: Whether or not to plot results in
+                transformed (:code:`False`) or original state space
+                (True, default)
+            include_prior: If :code:`True` also the a priori mean is plotted
+                using a dashed line.
+        """
+
+        x = self.get_result(q,
+                            interpolate = True,
+                            transform_back = transform_back)
+        if x is None:
+            s = "No result for retrieval quantity {} available.".format(q.name)
+            raise Exception(s)
+
+        if ax is None:
+            _, ax = plt.subplots(1, 1)
+
+        z = self.simulation.workspace.z_field.value.ravel()
+
+        ls = ax.plot(x, z, label = q.name)
+
+        if include_prior:
+            xa = self.get_xa(q,
+                             interpolate = True,
+                             transform_back = transform_back)
+            ax.plot(x, z, label = q.name, c = ls[0].get_color(), ls = "--")
+
+        return ax
+
+    def plot_jacobian(self,
+                      sensor,
+                      q,
+                      ax = None):
+        """
+        Plot the Jacobian of observations from a given sensor w.r.t.
+        a given retrieval quantity. Note that the Jacobian is always
+        displayed in transformed coordinates.
+
+        Works only in 1-dimensional atmospheres.
+
+        Args:
+            sensor: The sensor providing the osbervations of which the Jacobian
+                should be plotted.
+            q: The retrieval quantity w.r.t. to which the Jacobian should be plotted.
+            ax: matplotilib Axes object in which to plot the results. If
+                 None, a new axes object is constructed using suplots(1, 1).
+        """
+        i1, j1 = self.sensor_indices[sensor.name]
+        i2, j2 = self.rq_indices[q]
+        dydx = self.jacobian[i1 : j1, i2: j2]
+
+        if dydx is None:
+            s = "No result for retrieval quantity {} available.".format(q.name)
+            raise Exception(s)
+
+        if ax is None:
+            _, ax = plt.subplots(1, 1)
+
+        for i in range(dydx.shape[0]):
+            ax.plot(dydx[i, :], label = "Channel {}".format(i))
+        return ax
+
+    def plot_a_priori_errors(self):
+        """
+        Plots contributions of different components of the x-vector to the OEM
+        cost.
+        """
+        i = 0
+        for q in self.retrieval_quantities:
+            _, ax = plt.subplots(1, 1)
+
+            xa = q.retrieval.xa
+            x = self.get_result(q,
+                                interpolate = False,
+                                transform_back = False)
+            dx = x - xa
+
+            data_provider = self.simulation.data_provider
+            fname = "get_" + q.name + "_covariance"
+            try:
+                covmat_fun = getattr(data_provider, fname)
+                covmat = covmat_fun(*args, **kwargs)
+            except AttributeError as e:
+                covmat = None
+            except Exception as e:
+                raise e
+
+            fname = "get_" + q.name + "_precision"
+            try:
+                precmat_fun = getattr(data_provider, fname)
+                precmat = precmat_fun(*args, **kwargs)
+            except AttributeError as e:
+                precmat = None
+            except Exception as e:
+                raise e
+
+            if precmat:
+                c = dx * np.dot(precmat, dx)
+            else:
+                c = dx * np.linalg.solve(precmat, dx)
+
+            ax.plot(c)
+            ax.set_title(q.name, loc = "left")
+
+    def plot_observation_errors(self):
+        """
+        Plots contributions of different components of the x-vector to the OEM
+        cost.
+        """
+        data_provider = self.simulation.data_provider
+        get_name = "get_observation_error_covariance"
+        f = getattr(data_provider, get_name)
+        covmat_se = f(*args, **kwargs)
+
+        for s in self.sensors:
+            _, ax = plt.subplots(1, 1)
+            i, j = self.sensor_indices[s.name]
+            y = self.y[i : j]
+            yf = self.yf[i : j]
+            dy = yf - y
+            s = covmat_se[i : j, i : j]
+            c = dy * np.dot(s, dy)
+            ax.plot(c)
+            ax.set_title(s.name, loc = "left")
 
     def setup_a_priori(self, *args, **kwargs):
         """
@@ -577,8 +690,6 @@ class RetrievalRun:
 
         ws.retrievalDefClose()
 
-
-
         self.xa = np.concatenate(xa)
         self.x0 = np.concatenate(x0)
 
@@ -610,7 +721,6 @@ class RetrievalRun:
                 covmat_blocks += [covmat_se[i:j, i:j]]
 
         covmat_se = sp.sparse.block_diag(covmat_blocks, format = "coo")
-
         ws.covmat_seAddBlock(block = covmat_se)
 
     def setup_iteration_agenda(self):
@@ -673,13 +783,14 @@ class RetrievalRun:
 
             i += 1
 
+        atmosphere = self.simulation.atmosphere
         # Passive sensor
         for s in [self.sensors[i] for i in i_passive]:
 
             # Scattering solver call
             if scattering:
                 scattering_solver = self.simulation.scattering_solver
-                agenda.append(arts_agenda(scattering_solver.make_solver_call(s)))
+                agenda.append(arts_agenda(scattering_solver.make_solver_call(atmosphere, s)))
 
             agenda.append(arts_agenda(
                 s.make_y_calc_function(append = i > 0,
