@@ -853,12 +853,18 @@ class MaskedRegularGrid(ReducedVerticalGrid):
             i_last = np.where(mask)[0][-1]
         else:
             i_first = 0
-            i_last  = len(mask)
+            i_last  = len(mask) - 1
 
-        n = self.n_points + 2
+        n = min(self.n_points + 2, mask.sum() + 2)
         new_grid = np.zeros((n,))
         new_grid[1 : -1] = np.linspace(old_grid[i_first], old_grid[i_last],
-                                       self.n_points)
+                                       n - 2)
+
+        if n == 2:
+            new_grid[0] = old_grid[0]
+            new_grid[1] = old_grid[2]
+            return old_grid, new_grid
+
         # Left
         if self.transition is None:
             if i_first > 0:
