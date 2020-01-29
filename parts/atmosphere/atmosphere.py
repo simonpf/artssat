@@ -296,16 +296,17 @@ class Atmosphere:
 
         for i, a in enumerate(self._absorbers):
             tag = a.get_tag_string()
-            normalization = a.normalization
             cutoff = np.float32(a.cutoff)
             cutoff_type = a.cutoff_type
-            ws.abs_lines_per_speciesSetCutoffForSpecies(option = cutoff_type,
-                                                        value = cutoff,
-                                                        species_tag = tag)
+            #ws.abs_lines_per_speciesSetCutoffForSpecies(option = cutoff_type,
+            #                                            value = cutoff,
+            #                                            species_tag = tag)
             lineshape = a.lineshape
-            ws.abs_lines_per_speciesSetNormalizationForSpecies(option = normalization,
-                                                               species_tag = tag)
             ws.abs_lines_per_speciesSetLineShapeTypeForSpecies(option = lineshape,
+                                                               species_tag = tag)
+
+            normalization = a.normalization
+            ws.abs_lines_per_speciesSetNormalizationForSpecies(option = normalization,
                                                                species_tag = tag)
 
 

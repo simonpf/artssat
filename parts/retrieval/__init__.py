@@ -462,7 +462,8 @@ class RetrievalRun:
                     q,
                     ax = None,
                     transform_back = True,
-                    include_prior = True):
+                    include_prior = True,
+                    data_provider = None):
         """
         Plot retrieved results of given quantity.
 
@@ -497,7 +498,7 @@ class RetrievalRun:
             xa = self.get_xa(q,
                              interpolate = True,
                              transform_back = transform_back)
-            ax.plot(x, z, label = q.name, c = ls[0].get_color(), ls = "--")
+            ax.plot(xa, z, label = q.name, c = ls[0].get_color(), ls = "--")
 
         return ax
 
@@ -522,6 +523,7 @@ class RetrievalRun:
         i1, j1 = self.sensor_indices[sensor.name]
         i2, j2 = self.rq_indices[q]
         dydx = self.jacobian[i1 : j1, i2: j2]
+        print(dydx.shape)
 
         if dydx is None:
             s = "No result for retrieval quantity {} available.".format(q.name)
@@ -534,7 +536,7 @@ class RetrievalRun:
             ax.plot(dydx[i, :], label = "Channel {}".format(i))
         return ax
 
-    def plot_a_priori_errors(self):
+    def plot_a_priori_errors(self, *args, **kwargs):
         """
         Plots contributions of different components of the x-vector to the OEM
         cost.
@@ -571,7 +573,7 @@ class RetrievalRun:
             if precmat:
                 c = dx * np.dot(precmat, dx)
             else:
-                c = dx * np.linalg.solve(precmat, dx)
+                c = dx * np.linalg.solve(covmat, dx)
 
             ax.plot(c)
             ax.set_title(q.name, loc = "left")

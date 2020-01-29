@@ -48,7 +48,7 @@ class ScatteringSolver(metaclass = ABCMeta):
 
 class RT4(ScatteringSolver):
     def __init__(self,
-                 nstreams = 16,
+                 nstreams = 32,
                  pfct_method = "median",
                  quad_type = "D",
                  add_straight_angles = 1,

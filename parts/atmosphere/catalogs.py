@@ -48,6 +48,11 @@ class Perrin(LineCatalog):
             f_min = min(s.f_grid.min(), f_min)
             f_max = max(s.f_grid.max(), f_max)
 
+        df = f_max - f_min
+        f_min = np.maximum(f_min - 0.5 * df, 0.0)
+        f_max = f_max + 0.5 * df
+        print(f_min, f_max)
+
         workspace.ReadSplitARTSCAT(basename = self.path,
                                    fmin = f_min,
                                    fmax = f_max)
