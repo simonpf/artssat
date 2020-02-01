@@ -321,21 +321,40 @@ class TemperatureMask:
     The temperature mask replaces values at grid points outside of the
     given temperature interval with another value.
     """
-    def __init__(self, lower_limit, upper_limit):
+    def __init__(self,
+                 lower_limit,
+                 upper_limit,
+                 lower_inclusive = False,
+                 upper_inclusive = False):
         """
         Arguments:
 
             lower_limit(:code:`float`): The lower temperature limit
-
             upper_limit(:code:`float`): The upper temperature limit
+            lower_inclusive: Whether or not to include highest grid
+                point (in altitude) that does not lie in the half-open
+                temperature interval between lower_limit and upper limit.
+            lower_inclusive: Whether or not to include lowest grid
+                point (in altitude) that does not lie in the half-open
+                temperature interval between lower_limit and upper limit.
+
+                point on lower limit.
+            upper_inclusive: Whether or not to include adjacent grid
+                point on upper limit.
         """
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
+        self.upper_inclusive = upper_inclusive
+        self.lower_inclusive = lower_inclusive
 
     def __call__(self, data_provider, *args, **kwargs):
         t    = data_provider.get_temperature(*args, **kwargs)
         inds = np.logical_and(t.ravel() >= self.lower_limit,
                               t.ravel() <  self.upper_limit)
+        if self.upper_inclusive:
+            inds[1:] += inds[:-1]
+        if self.lower_inclusive:
+            inds[:-1] += inds[1:]
         return inds
 
 class AltitudeMask:
