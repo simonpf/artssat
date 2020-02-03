@@ -463,7 +463,9 @@ class RetrievalRun:
                     ax = None,
                     transform_back = True,
                     include_prior = True,
-                    data_provider = None):
+                    data_provider = None,
+                    args = [],
+                    kwargs = {}):
         """
         Plot retrieved results of given quantity.
 
@@ -499,6 +501,11 @@ class RetrievalRun:
                              interpolate = True,
                              transform_back = transform_back)
             ax.plot(xa, z, label = q.name, c = ls[0].get_color(), ls = "--")
+
+        if data_provider:
+            getter = getattr(data_provider, "get_" + q.name)
+            x = getter(*args, **kwargs)
+            ax.plot(x, z, label = "Reference", c = ls[0].get_color(), ls = "-.")
 
         return ax
 

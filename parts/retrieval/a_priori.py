@@ -316,6 +316,37 @@ class TropopauseMask:
             inds[i : inds.size] = False
         return inds
 
+class FreezingLevel:
+    def __init__(self,
+                 lower_inclusive = False,
+                 invert = False):
+        self.lower_inclusive = lower_inclusive
+        self.invert = invert
+
+    def __call__(self, data_provider, *args, **kwargs):
+        """
+        Arguments:
+
+            data_provider: Data provider describing the atmospheric scenario.
+
+            *args: Arguments to forward to data provider.
+
+            **kwargs: Keyword arguments to forward to data_provider.
+        """
+        t     = data_provider.get_temperature(*args, **kwargs)
+        inds = np.where(t < 273.15)[0]
+        if len(inds) > 0:
+            i = inds[0]
+        if self.lower_inclusive:
+            i = max(i - 1, 0)
+        inds = np.zeros(t.size, dtype = np.bool)
+        inds[i:] = True
+
+        if self.invert:
+            inds = np.logical_not(inds)
+
+        return inds
+
 class TemperatureMask:
     """
     The temperature mask replaces values at grid points outside of the
