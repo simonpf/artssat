@@ -313,7 +313,7 @@ class TropopauseMask:
         inds  = np.ones(t.size, dtype = np.bool)
         if len(tp > 0):
             i     = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
-            inds[i : inds.size] = False
+            inds[i + 1 : inds.size] = False
         return inds
 
 class FreezingLevel:
@@ -337,6 +337,8 @@ class FreezingLevel:
         inds = np.where(t < 273.15)[0]
         if len(inds) > 0:
             i = inds[0]
+        else:
+            i = 0
         if self.lower_inclusive:
             i = max(i - 1, 0)
         inds = np.zeros(t.size, dtype = np.bool)
@@ -478,8 +480,8 @@ class FixedAPriori(APrioriProviderBase):
         self.mask = mask
         self.mask_value = mask_value
 
-    def _get_mask(self, *args, **kwargs):
-        mask = self.mask(self.owner, *args, **kwargs)
+    def _get_mask(self, data_provider, *args, **kwargs):
+        mask = self.mask(data_provider, *args, **kwargs)
         return mask.astype(np.float)
 
     def get_xa(self, *args, **kwargs):
@@ -522,8 +524,8 @@ class FunctionalAPriori(APrioriProviderBase):
         self.mask       = mask
         self.mask_value = mask_value
 
-    def _get_mask(self, *args, **kwargs):
-        mask = self.mask(self.owner, *args, **kwargs)
+    def _get_mask(self, data_provider, *args, **kwargs):
+        mask = self.mask(data_provider, *args, **kwargs)
         return mask.astype(np.float)
 
     def get_xa(self, *args, **kwargs):
@@ -798,14 +800,33 @@ class ReducedVerticalGrid(APrioriProviderBase):
                 yi[:-1, -1] = 0.0
         return yi
 
-    def _get_mask(self, *args, **kwargs):
-        try:
-            mask = self.a_priori._get_mask(*args, **kwargs)
-            mask_i = self._interpolate(mask, *args, **kwargs)
-            mask_i[mask_i > 0.0] = 1.0
+    def _get_mask(self, data_provider, *args, **kwargs):
+        mask = self.a_priori._get_mask(data_provider, *args, **kwargs)
+
+        mask_i = self._interpolate(mask, *args, **kwargs)
+        mask_i[mask_i > 0.0] = 1.0
+
+        # Return if mask is false everywhere
+        if np.all(np.logical_not(mask)):
             return mask_i
-        except:
-            return np.ones(self.new_grid.shape, dtype = np.bool)
+
+
+        old_grid, new_grid = self._get_grids(*args, **kwargs)
+        i_0_old, i_1_old = np.where(mask)[0][[0, -1]]
+        i_0_new, i_1_new = np.where(mask_i)[0][[0, -1]]
+
+        if self.quantity == "pressure":
+            if old_grid[i_0_old] > new_grid[i_0_new]:
+                mask_i[max(i_0_new - 1, 0)] = 1.0
+            if old_grid[i_1_old] < new_grid[i_1_new]:
+                mask_i[min(i_1_new + 1, new_grid.size - 1)] = 1.0
+        else:
+            if old_grid[i_0_old] < new_grid[i_0_new]:
+                mask_i[max(i_0_new - 1, 0)] = 1.0
+            if old_grid[i_1_old] > new_grid[i_1_new]:
+                mask_i[min(i_1_new + 1, new_grid.size - 1)] = 1.0
+
+        return mask_i.astype(np.bool)
 
     def get_xa(self, *args, **kwargs):
         self.a_priori.owner = self.owner
@@ -827,7 +848,7 @@ class ReducedVerticalGrid(APrioriProviderBase):
             if isinstance(covmat, sp.sparse.spmatrix):
                 covmat = covmat.todense()
             covmat = self._interpolate_matrix(covmat, *args, **kwargs)
-            mask = ReducedVerticalGrid._get_mask(self, *args, **kwargs)
+            mask = self._get_mask(self.owner, *args, **kwargs)
             for i in np.where(np.logical_not(mask))[0]:
                 covmat[i, i + 1 :] = 0.0
                 covmat[i+1 :, i] = 0.0
@@ -879,7 +900,7 @@ class MaskedRegularGrid(ReducedVerticalGrid):
 
         self.transition = transition
 
-    def _get_mask(self, *args, **kwargs):
+    def _get_mask(self, data_provider, *args, **kwargs):
         mask = np.ones((self.n_points + 2,))
         mask[1] = 0.0
         mask[-1] = 0.0
