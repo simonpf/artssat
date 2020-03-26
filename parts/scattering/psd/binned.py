@@ -7,7 +7,7 @@ by particle densities over a given number of bins.
 """
 import numpy as np
 import scipy as sp
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq

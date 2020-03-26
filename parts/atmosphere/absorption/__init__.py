@@ -12,7 +12,7 @@ from parts.jacobian    import JacobianBase
 from parts.retrieval   import RetrievalBase, RetrievalQuantity
 
 import numpy as np
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 from typhon.physics.atmosphere import vmr2relative_humidity, \
     relative_humidity2vmr
 
@@ -105,7 +105,7 @@ class RelativeHumidity(Unit):
 
         Arguments:
 
-            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+            ws(:code:`pyarts.workspace.Workspace`): Workspace object
                 which contains pressure grid and temperature field required
                 for the converstion.
 
@@ -127,7 +127,7 @@ class RelativeHumidity(Unit):
 
         Arguments:
 
-            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+            ws(:code:`pyarts.workspace.Workspace`): Workspace object
                 which contains pressure grid and temperature field required
                 for the conversion.
 
@@ -164,17 +164,13 @@ class Jacobian(JacobianBase, ArtsObject):
         ArtsObject.__init__(self)
 
         self.unit = VMR()
-        self.method = "analytical"
         self.for_species_tag = 1
-        self.dx = 0.001
 
     def _make_setup_kwargs(self, ws):
         kwargs = self.get_grids(ws)
         kwargs.update({"species" : self.quantity.get_tag_string(),
-                       "method" : self.method,
                        "unit" : self.unit.arts_name,
-                       "for_species_tag" : self.for_species_tag,
-                       "dx" : self.dx})
+                       "for_species_tag" : self.for_species_tag})
         return kwargs
 
     def setup(self, ws):

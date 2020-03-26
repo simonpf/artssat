@@ -247,7 +247,7 @@ class JacobianCalculation:
 
         Arguments:
 
-            ws(:code:`typhon.arts.workspace.Workspace`): Workspace object
+            ws(:code:`pyarts.workspace.Workspace`): Workspace object
             on which to setup the Jacobian calculation.
 
             data_provider: The data provider object providing the data for

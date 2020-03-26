@@ -46,9 +46,9 @@ not consistently passed to the surface agenda.
 Attributes:
 
     wsm(dict): Alias for the :code:'workspace_methods' dictionary
-               from 'typhon.arts.workspace.methods'
+               from 'pyarts.workspace.methods'
     wsv(dict): Alias for the :code:`workspace_variables` dictionary
-               from :code:`typhon.arts.workspace.variables`
+               from :code:`pyarts.workspace.variables`
 """
 from abc import ABCMeta, abstractmethod, abstractproperty
 
@@ -56,10 +56,10 @@ import numpy as np
 
 from parts.arts_object import ArtsObject, arts_property
 from parts.arts_object import Dimension as dim
-from typhon.arts.types import SingleScatteringData
-from typhon.arts.workspace import Workspace, arts_agenda
-from typhon.arts.workspace.methods import workspace_methods
-from typhon.arts.workspace.variables import WorkspaceVariable, \
+from pyarts.types import SingleScatteringData
+from pyarts.workspace import Workspace, arts_agenda
+from pyarts.workspace.methods import workspace_methods
+from pyarts.workspace.variables import WorkspaceVariable, \
                                             workspace_variables
 
 wsv = workspace_variables
@@ -371,7 +371,7 @@ class Sensor(ArtsObject):
 
         Paremters:
 
-            ws(typhon.arts.workspace.Workspace): The workspace on which
+            ws(pyarts.workspace.Workspace): The workspace on which
                 to perform the setup of the sensor.
         """
         self._create_private_wsvs(ws, type(self).private_wsvs)
@@ -383,12 +383,14 @@ class Sensor(ArtsObject):
         # Scat data
         #
         if ws.scat_data_raw.initialized:
-            ws.scat_dataCalc(ws.scat_data_raw, wsvs["f_grid"], interp_order = 1)
+            ws.scat_dataCalc(scat_data_raw=ws.scat_data_raw,
+                             f_grid=wsvs["f_grid"],
+                             interp_order=1)
             ws.Copy(wsvs["scat_data"], ws.scat_data)
 
-        args = self.get_wsm_args(wsm["scat_data_checkedCalc"])
-        ws.scat_data_checkedCalc(*args, check_level = "sane")
-        wsvs["scat_data_checked"].value = ws.scat_data_checked
+        kwargs = self.get_wsm_kwargs(wsm["scat_data_checkedCalc"])
+        ws.scat_data_checkedCalc(**kwargs, check_level = "sane")
+        wsvs["scat_data_checked"].value = ws.scat_data_checked.value
 
         #
         # Need to add agendas in the end so that input arguments
@@ -494,13 +496,13 @@ class ActiveSensor(Sensor):
             The iy_transmitter_agenda for the active sensor.
 
         """
-        args = self.get_wsm_args(wsm["iy_transmitterSinglePol"])
+        kwargs = self.get_wsm_kwargs(wsm["iy_transmitterSinglePol"])
         @arts_agenda
         def iy_transmitter_agenda(ws):
             ws.Ignore(ws.rtp_pos)
             ws.Ignore(ws.rtp_los)
             ws.Ignore(ws.f_grid)
-            ws.iy_transmitterSinglePol(*args)
+            ws.iy_transmitterSinglePol(**kwargs)
 
         return iy_transmitter_agenda
 
@@ -511,8 +513,7 @@ class ActiveSensor(Sensor):
         at some point.
         """
 
-        args = self.get_wsm_args(wsm["iyActiveSingleScat2"])
-
+        kwargs = self.get_wsm_kwargs(wsm["iyActiveSingleScat2"])
         @arts_agenda
         def iy_main_agenda(ws):
             ws.Ignore(ws.iy_id)
@@ -523,10 +524,9 @@ class ActiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyActiveSingleScat2(*args,
+            ws.iyActiveSingleScat2(**kwargs,
                                    pext_scaling = self._wsvs["extinction_scaling"],
                                    trans_in_jacobian = 1)
-
         return iy_main_agenda
 
     #
@@ -598,7 +598,7 @@ class ActiveSensor(Sensor):
             raise Exception("ARTS doesn't support appending measurements from"
                             " active sensors.")
 
-        args = self.get_wsm_args(wsm["yActive"])
+        kwargs = self.get_wsm_kwargs(wsm["yActive"])
 
         if self.y_min:
             y_min = self.y_min
@@ -606,7 +606,7 @@ class ActiveSensor(Sensor):
             y_min = - np.inf
 
         def y_calc(ws):
-            ws.yActive(*args, dbze_min = y_min)
+            ws.yActive(**kwargs, dbze_min = y_min)
 
         return y_calc
 
@@ -666,7 +666,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid2(*args, t_interp_order = self.t_interp_order)
+            ws.iyHybrid2(**kwargs, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)
@@ -675,16 +675,14 @@ class PassiveSensor(Sensor):
             ws.Ignore(ws.iy_unit)
             ws.Ignore(ws.iy_aux_vars)
             ws.ppathCalc()
-            ws.iyEmissionStandard(*args)
-
-        kwargs = {"t_interp_order" : self.t_interp_order}
+            ws.iyEmissionStandard(**kwargs)
 
         if scattering:
             agenda = iy_main_agenda_scattering
-            args = self.get_wsm_args(wsm["iyHybrid"])
+            kwargs = self.get_wsm_kwargs(wsm["iyHybrid"])
         else:
             agenda = iy_main_agenda_no_scattering
-            args = self.get_wsm_args(wsm["iyEmissionStandard"])
+            kwargs = self.get_wsm_kwargs(wsm["iyEmissionStandard"])
 
         agenda.__name__ = "iy_main_agenda"
 
@@ -771,16 +769,16 @@ class PassiveSensor(Sensor):
         """
 
         if append:
-            args = self.get_wsm_args(wsm["yCalcAppend"])
+            kwargs = self.get_wsm_kwargs(wsm["yCalcAppend"])
         else:
-            args = self.get_wsm_args(wsm["yCalc"])
+            kwargs = self.get_wsm_kwargs(wsm["yCalc"])
 
         def y_calc_append(ws):
-            ws.yCalcAppend(*args,
+            ws.yCalcAppend(**kwargs,
                            jacobian_quantities_copy = ws.jacobian_quantities)
 
         def y_calc(ws):
-            ws.yCalc(*args)
+            ws.yCalc(**kwargs)
 
         if append:
             f = y_calc_append

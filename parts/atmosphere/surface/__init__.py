@@ -4,7 +4,7 @@ Surface
 
 """
 import numpy as np
-from typhon.arts.workspace import Workspace, arts_agenda
+from pyarts.workspace import Workspace, arts_agenda
 
 ws = Workspace()
 ws.NumericCreate("surface_temperature")

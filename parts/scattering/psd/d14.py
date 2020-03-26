@@ -48,7 +48,7 @@ In this module, two implementations of the D14 PSD are provided:
 from parts import dimensions as dim
 from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.scattering.psd.data.psd_data import PSDData, D_eq
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
@@ -245,7 +245,7 @@ class D14(ArtsPSD):
                                 alpha  = self.alpha,
                                 beta   = self.beta,
                                 t_min  = self.t_min,
-                                Dm_min = self.dm_min,
+                                dm_min = self.dm_min,
                                 t_max  = self.t_max)
         return pnd_call
 

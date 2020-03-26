@@ -53,7 +53,7 @@ class Dimension:
 
         Parameters:
 
-            ws(typhon.arts.workspace.Workspace): Workspace object
+            ws(pyarts.workspace.Workspace): Workspace object
                 for which the dimension was deduced.
 
             value(Int): The deduced dimenions
@@ -73,7 +73,7 @@ class Dimension:
 
         Parameters:
 
-            ws(typhon.arts.workspace.Workspace): The workspace for which
+            ws(pyarts.workspace.Workspace): The workspace for which
                 to check the deduction.
 
             n(int): The value which to check against previous deduced values.
@@ -98,7 +98,7 @@ class Dimension:
 
         Parameters:
 
-            ws(typhon.arts.workspace.Workspace) The workspace object for
+            ws(pyarts.workspace.Workspace) The workspace object for
                 which the value of the dimension should be deduced.
 
         Raises:

@@ -75,9 +75,9 @@ Reference
 import numpy as np
 import inspect
 from abc import ABCMeta, abstractmethod, abstractproperty
-from typhon.arts.workspace.variables import WorkspaceVariable, group_names
-from typhon.arts.workspace.variables import workspace_variables as wsv
-from typhon.arts.workspace import Workspace
+from pyarts.workspace.variables import WorkspaceVariable, group_names
+from pyarts.workspace.variables import workspace_variables as wsv
+from pyarts.workspace import Workspace
 
 ################################################################################
 # The Dimension class
@@ -351,7 +351,7 @@ def arts_property(group, shape = None, wsv = None, optional = False):
 
         shape(tuple): Tuple describing the expected shape of the variable.
 
-        wsv(typhon.arts.workspace.WorkspaceVariable): The workspace variable
+        wsv(pyarts.workspace.WorkspaceVariable): The workspace variable
         corresponding to the ARTS property.
     """
     class ArtsPropertySpecialization(ArtsProperty):
@@ -401,7 +401,7 @@ class ArtsProperty:
             Set to :code:`None` if no reasonable expected shape can be
             specified.
 
-            wsv(typhon.arts.workspace.WorkspaceVariable): Workspace variable
+            wsv(pyarts.workspace.WorkspaceVariable): Workspace variable
             corresponding to this ARTS property or :code:`None` if no such
             WSV exists.
 
@@ -507,7 +507,7 @@ class ArtsProperty:
         The group specification can be a single string in which case this
         function will try to convert the provided value to the given group
         using the :code:`convert` class method of
-        :class:`typhon.arts.workspace.WorkspaceVariable`.
+        :class:`pyarts.workspace.WorkspaceVariable`.
 
         It is also possible to specify a list of groups for the expected
         value. In this case this function simply checks whether the group
@@ -805,7 +805,7 @@ class ArtsObject:
 
         Parameters:
 
-            ws(typhon.arts.workspace): The workspace for which to setup
+            ws(pyarts.workspace): The workspace for which to setup
             the simulation.
 
         """
@@ -822,7 +822,7 @@ class ArtsObject:
 
         Parameters:
 
-            ws(typhon.arts.workspace): The workspace for which to setup
+            ws(pyarts.workspace): The workspace for which to setup
             the simulation.
 
             data_provider(obj): The :code:`data_provider` providing the
@@ -848,10 +848,10 @@ class ArtsObject:
 
         Parameters:
 
-            ws(typhon.arts.workspace.Workspace): The workspace in which to set
+            ws(pyarts.workspace.Workspace): The workspace in which to set
             the WSV.
 
-            wsv(typhon.arts.workspace.variables.WorkspaceVariable): The
+            wsv(pyarts.workspace.variables.WorkspaceVariable): The
             variable to set.
 
             value(obj): The value to set the WSV :code:`wsv` to.
@@ -870,7 +870,7 @@ class ArtsObject:
 
         Parameters:
 
-            wsv(typhon.arts.workspace.variables.WorkspaceVariable): The
+            wsv(pyarts.workspace.variables.WorkspaceVariable): The
             variable to set.
 
             value(obj): The value to set the WSV :code:`wsv` to.
@@ -890,15 +890,15 @@ class ArtsObject:
 
         Parameters:
 
-            ws(typhon.arts.workspace.Workspace): The workspace on which to
+            ws(pyarts.workspace.Workspace): The workspace on which to
             execute the method.
 
-            wsm(typhon.arts.workspace.WorkspaceMethod): The workspace method
+            wsm(pyarts.workspace.WorkspaceMethod): The workspace method
             to execute.
 
         """
-        args = self.get_wsm_args(wsm)
-        wsm.call(ws, *args)
+        args = self.get_wsm_kwargs(wsm)
+        wsm.call(ws, **args)
 
         # Copy output
         for i in wsm.outs:
@@ -912,7 +912,7 @@ class ArtsObject:
 
         Parameters:
 
-            ws(:code:`typhon.arts.workspace.Workspace`): A workspace instance
+            ws(:code:`pyarts.workspace.Workspace`): A workspace instance
             on which to create the workspace variables.
 
             names(list): List of strings containing the names of the workspace
@@ -924,7 +924,7 @@ class ArtsObject:
                                              self.name + "_" + name)
             self._wsvs[name] = wsv_private
 
-    def get_wsm_args(self, wsm):
+    def get_wsm_kwargs(self, wsm):
         """
         Generate a list of arguments to the given ARTS workspace method
         :code:`wsm` for which the sensor related input parameters are
@@ -934,7 +934,7 @@ class ArtsObject:
 
         Parameters:
 
-           wsm(typhon.arts.workspace.methods.Workspacemethod): The ARTS
+           wsm(pyarts.workspace.methods.WorkspaceMethod): The ARTS
                workspace method object for which to generate the input
                argument list.
 
@@ -944,14 +944,14 @@ class ArtsObject:
             replaced by the corresponding WSVs of the sensor.
 
         """
-        args = []
+        kwargs = {}
         for i in wsm.ins:
             name = WorkspaceVariable.get_variable_name(i)
             if name in self._wsvs:
-                args += [self._wsvs[name]]
+                kwargs[name] = self._wsvs[name]
             else:
-                args += [wsv[name]]
-        return args
+                kwargs[name] = wsv[name]
+        return kwargs
 
 
 

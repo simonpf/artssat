@@ -28,7 +28,7 @@ where :math:`a, b` are the parameters of the mass-size relationship
 import numpy as np
 import scipy as sp
 from scipy.special import gamma
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 
 from parts import dimensions as dim
 from parts.scattering.psd.modified_gamma     import ModifiedGamma

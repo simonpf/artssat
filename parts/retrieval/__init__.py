@@ -48,9 +48,9 @@ import matplotlib.pyplot as plt
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from typhon.arts.workspace         import arts_agenda
-from typhon.arts.workspace.agendas import Agenda
-from typhon.arts.workspace.methods import workspace_methods
+from pyarts.workspace         import arts_agenda
+from pyarts.workspace.agendas import Agenda
+from pyarts.workspace.methods import workspace_methods
 wsm = workspace_methods
 
 from parts.jacobian    import JacobianBase, JacobianQuantity, Transformation
@@ -190,7 +190,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
 
         Arguments:
 
-            ws(:class:`typhon.arts.workspace.Workspace`): The ARTS workspace on
+            ws(:class:`pyarts.workspace.Workspace`): The ARTS workspace on
                 which to setup the retrieval.
 
             data_provider: Data provider object to query a priori settings from.
@@ -622,7 +622,7 @@ class RetrievalRun:
 
         Arguments:
 
-            ws(:code:`arts`): The :code:`typhon.arts.workspace.Workspace`
+            ws(:code:`arts`): The :code:`pyarts.workspace.Workspace`
                 object which to setup for the retrieval.
 
             sensors(list): The sensors to use for the retrieval calculation.
@@ -766,8 +766,8 @@ class RetrievalRun:
             if not preps is None:
                 agenda.append(preps)
 
-        arg_list = self.sensors[0].get_wsm_args(wsm["x2artsAtmAndSurf"])
-        agenda.add_method(ws, wsm["x2artsAtmAndSurf"], *arg_list)
+        arg_list = self.sensors[0].get_wsm_kwargs(wsm["x2artsAtmAndSurf"])
+        agenda.add_method(ws, wsm["x2artsAtmAndSurf"], **arg_list)
 
         scattering = len(self.simulation.atmosphere.scatterers) > 0
         if scattering:
@@ -986,7 +986,7 @@ class RetrievalCalculation:
 
         Arguments:
 
-            ws(:code:`arts`): The :code:`typhon.arts.workspace.Workspace`
+            ws(:code:`arts`): The :code:`pyarts.workspace.Workspace`
                 object which to setup for the retrieval.
 
             sensors(list): The sensors to use for the retrieval calculation.

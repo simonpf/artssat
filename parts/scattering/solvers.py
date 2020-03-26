@@ -14,8 +14,8 @@ Reference
 """
 import numpy as np
 from abc import ABCMeta, abstractproperty, abstractmethod
-from typhon.arts.workspace.methods import workspace_methods
-from typhon.arts.workspace.variables import workspace_variables
+from pyarts.workspace.methods import workspace_methods
+from pyarts.workspace.variables import workspace_variables
 
 wsv = workspace_variables
 wsm = workspace_methods
@@ -97,9 +97,9 @@ class RT4(ScatteringSolver):
 
     def make_solver_call(self, atmosphere, sensor):
 
-        args = sensor.get_wsm_args(wsm["RT4Calc"])
+        kwargs = sensor.get_wsm_kwargs(wsm["RT4Calc"])
         def run_solver(ws):
-            ws.RT4Calc(*args,
+            ws.RT4Calc(**kwargs,
                        nstreams = self._nstreams,
                        pfct_method = self._pfct_method,
                        quad_type = self._quad_type,
@@ -125,7 +125,7 @@ class Disort(ScatteringSolver):
 
     def make_solver_call(self, atmosphere, sensor):
 
-        args = sensor.get_wsm_args(wsm["DisortCalcWithARTSSurface"])
+        args = sensor.get_wsm_kwargs(wsm["DisortCalcWithARTSSurface"])
 
         def run_solver(ws):
             ws.Ignore(ws.atmosphere_dim)

@@ -1,4 +1,4 @@
-from typhon.arts.workspace import WorkspaceVariable
+from pyarts.workspace import WorkspaceVariable
 from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 

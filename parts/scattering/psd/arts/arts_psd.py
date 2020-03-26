@@ -9,7 +9,7 @@ import scipy as sp
 from abc import abstractproperty
 from parts.scattering.psd.data.psd_data import SizeParameter, Area, D_eq,\
                                                D_max, Mass
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 
 class ArtsPSD:
     r"""

@@ -10,7 +10,7 @@ from parts.scattering.psd.data.psd_data import PSDData, D_eq
 from parts.arts_object import arts_property
 from parts.arts_object import Dimension as dim
 from parts.arts_object import ArtsObject
-from typhon.arts.workspace import Workspace, arts_agenda
+from pyarts.workspace import Workspace, arts_agenda
 
 ws = Workspace()
 

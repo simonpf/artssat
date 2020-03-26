@@ -481,22 +481,29 @@ class FixedAPriori(APrioriProviderBase):
         self.mask_value = mask_value
 
     def _get_mask(self, data_provider, *args, **kwargs):
-        mask = self.mask(data_provider, *args, **kwargs)
-        return mask.astype(np.float)
+        if self.mask is None:
+            xa = self._get_xa(data_provider, *args, **kwargs)
+            mask = np.ones(xa.shape, dtype=np.bool)
+        else:
+            mask = self.mask(data_provider, *args, **kwargs)
+        return mask
 
-    def get_xa(self, *args, **kwargs):
+    def _get_xa(self, data_provider, *args, **kwargs):
 
         if self._xa.size == 1:
-            z = self.owner.get_altitude(*args, **kwargs)
+            z = data_provider.get_altitude(*args, **kwargs)
             xa = self._xa.ravel() * np.ones(z.size)
         else:
             xa = self._xa
 
         if not self.mask is None:
-            mask = np.logical_not(self.mask(self.owner, *args, **kwargs))
+            mask = np.logical_not(self._get_mask(self, data_provider, *args, **kwargs))
             xa[mask] = self.mask_value
 
         return xa
+
+    def get_xa(self, *args, **kwargs):
+        return self._get_xa(self.owner, *args, **kwargs)
 
 ################################################################################
 # Functional a priori

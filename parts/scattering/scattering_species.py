@@ -7,7 +7,7 @@ from parts.scattering.psd.arts.arts_psd import ArtsPSD
 from parts.jacobian  import JacobianBase
 from parts.retrieval import RetrievalBase, RetrievalQuantity
 
-from typhon.arts.workspace import arts_agenda
+from pyarts.workspace import arts_agenda
 
 ################################################################################
 # Jacobian

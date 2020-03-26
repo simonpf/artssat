@@ -1,5 +1,5 @@
 import numpy as np
-from typhon.arts.workspace     import Workspace
+from pyarts.workspace     import Workspace
 from parts.sensor.sensor       import ActiveSensor, PassiveSensor
 from parts.scattering.solvers  import ScatteringSolver, RT4, Disort
 from parts.jacobian            import JacobianCalculation
@@ -83,7 +83,7 @@ class ArtsSimulation:
     # Radiative transfer calculations
     #
 
-    def setup(self, verbosity = 1):
+    def setup(self, verbosity = 0):
 
         self.verbosity  = verbosity
         self._workspace = Workspace(verbosity = verbosity)

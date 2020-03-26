@@ -1,4 +1,4 @@
-from typhon.arts.workspace import Workspace, arts_agenda
+from pyarts.workspace import Workspace, arts_agenda
 from abc import abstractmethod, abstractproperty
 import numpy as np
 
