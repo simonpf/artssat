@@ -14,7 +14,7 @@ setup(
     url='https://github.com/simonpf/parts',  # Optional
     author='Simon Pfreundschuh',  # Optional
     author_email='simon.pfreundschuh@chalmers.se',  # Optional
-    install_requires=["pyarts"],
+    install_requires=["pyarts", "typhon"],
     packages=find_packages(exclude=['examples', 'doc', 'misc', 'tests']),
     python_requires='>=3.6',
     project_urls={  # Optional
