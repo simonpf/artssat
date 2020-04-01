@@ -15,7 +15,7 @@ setup(
     author='Simon Pfreundschuh',  # Optional
     author_email='simon.pfreundschuh@chalmers.se',  # Optional
     install_requires=["pyarts"],
-    packages=["parts"],
+    packages=find_packages(exclude=['examples', 'doc', 'misc', 'tests']),
     python_requires='>=3.6',
     project_urls={  # Optional
         'Source': 'https://github.com/simonpf/parts/',
