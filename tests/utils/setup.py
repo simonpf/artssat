@@ -20,11 +20,12 @@ import numpy as np
 
 import os
 import sys
-test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
-sys.path.append(test_path)
+base_path = os.path.join(os.path.dirname(parts.__file__), "..")
+sys.path.append(base_path)
+sys.path.append(os.path.join(base_path, "tests"))
 from utils.data import scattering_data, scattering_meta
 
-include_path_push(os.path.join(test_path, "data"))
+include_path_push(os.path.join(base_path, "tests", "data"))
 
 def arts_simulation(scattering = False):
 
