@@ -13,6 +13,9 @@ from parts.data_provider      import FunctorDataProvider
 from parts.retrieval.a_priori import FixedAPriori, Diagonal, \
     SensorNoiseAPriori
 
+import pyarts
+from pyarts.workspace.api import include_path_push
+
 import numpy as np
 
 import os
@@ -20,6 +23,8 @@ import sys
 test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
 sys.path.append(test_path)
 from utils.data import scattering_data, scattering_meta
+
+include_path_push(os.path.join(test_path, "data"))
 
 def arts_simulation(scattering = False):
 
