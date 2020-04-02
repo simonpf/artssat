@@ -12,6 +12,8 @@ class Jacobian:
 
 def extend_dimensions(x):
     shape = [1, 1, 1]
+    if not type(x) == np.ndarray:
+        x = np.array(x)
     for i, d in enumerate(x.shape):
         shape[i] = d
     return x.reshape(shape)

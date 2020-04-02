@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<arts version="1" format="binary">
+<Array nelem="2" type="SingleScatteringData">
+<SingleScatteringData version="3">
+<String>"totally_random"</String>
+<String>"Randomly-oriented non-spherical particles from Hong database - single particles of Plate shape and   250.00um max.dim."</String>
+<Vector nelem="21">
+</Vector>
+<Vector nelem="1">
+</Vector>
+<Vector nelem="181">
+</Vector>
+<Vector nelem="0">
+</Vector>
+<Tensor7 ncols="6" nrows="1" npages="1" nbooks="1" nshelves="181" nvitrines="1" nlibraries="21">
+</Tensor7>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="21">
+</Tensor5>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="21">
+</Tensor5>
+</SingleScatteringData>
+<SingleScatteringData version="3">
+<String>"totally_random"</String>
+<String>"Randomly-oriented non-spherical particles from Hong database - single particles of Plate shape and  1000.00um max.dim."</String>
+<Vector nelem="21">
+</Vector>
+<Vector nelem="1">
+</Vector>
+<Vector nelem="181">
+</Vector>
+<Vector nelem="0">
+</Vector>
+<Tensor7 ncols="6" nrows="1" npages="1" nbooks="1" nshelves="181" nvitrines="1" nlibraries="21">
+</Tensor7>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="21">
+</Tensor5>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="21">
+</Tensor5>
+</SingleScatteringData>
+</Array>
+</arts>

@@ -131,7 +131,7 @@ class Sensor(ArtsObject):
         return 1
 
     @arts_property("Matrix",
-                   shape = (dim.Obs, dim.Atm),
+                   shape = (dim.Joker, dim.Atm),
                    wsv = wsv["sensor_pos"])
     def sensor_position(self):
         """
@@ -524,9 +524,9 @@ class ActiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyActiveSingleScat2(**kwargs,
-                                   pext_scaling = self._wsvs["extinction_scaling"],
-                                   trans_in_jacobian = 1)
+            ws.iyActiveSingleScat(**kwargs,
+                                  pext_scaling = self._wsvs["extinction_scaling"],
+                                  trans_in_jacobian = 1)
         return iy_main_agenda
 
     #

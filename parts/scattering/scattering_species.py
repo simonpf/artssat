@@ -84,8 +84,11 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
                 try:
                     x = self.data
                     pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
+                    if len(x.shape) < len(pbf_shape):
+                        n = len(pbf_shape) - len(x.shape)
+                        x = np.reshape(x, x.shape + (1,) * n)
                     ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] \
-                        = np.reshape(x, pbf_shape)
+                        = np.broadcast_to(x, pbf_shape)
                 except Exception as e:
                     raise Exception("Encountered error trying to get data for "
                                     " moment {0}: {1}".format(self.name, e))

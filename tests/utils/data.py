@@ -13,7 +13,5 @@ else:
     parts_path = os.path.dirname(parts.__file__)
     test_data_path  = os.path.join(parts_path, "..", "tests", "data")
 
-scattering_data = os.path.join(test_data_path,
-                               "SectorSnowflake.xml")
-scattering_meta = os.path.join(test_data_path,
-                               "SectorSnowflake.meta.xml")
+scattering_data = os.path.join(test_data_path, "ice.xml")
+scattering_meta = os.path.join(test_data_path, "ice.meta.xml")

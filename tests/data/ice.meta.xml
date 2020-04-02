@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<arts version="1" format="binary">
+<Array nelem="2" type="ScatteringMetaData">
+<ScatteringMetaData version="3">
+<String>"Auxilliary data of randomly-oriented non-spherical particles from Hong database:
+single particles of Plate shape and  250.00um max.dim."</String>
+<String>"Hong database"</String>
+<String>"Warren84 for H2Oice"</String>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+</ScatteringMetaData>
+<ScatteringMetaData version="3">
+<String>"Auxilliary data of randomly-oriented non-spherical particles from Hong database:
+single particles of Plate shape and 1000.00um max.dim."</String>
+<String>"Hong database"</String>
+<String>"Warren84 for H2Oice"</String>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+</ScatteringMetaData>
+</Array>
+</arts>

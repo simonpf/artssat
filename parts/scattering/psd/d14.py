@@ -480,7 +480,7 @@ class D14N(ArtsPSD):
                                 alpha  = self.alpha,
                                 beta   = self.beta,
                                 t_min  = self.t_min,
-                                Dm_min = self.dm_min,
+                                dm_min = self.dm_min,
                                 t_max  = self.t_max)
         return pnd_call
 
@@ -674,7 +674,7 @@ class D14MN(D14N):
                                 alpha  = self.alpha,
                                 beta   = self.beta,
                                 t_min  = self.t_min,
-                                Dm_min = self.dm_min,
+                                dm_min = self.dm_min,
                                 t_max  = self.t_max)
         return pnd_call
 

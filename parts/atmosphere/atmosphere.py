@@ -396,7 +396,7 @@ class Atmosphere:
         dimensions = ws.t_field.value.shape
 
         if hasattr(provider, "get_surface_altitude"):
-            zs = provider.get_surface_altitude()
+            zs = provider.get_surface_altitude(*args, **kwargs)
             try:
                 zs = zs.reshape(dimensions[1:])
                 ws.z_surface = zs

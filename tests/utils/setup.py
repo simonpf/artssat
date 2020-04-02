@@ -27,7 +27,7 @@ def arts_simulation(scattering = False):
     ici = ICI(channel_indices = [0, -1], stokes_dimension = 1)
     ici.sensor_position       = 500e3
     ici.sensor_line_of_sight  = 180.0
-    mwi = MWI(channel_indices = [0, -1], stokes_dimension = 1)
+    mwi = MWI(channel_indices = [-2, -1], stokes_dimension = 1)
     mwi.sensor_position       = 500e3
     mwi.sensor_line_of_sight  = 180.0
     sensors       = [ici, mwi]
