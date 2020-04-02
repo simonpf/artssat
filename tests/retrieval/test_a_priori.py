@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 from examples.data_provider import DataProvider
-from examples.sensors import ICI
+from parts.sensor import ICI
 from parts.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
     TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori, \
     SensorNoiseAPriori, ReducedVerticalGrid, FunctionalAPriori, MaskedRegularGrid
