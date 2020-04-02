@@ -1,25 +1,14 @@
-sudo: required
-
 language: python
-
-services:
-  - docker
-
+python:
+  - 3.6
 before_install:
-- docker pull spfrnd/parts_test:latest
+  - python --version
+  - pip install -U pip
+  - pip install -U pytest
+  - pip install codecov
+install:
+  - pip install .
+script: pytest
+after_success:
+  - codecov
 
-script:
-- docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts; git pull origin master; git checkout master; pytest"
-- docker run spfrnd/parts_test:latest /bin/bash -c "cd /app/parts/doc; ./run_apidoc.sh; make html;"
-- docker_id=$(docker ps -a | grep spfrnd/parts_test:latest | awk '{print $1}' | head -n 1)
-- docker cp ${docker_id}:/app/parts/doc/_build/html .
-
-deploy:
-  provider: pages
-  local-dir: html
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-  target-branch: gh-pages
-  keep-history: true
-  on:
-    branch: master
