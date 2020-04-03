@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<arts version="1" format="binary">
+<Array nelem="2" type="SingleScatteringData">
+<SingleScatteringData version="3">
+<String>"totally_random"</String>
+<String>"Spherical particles, generated using atmlab andthe Mie program from C. Mätzler, particle size: 32.4 microns."</String>
+<Vector nelem="45">
+</Vector>
+<Vector nelem="1">
+</Vector>
+<Vector nelem="45">
+</Vector>
+<Vector nelem="0">
+</Vector>
+<Tensor7 ncols="6" nrows="1" npages="1" nbooks="1" nshelves="45" nvitrines="1" nlibraries="45">
+</Tensor7>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="45">
+</Tensor5>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="45">
+</Tensor5>
+</SingleScatteringData>
+<SingleScatteringData version="3">
+<String>"totally_random"</String>
+<String>"Spherical particles, generated using atmlab andthe Mie program from C. Mätzler, particle size: 72.9 microns."</String>
+<Vector nelem="45">
+</Vector>
+<Vector nelem="1">
+</Vector>
+<Vector nelem="45">
+</Vector>
+<Vector nelem="0">
+</Vector>
+<Tensor7 ncols="6" nrows="1" npages="1" nbooks="1" nshelves="45" nvitrines="1" nlibraries="45">
+</Tensor7>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="45">
+</Tensor5>
+<Tensor5 ncols="1" nrows="1" npages="1" nbooks="1" nshelves="45">
+</Tensor5>
+</SingleScatteringData>
+</Array>
+</arts>
