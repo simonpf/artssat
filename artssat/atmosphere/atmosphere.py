@@ -478,7 +478,8 @@ class Atmosphere1D(Atmosphere):
                  absorbers = [],
                  scatterers = [],
                  surface = None,
-                 levels = None):
+                 levels = None,
+                 catalog = None):
         if levels is None:
             dimensions = (0,)
         else:
@@ -490,4 +491,5 @@ class Atmosphere1D(Atmosphere):
         super().__init__(dimensions,
                          absorbers = absorbers,
                          scatterers = scatterers,
-                         surface = surface)
+                         surface = surface,
+                         catalog = catalog)
