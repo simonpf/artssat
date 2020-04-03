@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from parts.scattering.psd.data.psd_data import Mass
-from parts.scattering.psd.modified_gamma import ModifiedGamma
+from artssat.scattering.psd.data.psd_data import Mass
+from artssat.scattering.psd.modified_gamma import ModifiedGamma
 
 ################################################################################
 # Fixtures

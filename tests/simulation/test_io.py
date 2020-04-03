@@ -2,14 +2,14 @@
 This file tests the storing of forward simulation and retrieval
 results to NetCDF files.
 """
-import parts
+import artssat
 import tempfile
 import numpy as np
 import shutil
 
 import os
 import sys
-test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
 sys.path.append(test_path)
 from utils.setup import arts_simulation, arts_retrieval
 

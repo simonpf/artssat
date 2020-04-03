@@ -1,4 +1,4 @@
-from parts.data_provider import DataProviderBase, Constant, \
+from artssat.data_provider import DataProviderBase, Constant, \
     FunctorDataProvider, CombinedProvider
 
 ################################################################################

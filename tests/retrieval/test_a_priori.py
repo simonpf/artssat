@@ -7,8 +7,8 @@
 import numpy as np
 import pytest
 from examples.data_provider import DataProvider
-from parts.sensor import ICI
-from parts.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
+from artssat.sensor import ICI
+from artssat.retrieval.a_priori import Diagonal, SpatialCorrelation, Thikhonov, \
     TemperatureMask, TropopauseMask, And, DataProviderAPriori, FixedAPriori, \
     SensorNoiseAPriori, ReducedVerticalGrid, FunctionalAPriori, MaskedRegularGrid
 

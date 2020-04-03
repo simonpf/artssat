@@ -4,17 +4,17 @@ import numpy as np
 import scipy as sp
 import pytest
 
-import parts
-from parts                       import ArtsSimulation
-from parts.atmosphere            import Atmosphere1D
-from parts.atmosphere.surface    import Tessem
-from parts.jacobian              import Log10
-from parts.scattering            import ScatteringSpecies, D14
-from parts.scattering.solvers    import RT4, Disort
-from parts.sensor                import CloudSat, ICI
-from parts.data_provider         import DataProviderBase
-from parts.retrieval.a_priori    import FixedAPriori, Diagonal
-from parts.atmosphere.absorption import O2, N2, H2O, Relative,\
+import artssat
+from artssat                       import ArtsSimulation
+from artssat.atmosphere            import Atmosphere1D
+from artssat.atmosphere.surface    import Tessem
+from artssat.jacobian              import Log10
+from artssat.scattering            import ScatteringSpecies, D14
+from artssat.scattering.solvers    import RT4, Disort
+from artssat.sensor                import CloudSat, ICI
+from artssat.data_provider         import DataProviderBase
+from artssat.retrieval.a_priori    import FixedAPriori, Diagonal
+from artssat.atmosphere.absorption import O2, N2, H2O, Relative,\
     RelativeHumidity
 from examples.data_provider      import DataProvider
 
@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
-test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
 sys.path.append(test_path)
 from utils.data import scattering_data, scattering_meta
 

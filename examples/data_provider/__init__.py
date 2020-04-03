@@ -1,7 +1,7 @@
 import scipy as sp
 import numpy as np
 
-from parts.data_provider import DataProviderBase
+from artssat.data_provider import DataProviderBase
 
 class DataProvider(DataProviderBase):
 

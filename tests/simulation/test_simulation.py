@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-import parts
-from parts import ArtsSimulation
-from parts.atmosphere import Atmosphere1D
-from parts.atmosphere.absorption import O2, N2, H2O
-from parts.scattering import ScatteringSpecies, D14
-from parts.scattering.solvers import RT4, Disort
-from parts.atmosphere.surface import Tessem
-from parts.sensor import CloudSat, ICI
+import artssat
+from artssat import ArtsSimulation
+from artssat.atmosphere import Atmosphere1D
+from artssat.atmosphere.absorption import O2, N2, H2O
+from artssat.scattering import ScatteringSpecies, D14
+from artssat.scattering.solvers import RT4, Disort
+from artssat.atmosphere.surface import Tessem
+from artssat.sensor import CloudSat, ICI
 
 from examples.data_provider import DataProvider
 
@@ -18,7 +18,7 @@ scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 
 import os
 import sys
-test_path = os.path.join(os.path.dirname(parts.__file__), "..", "tests")
+test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
 sys.path.append(test_path)
 from utils.data import scattering_data, scattering_meta
 

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from parts.scattering.psd import D14, D14N, D14MN
-from parts.scattering.psd import MY05
+from artssat.scattering.psd import D14, D14N, D14MN
+from artssat.scattering.psd import MY05
 
 ################################################################################
 # Fixtures

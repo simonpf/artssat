@@ -1,8 +1,8 @@
 import numpy as np
 
-from parts.arts_object import Dimension, get_shape, broadcast, arts_property, \
+from artssat.arts_object import Dimension, get_shape, broadcast, arts_property, \
     ArtsObject
-from parts.arts_object import Dimension as dim
+from artssat.arts_object import Dimension as dim
 from pyarts.workspace import Workspace
 from pyarts.workspace.variables import workspace_variables as wsv
 

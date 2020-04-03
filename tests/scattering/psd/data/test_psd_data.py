@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from parts.scattering.psd.data.psd_data import SizeParameter, PSDData
+from artssat.scattering.psd.data.psd_data import SizeParameter, PSDData
 
 ################################################################################
 # Fixtures

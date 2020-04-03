@@ -1,16 +1,16 @@
 """
 Setup routines to simplify simulation setup.
 """
-import parts
-from parts.scattering.solvers import RT4, Disort
-from parts                    import ArtsSimulation
-from parts.models             import StandardAtmosphere
-from parts.data.atmosphere    import Tropical
-from parts.atmosphere         import Atmosphere1D
-from parts.sensor             import ICI, MWI
-from parts.scattering         import ScatteringSpecies, D14
-from parts.data_provider      import FunctorDataProvider
-from parts.retrieval.a_priori import FixedAPriori, Diagonal, \
+import artssat
+from artssat.scattering.solvers import RT4, Disort
+from artssat                    import ArtsSimulation
+from artssat.models             import StandardAtmosphere
+from artssat.data.atmosphere    import Tropical
+from artssat.atmosphere         import Atmosphere1D
+from artssat.sensor             import ICI, MWI
+from artssat.scattering         import ScatteringSpecies, D14
+from artssat.data_provider      import FunctorDataProvider
+from artssat.retrieval.a_priori import FixedAPriori, Diagonal, \
     SensorNoiseAPriori
 
 import pyarts
@@ -20,7 +20,7 @@ import numpy as np
 
 import os
 import sys
-base_path = os.path.join(os.path.dirname(parts.__file__), "..")
+base_path = os.path.join(os.path.dirname(artssat.__file__), "..")
 sys.path.append(base_path)
 sys.path.append(os.path.join(base_path, "tests"))
 from utils.data import scattering_data, scattering_meta

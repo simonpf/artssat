@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# pARTS documentation build configuration file, created by
+# artssat documentation build configuration file, created by
 # sphinx-quickstart on Mon Aug 13 17:07:19 2018.
 #
 # This file is execfile()d with the current directory set to its
@@ -55,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'pARTS'
+project = 'artssat'
 copyright = '2018, Simon Pfreundschuh'
 author = 'Simon Pfreundschuh'
 
@@ -124,7 +124,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pARTSdoc'
+htmlhelp_basename = 'artssatdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -151,7 +151,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pARTS.tex', 'pARTS Documentation',
+    (master_doc, 'artssat.tex', 'artssat Documentation',
      'Simon Pfreundschuh', 'manual'),
 ]
 
@@ -161,7 +161,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'parts', 'pARTS Documentation',
+    (master_doc, 'artssat', 'artssat Documentation',
      [author], 1)
 ]
 
@@ -172,8 +172,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pARTS', 'pARTS Documentation',
-     author, 'pARTS', 'One line description of project.',
+    (master_doc, 'artssat', 'artssat Documentation',
+     author, 'artssat', 'One line description of project.',
      'Miscellaneous'),
 ]
 

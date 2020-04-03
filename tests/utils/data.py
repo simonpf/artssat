@@ -1,17 +1,17 @@
 """
-This module contains test data required to run the parts tests.
+This module contains test data required to run the artssat tests.
 
 The module looks for test data in the location specified by the
-:code:`PARTS_TEST_DATA` environment variable.
+:code:`ARTSSAT_TEST_DATA` environment variable.
 """
 import os
-import parts
+import artssat
 
-if "PARTS_TEST_DATA" in os.environ:
-    test_data_path  = os.environ["PARTS_TEST_DATA"]
+if "ARTSSAT_TEST_DATA" in os.environ:
+    test_data_path  = os.environ["ARTSSAT_TEST_DATA"]
 else:
-    parts_path = os.path.dirname(parts.__file__)
-    test_data_path  = os.path.join(parts_path, "..", "tests", "data")
+    artssat_path = os.path.dirname(artssat.__file__)
+    test_data_path  = os.path.join(artssat_path, "..", "tests", "data")
 
 scattering_data = os.path.join(test_data_path, "ice.xml")
 scattering_meta = os.path.join(test_data_path, "ice.meta.xml")

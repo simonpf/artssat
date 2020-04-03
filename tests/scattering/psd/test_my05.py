@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from parts.scattering.psd.my05 import MY05
+from artssat.scattering.psd.my05 import MY05
 
 ################################################################################
 # Fixtures

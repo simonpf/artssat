@@ -1,4 +1,4 @@
-from parts.sensor import PassiveSensor
+from artssat.sensor import PassiveSensor
 import numpy as np
 
 class ICI(PassiveSensor):
@@ -37,11 +37,11 @@ class ICI(PassiveSensor):
                  stokes_dimension = 1):
         """
         This creates an instance of the ICI sensor to be used within a
-        :code:`parts` simulation.
+        :code:`artssat` simulation.
 
         Arguments:
 
-            name(:code:`str`): The name of the sensor used within the parts
+            name(:code:`str`): The name of the sensor used within the artssat
                 simulation.
 
             channel_indices(:code:`list`): List of channel indices to be used
