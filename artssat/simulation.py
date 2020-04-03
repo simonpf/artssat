@@ -34,6 +34,11 @@ class ArtsSimulation:
         except:
             self.parallel = False
 
+        self.includes = ["general/general.arts",
+                         "general/continua.arts",
+                         "general/agendas.arts",
+                         "general/planet_earth.arts"]
+
 
     #
     # Properties
@@ -88,10 +93,8 @@ class ArtsSimulation:
         self.verbosity  = verbosity
         self._workspace = Workspace(verbosity = verbosity)
         ws = self._workspace
-        ws.execute_controlfile("general/general.arts")
-        ws.execute_controlfile("general/continua.arts")
-        ws.execute_controlfile("general/agendas.arts")
-        ws.execute_controlfile("general/planet_earth.arts")
+        for include in self.includes:
+            ws.execute_controlfile(include)
 
         ws.Copy(ws.ppath_agenda, ws.ppath_agenda__FollowSensorLosPath)
         ws.Copy(ws.ppath_step_agenda, ws.ppath_step_agenda__GeometricPath)
