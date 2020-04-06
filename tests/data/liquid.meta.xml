@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<arts version="1" format="binary">
+<Array nelem="2" type="ScatteringMetaData">
+<ScatteringMetaData version="3">
+<String>"ScatteringMetaData of spherical liquid particles
+from Mie - Atmlab - with radius 32.4um."</String>
+<String>"Atmlab Mie"</String>
+<String>"Liebe93 for H2Oliquid"</String>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+</ScatteringMetaData>
+<ScatteringMetaData version="3">
+<String>"ScatteringMetaData of spherical liquid particles
+from Mie - Atmlab - with radius 72.9um."</String>
+<String>"Atmlab Mie"</String>
+<String>"Liebe93 for H2Oliquid"</String>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+<Numeric></Numeric>
+</ScatteringMetaData>
+</Array>
+</arts>

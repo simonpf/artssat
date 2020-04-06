@@ -1,14 +1,13 @@
 import numpy as np
 import os
-from abc import ABCMeta, abstractmethod, abstractproperty
 
-class LineCatalog(metaclass = ABCMeta):
-    def __init__(self):
-        pass
+class LineCatalog:
+    def __init__(self,
+                 path):
+        self.path = path
 
-    @abstractmethod
-    def setup(self, workspace):
-        pass
+    def setup(self, workspace, sensors):
+        workspace.ReadXML(workspace.abs_lines, self.path)
 
 class Hitran(LineCatalog):
     def __init__(self, path = None):
@@ -16,7 +15,7 @@ class Hitran(LineCatalog):
         self.path = path
         if self.path is None:
             try:
-                self.path = os.environ["PATH"]
+                self.path = os.environ["HITRAN_PATH"]
             except:
                 self.path = "HITRAN2012.par"
 
