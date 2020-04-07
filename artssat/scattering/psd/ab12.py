@@ -144,8 +144,7 @@ class AB12(ArtsPSD):
         """
         @arts_agenda
         def pnd_call(ws):
-            ws.psdAbelBoutle12(hydrometeor_type = self.hydrometeor_type,
-                               t_min = self.t_min,
+            ws.psdAbelBoutle12(t_min = self.t_min,
                                t_max = self.t_max)
         return pnd_call
 

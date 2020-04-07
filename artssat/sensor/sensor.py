@@ -679,7 +679,7 @@ class PassiveSensor(Sensor):
 
         if scattering:
             agenda = iy_main_agenda_scattering
-            kwargs = self.get_wsm_kwargs(wsm["iyHybrid"])
+            kwargs = self.get_wsm_kwargs(wsm["iyHybrid2"])
         else:
             agenda = iy_main_agenda_no_scattering
             kwargs = self.get_wsm_kwargs(wsm["iyEmissionStandard"])
