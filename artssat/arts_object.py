@@ -724,7 +724,7 @@ class ArtsProperty:
             # No value - throw exception
             elif not self.optional:
                 raise Exception("Neither a default value nor a get method "
-                                " has been provided for the ARTS property"
+                                " has been provided for the ARTS property "
                                 "{0}.".format(self.get_name(owner, ".")))
             else:
                 return
