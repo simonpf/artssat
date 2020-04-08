@@ -1,4 +1,6 @@
+from copy import copy
 import numpy as np
+
 from pyarts.workspace     import Workspace
 from artssat.sensor.sensor       import ActiveSensor, PassiveSensor
 from artssat.scattering.solvers  import ScatteringSolver, RT4, Disort
@@ -38,7 +40,6 @@ class ArtsSimulation:
                          "general/continua.arts",
                          "general/agendas.arts",
                          "general/planet_earth.arts"]
-
 
     #
     # Properties
@@ -269,6 +270,27 @@ class ArtsSimulation:
         for i in range(r.start + n0, r.start + n0 + dn):
             self._run_ranges(ranges[1:], *args, i, **kwargs, callback = callback)
 
+    def _run_ranges_ipyparallel(self,
+                                ranges,
+                                *args,
+                                callback = None,
+                                ipyparallel_view = None,
+                                **kwargs):
+        if ipyparallel_view is None:
+            raise ValueError("To run simulations in parallel using ipyparallel,"
+                             "the ipyparallel_view keyword argument must be"
+                             " provided.")
+
+        ipyparallel.push({"simulation" : self})
+
+        def setup_workspaces():
+            simulation.setup()
+        ipyparallel_view.apply(setup_workspaces, block=True)
+
+        def run_simulation(i):
+            self.run_ranges(ranges[1:], *args, i, **kwargs, callback=callback)
+        results = ipyparallel_view.map(run_simulation, ranges[0], block=false)
+        return results
 
     def _run_ranges(self, ranges, *args, callback = None, **kwargs):
         if len(ranges) == 0:
@@ -285,10 +307,20 @@ class ArtsSimulation:
                 self._run_ranges(ranges[1:], *args, i, **kwargs)
 
 
-    def run_ranges(self, *args, mpi = None, callback = None, **kwargs):
+    def run_ranges(self,
+                   *args,
+                   mpi = None,
+                   ipyparallel_view = None,
+                   callback = None,
+                   **kwargs):
 
         if mpi is None:
             parallel = self.parallel
+            if not ipyparallel_view is None:
+                raise ValueError("Simulations can be run either using MPI or "
+                                 " IPyParallel, not both. Therefore, only "
+                                 "one of the mpi and ipyparallel_view keyword "
+                                 "arguments can be given.")
         else:
             parallel = mpi
 
@@ -317,3 +349,10 @@ class ArtsSimulation:
         else:
             raise Exception("The output file must be initialized before results"
                             " can be written to it.")
+
+    def __getstate__(self):
+        state = copy(self.__dict__)
+        if "workspace" in state.keys():
+            state.pop("workspace")
+        return state
+

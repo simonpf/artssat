@@ -24,12 +24,56 @@ def test_io_forward_simulation():
     simulation.initialize_output_file(output_file, [("i", 1, 0), ("j", 2, 0)])
     simulation.run_ranges(range(1), range(2))
 
+    simulation.output_file.open()
     fh      = simulation.output_file.file_handle
     v_names = [v for v in fh.variables]
     assert(v_names == ["y_" + s.name for s in simulation.sensors])
     for s in simulation.sensors:
         assert(np.all(np.isclose(fh.variables["y_" + s.name][-1, -1, :], s.y.ravel())))
 
+    shutil.rmtree(path)
+
+def test_io_forward_simulation_polarized():
+    """
+    Test storing of forward simulation results to output file.
+    """
+    path = tempfile.mkdtemp()
+    output_file = os.path.join(path, "output.nc")
+    simulation = arts_simulation()
+    for s in simulation.sensors:
+        s.stokes_dimension = 2
+
+    simulation.setup(verbosity = 0)
+    simulation.initialize_output_file(output_file, [("i", 1, 0), ("j", 2, 0)])
+    simulation.run_ranges(range(1), range(2))
+
+    simulation.output_file.open()
+    fh      = simulation.output_file.file_handle
+    v_names = [v for v in fh.variables]
+    assert(v_names == ["y_" + s.name for s in simulation.sensors])
+    for s in simulation.sensors:
+        assert(np.all(np.isclose(fh.variables["y_" + s.name][-1, -1, :], s.y)))
+
+    shutil.rmtree(path)
+
+def test_unliminted_dimension():
+    """
+    Test storing of forward simulation results to output file.
+    """
+    path = tempfile.mkdtemp()
+    output_file = os.path.join(path, "output.nc")
+    simulation = arts_simulation()
+    simulation.setup(verbosity = 0)
+    simulation.initialize_output_file(output_file, [("i", -1, 0), ("j", 1, 0)])
+
+    simulation.run(0, 0)
+    simulation.store_results()
+    simulation.run(1, 0)
+    simulation.store_results()
+
+    simulation.output_file.open()
+    fh = simulation.output_file.file_handle
+    assert(fh.dimensions["i"].size == 2)
     shutil.rmtree(path)
 
 def test_io_retrieval():
@@ -61,5 +105,3 @@ def test_io_retrieval():
     v_names_r = ["y_" + s.name for s in simulation.sensors] \
                 + ["yf_" + s.name for s in simulation.sensors] \
                 + ["diagnostics", "O2"]
-
-    #shutil.rmtree(path)

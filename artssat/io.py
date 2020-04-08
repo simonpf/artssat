@@ -5,6 +5,7 @@ artssat.io
 The `artssat.io` module provides routines for the storing of simulations results.
 """
 from netCDF4 import Dataset
+from artssat.sensor import ActiveSensor, PassiveSensor
 import numpy as np
 
 class OutputFile:
@@ -36,9 +37,9 @@ class OutputFile:
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             size = self.comm.Get_size()
-            self.parallel = size > 1
+            self.mpi = size > 1
         except:
-            self.parallel = False
+            self.mpi = False
 
         self.filename   = filename
         self.mode       = mode
@@ -54,7 +55,10 @@ class OutputFile:
         """
         # indices
         for n, s, _ in self.dimensions:
-            self.file_handle.createDimension(n, s)
+            if s < 0:
+                self.file_handle.createDimension(n, None)
+            else:
+                self.file_handle.createDimension(n, s)
 
     def _initialize_forward_simulation_output(self, simulation):
         """
@@ -67,10 +71,22 @@ class OutputFile:
         indices = [n for n, _, _ in self.dimensions]
 
         for s in simulation.sensors:
-            dim = s.name + "_channels"
-            root.createDimension(dim, s.y_vector_length)
+            dims = []
+            if isinstance(s, ActiveSensor):
+                dim = s.name + "_range_bins"
+                root.createDimension(dim, s.range_bins.size - 1)
+                dims += [dim]
+            elif isinstance(s, PassiveSensor):
+                dim = s.name + "_channels"
+                root.createDimension(dim, s.f_grid.size)
+                dims += [dim]
+            if s.stokes_dimension > 1:
+                dim = s.name + "_stokes_dim"
+                root.createDimension(dim, s.stokes_dimension)
+                dims += [dim]
+
             v = root.createVariable("y_" + s.name, self.f_fp,
-                                    dimensions = tuple(indices  + [dim]))
+                                    dimensions = tuple(indices  + dims))
             self.variables[s.name] = v
 
     def _initialize_retrieval_output(self, simulation):
@@ -161,7 +177,7 @@ class OutputFile:
         """
         self.file_handle = Dataset(self.filename,
                                    mode = self.mode,
-                                   parallel = self.parallel)
+                                   parallel = self.mpi)
 
         self._initialize_dimensions()
 
@@ -256,15 +272,28 @@ class OutputFile:
                 var = g["jacobian"]
                 var.__setitem__(list(args) + [slice(0, None)] * 2, ws.jacobian.value)
 
-
-
     def store_results(self, simulation):
 
         # Initialize file structure
         if not self.initialized:
             self.initialize(simulation)
 
+        if not self.file_handle.isopen():
+            self.file_handle = Dataset(self.filename,
+                                       mode = "r+")
+
         if len(simulation.retrieval.retrieval_quantities) > 0:
             self._store_retrieval_results(simulation)
         else:
             self._store_forward_simulation_results(simulation)
+
+        if not self.mpi:
+            self.close()
+
+    def open(self):
+        if not self.file_handle.isopen():
+            self.file_handle = Dataset(self.filename,
+                                       mode = "r+")
+
+    def close(self):
+        self.file_handle.close()
