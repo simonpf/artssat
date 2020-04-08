@@ -17,6 +17,7 @@ class OutputFile:
                  filename,
                  dimensions = None,
                  mode = "wb",
+                 inputs = [],
                  floating_point_format = "f4",
                  full_retrieval_output = True):
         """
@@ -25,13 +26,18 @@ class OutputFile:
         Arguments:
 
             filename(str): Path of the output file.
-
             dimensions(list): List of tuples :code:`(s, e, o)` containing
                 for each dimensions over which simulations will be produced
                 the start index :code:`s`, the end index :code:`e` and
                 the offset :code:`o`.
-
             mode(str): String describing the mode to open the output file.
+            inputs: List of tuples :code:`(name, (dim1, ...))` containing the
+                names (:code:`name`) of the input variables and names
+                (:code:`dim1, ...`) of the associated dimensions.
+            floating_point_format(str): The precision to use to store floating
+                point numbers (:code:`f4` or :code:`f8`)
+            full_retrieval_output(:code:`bool`): Whether or not to include
+                full retrieval output (Jacobians, AVK and covariance matrices).
         """
         try:
             from mpi4py import MPI
@@ -45,6 +51,7 @@ class OutputFile:
         self.mode       = mode
         self.dimensions = dimensions
         self.f_fp       = floating_point_format
+        self.inputs = inputs
 
         self.full_retrieval_output = full_retrieval_output
         self.initialized = False
@@ -165,7 +172,43 @@ class OutputFile:
                 group.createVariable("covmat_ss", self.f_fp, dimensions = tuple(indices + ["n", "n"]))
                 group.createVariable("jacobian", self.f_fp, dimensions = tuple(indices + ["m", "n"]))
 
+    def _initialize_inputs(self, simulation):
 
+        self.input_dimensions = {}
+        self.input_variables = {}
+        indices = [n for n, _, _ in self.dimensions]
+        group = self.file_handle.createGroup("inputs")
+
+        for (v, dims) in self.inputs:
+
+            # Get data from provider.
+            fget = getattr(simulation.data_provider, "get_" + v)
+            data = fget(*simulation.args, **simulation.kwargs)
+            if not len(data.shape) == len(dims):
+                raise ValueError("Shape of input data {} does not match "
+                                 " expected dimensions {}.".format(data.shape,
+                                                                   dims))
+
+            # Check if size of dimension has been inferred and if so if
+            # it is consistent with previously inferred size.
+            # Otherwise create dimension.
+            for d, s in zip(dims, data.shape):
+                if d in self.input_dimensions:
+                    si = self.input_dimensions[d]
+                    if si != s:
+                        raise Exception("Dimension {} of input {} is inconsistent "
+                                        "with inferred dimension ({})."
+                                        .format(d, v, si))
+                else:
+                    group.createDimension(d, s)
+                    self.input_dimensions[d] = s
+
+            self.input_variables[v] = group.createVariable(v,
+                                                           self.f_fp,
+                                                           tuple(indices + list(dims)))
+
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        kwargs = simulation.kwargs
 
     def initialize(self, simulation):
         """
@@ -185,6 +228,8 @@ class OutputFile:
             self._initialize_retrieval_output(simulation)
         else:
             self._initialize_forward_simulation_output(simulation)
+        if self.inputs:
+            self._initialize_inputs(simulation)
 
         self.initialized = True
 
@@ -197,8 +242,6 @@ class OutputFile:
             var = self.variables[s.name]
             y   = np.copy(s.y.ravel())
             var.__setitem__(list(args) + [slice(0, None)], y)
-
-        retrieval = simulation.retrieval
 
     def _store_retrieval_results(self, simulation):
 
@@ -272,6 +315,18 @@ class OutputFile:
                 var = g["jacobian"]
                 var.__setitem__(list(args) + [slice(0, None)] * 2, ws.jacobian.value)
 
+    def _store_inputs(self, simulation):
+
+        for (v, _) in self.inputs:
+            # Get data from provider.
+            fget = getattr(simulation.data_provider, "get_" + v)
+            data = fget(*simulation.args, **simulation.kwargs)
+
+            args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+
+            var = self.input_variables[v]
+            var.__setitem__(list(args) + [slice(0, None)], data)
+
     def store_results(self, simulation):
 
         # Initialize file structure
@@ -286,6 +341,8 @@ class OutputFile:
             self._store_retrieval_results(simulation)
         else:
             self._store_forward_simulation_results(simulation)
+        if self.inputs:
+            self._store_inputs(simulation)
 
         if not self.mpi:
             self.close()

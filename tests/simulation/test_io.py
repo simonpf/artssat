@@ -76,6 +76,28 @@ def test_unliminted_dimension():
     assert(fh.dimensions["i"].size == 2)
     shutil.rmtree(path)
 
+def test_store_input():
+    """
+    Test storing of forward simulation results to output file.
+    """
+    path = tempfile.mkdtemp()
+    output_file = os.path.join(path, "output.nc")
+    simulation = arts_simulation()
+    simulation.setup(verbosity = 0)
+    dimensions = [("i", -1, 0), ("j", 1, 0)]
+    inputs = [("temperature", ("altitude",))]
+    simulation.initialize_output_file(output_file,
+                                      dimensions,
+                                      inputs=inputs)
+    simulation.run_ranges(range(3), range(1))
+
+    simulation.output_file.open()
+    fh = simulation.output_file.file_handle
+    temperature = fh["inputs"]["temperature"][0, :]
+    assert(np.allclose(temperature,
+                       simulation.data_provider.get_temperature(0, 0)))
+    shutil.rmtree(path)
+
 def test_io_retrieval():
     """
     Test storing of retrieval results to output file.

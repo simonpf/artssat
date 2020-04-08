@@ -336,12 +336,14 @@ class ArtsSimulation:
     def initialize_output_file(self,
                                filename,
                                dimensions,
+                               inputs=[],
                                mode = "w",
                                full_retrieval_output = True):
         self.output_file = OutputFile(filename,
-                                      dimensions = dimensions,
-                                      mode = mode,
-                                      full_retrieval_output = full_retrieval_output)
+                                      dimensions=dimensions,
+                                      mode=mode,
+                                      inputs=inputs,
+                                      full_retrieval_output=full_retrieval_output)
 
     def store_results(self):
         if not self.output_file is None:
