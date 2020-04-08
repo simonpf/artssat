@@ -174,10 +174,21 @@ class Tessem(Surface):
 ################################################################################
 
 class Telsem(ArtsObject):
-
+    """
+    This class implements the Tool for estimating surface emissivities 2
+    (TELSEM2). TELSEM2 is a microwave atlas covering microwave and
+    sub-millimeter frequencies. It comes in the form of 12 microwave atlases,
+    one for each month that contain microwave emissivities of land-surfaces on
+    an equal-area grid.
+    """
     def __init__(self,
                  atlas_directory,
                  month=6):
+        """
+        Args:
+            atlas_directory: Directory containing the Telsem atlases
+            month: The month of the atlas to use.
+        """
         super().__init__()
         self.atlas_directory = atlas_directory
         self.month = month
@@ -233,6 +244,72 @@ class Telsem(ArtsObject):
         ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
     def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
+
+    def run_checks(self, ws):
+        pass
+
+################################################################################
+# Combined surface
+################################################################################
+
+class CombinedSurface(ArtsObject):
+    """
+    This class combines two surface models and switches between them depending
+    on a surface property variable provided by the data provider.
+    """
+    def __init__(self,
+                 surface_model_1,
+                 surface_model_2,
+                 surface_type_variable = "surface_type"):
+        """
+        Args:
+            surface_model_1: The surface model to use when surface type is 0
+            surface_model_2: The surface model to use when surface type is 1
+            surface_type_variable: The variable based on which to switch between
+                 the two models.
+        """
+        super().__init__()
+        self.surface_model_1 = surface_model_1
+        self.surface_model_2 = surface_model_2
+        self.surface_type_variable = surface_type_variable
+
+    @property
+    def required_data(self):
+        return self.surface_model_1.required_data + self.surface_model_2.required_data
+
+    @arts_property(group="Index")
+    def surface_type(self):
+        return None
+
+    @property
+    def surface_agenda(self):
+
+        @arts_agenda
+        def surface_agenda(ws):
+            ws.Ignore(ws.f_grid)
+            ws.Ignore(ws.rtp_pos)
+            ws.Ignore(ws.rtp_los)
+            ws.Touch(ws.surface_skin_t)
+            ws.Touch(ws.surface_emission)
+            ws.Touch(ws.surface_los)
+            ws.Touch(ws.surface_rmatrix)
+            if self.surface_type <= 0.0:
+                ws.execute_agenda(self.surface_model_1.surface_agenda)
+            else:
+                ws.execute_agenda(self.surface_model_2.surface_agenda)
+
+        return surface_agenda
+
+    def setup(self, ws):
+        self.surface_model_1.setup(ws)
+        self.surface_model_2.setup(ws)
+        ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
+
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.surface_model_1.get_data(ws, data_provider, *args, **kwargs)
+        self.surface_model_2.get_data(ws, data_provider, *args, **kwargs)
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
 
     def run_checks(self, ws):

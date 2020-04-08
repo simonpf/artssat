@@ -848,6 +848,8 @@ class ICI(PassiveSensor):
             channels  = ICI.channels[channel_indices]
             self.nedt = self.nedt[channel_indices]
         super().__init__(name, channels, stokes_dimension = stokes_dimension)
+        self.sensor_line_of_sight = np.array([[135.0]])
+        self.sensor_position = np.array([[600e3]])
 
 ################################################################################
 # Microwave imager (MWI).
