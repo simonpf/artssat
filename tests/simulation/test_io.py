@@ -127,3 +127,22 @@ def test_io_retrieval():
     v_names_r = ["y_" + s.name for s in simulation.sensors] \
                 + ["yf_" + s.name for s in simulation.sensors] \
                 + ["diagnostics", "O2"]
+
+def test_io_multiview():
+    """
+    Test storing of retrieval results to output file.
+    """
+    path = tempfile.mkdtemp()
+    path = "."
+    output_file = os.path.join(path, "output.nc")
+
+    simulation = arts_simulation(multiview=True)
+    simulation.setup(verbosity = 0)
+    simulation.initialize_output_file(output_file, [("i", 1, 0), ("j", 2, 0)])
+    simulation.run_ranges(range(1), range(2))
+
+    simulation.output_file.open()
+    fh      = simulation.output_file.file_handle
+    fh.dimensions
+    assert(fh["ici_position"][:].shape[-1] == 2)
+    assert(fh["ici_line_of_sight"][:].shape[-1] == 2)

@@ -139,3 +139,44 @@ def test_simulation_absorption_jacobian():
     simulation.setup()
     simulation.run()
     return np.copy(simulation.workspace.jacobian.value)
+
+def test_simulation_multiview():
+    atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
+                              surface = Tessem())
+    lines_of_sight = np.array([[135.0],
+                               [180.0]])
+    positions = np.array([[600e3],
+                          [600e3]])
+
+    ici = ICI(lines_of_sight=lines_of_sight,
+              positions=positions)
+
+    simulation = ArtsSimulation(atmosphere = atmosphere,
+                                data_provider = DataProvider(),
+                                sensors = [ici])
+    simulation.setup()
+    simulation.run()
+
+    y = np.copy(ici.y)
+    assert(y.shape[0] == 2)
+
+def test_simulation_multiview_radar():
+    atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
+                              surface = Tessem())
+    lines_of_sight = np.array([[135.0],
+                               [180.0]])
+    positions = np.array([[600e3],
+                          [600e3]])
+
+    cs = CloudSat(lines_of_sight=lines_of_sight,
+                   positions=positions)
+
+    simulation = ArtsSimulation(atmosphere = atmosphere,
+                                data_provider = DataProvider(),
+                                sensors = [cs])
+    simulation.setup()
+    simulation.run()
+
+    y = np.copy(cs.y)
+    assert(y.shape[0] == 2)
+    assert(y.shape[-1] == 2)

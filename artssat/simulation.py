@@ -177,7 +177,10 @@ class ArtsSimulation:
                                           min(len(self.atmosphere.dimensions), 2)))
 
             i += 1
-            s.y = np.copy(ws.y.value[y_index:].reshape((-1, 1)))
+            if s.views > 1:
+                s.y = np.copy(ws.y.value[y_index:].reshape((s.views, -1, s.stokes_dimension)))
+            else:
+                s.y = np.copy(ws.y.value[y_index:].reshape((-1, s.stokes_dimension)))
             y_index += ws.y.value.size
 
 
@@ -196,7 +199,10 @@ class ArtsSimulation:
                                        scattering = self.atmosphere.scattering)
             f(ws)
 
-            s.y = np.copy(ws.y.value[y_index:].reshape((-1, s.stokes_dimension)))
+            if s.views > 1:
+                s.y = np.copy(ws.y.value[y_index:].reshape((s.views, -1, s.stokes_dimension)))
+            else:
+                s.y = np.copy(ws.y.value[y_index:].reshape((-1, s.stokes_dimension)))
             y_index = ws.y.value.size
 
             i += 1

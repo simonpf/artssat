@@ -351,6 +351,10 @@ class Sensor(ArtsObject):
     def y_vector_length(self):
         pass
 
+    @property
+    def views(self):
+        return self.sensor_position.shape[0]
+
     #
     # General sensor setup
     #
@@ -825,7 +829,9 @@ class ICI(PassiveSensor):
     def __init__(self,
                  name = "ici",
                  channel_indices = None,
-                 stokes_dimension = 1):
+                 stokes_dimension = 1,
+                 lines_of_sight = None,
+                 positions = None):
         """
         This creates an instance of the ICI sensor to be used within a
         :code:`artssat` simulation.
@@ -848,8 +854,17 @@ class ICI(PassiveSensor):
             channels  = ICI.channels[channel_indices]
             self.nedt = self.nedt[channel_indices]
         super().__init__(name, channels, stokes_dimension = stokes_dimension)
-        self.sensor_line_of_sight = np.array([[135.0]])
-        self.sensor_position = np.array([[600e3]])
+
+        if not (lines_of_sight is None):
+            if not (positions is None):
+                self.sensor_line_of_sight = lines_of_sight
+                self.sensor_position = positions
+            else:
+                self.sensor_position = np.array([[600e3]])
+                self.sensor_line_of_sight = np.array([[135.0]])
+        else:
+            self.sensor_position = np.array([[600e3]])
+            self.sensor_line_of_sight = np.array([[135.0]])
 
 ################################################################################
 # Microwave imager (MWI).
@@ -939,7 +954,9 @@ class CloudSat(ActiveSensor):
     def __init__(self,
                  name = "cloud_sat",
                  range_bins = np.arange(500.0, 20e3, 500.0),
-                 stokes_dimension = 2):
+                 stokes_dimension = 2,
+                 lines_of_sight = None,
+                 positions = None):
         super().__init__(name,
                          f_grid = np.array([94e9]),
                          stokes_dimension = stokes_dimension,
@@ -948,5 +965,16 @@ class CloudSat(ActiveSensor):
         self.instrument_pol_array = [[1]]
         self.extinction_scaling   = 1.0
         self.y_min = -30.0
+
+        if not (lines_of_sight is None):
+            if not (positions is None):
+                self.sensor_line_of_sight = lines_of_sight
+                self.sensor_position = positions
+            else:
+                self.sensor_position = np.array([[600e3]])
+                self.sensor_line_of_sight = np.array([[180.0]])
+        else:
+            self.sensor_position = np.array([[600e3]])
+            self.sensor_line_of_sight = np.array([[180.0]])
 
 ici = ICI()

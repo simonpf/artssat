@@ -74,11 +74,26 @@ class OutputFile:
         corresponding to each sensor name.
         """
         self.variables = {}
+        self.los_variables = {}
+        self.pos_variables = {}
         root = self.file_handle
         indices = [n for n, _, _ in self.dimensions]
 
         for s in simulation.sensors:
             dims = []
+            if s.views > 1:
+                dim = s.name + "_views"
+                root.createDimension(dim, s.sensor_position.shape[0])
+                dims += [dim]
+                v = root.createVariable(s.name + "_position",
+                                        self.f_fp,
+                                        dimensions = tuple(indices + dims))
+                self.pos_variables[s.name] = v
+                v = root.createVariable(s.name + "_line_of_sight",
+                                        self.f_fp,
+                                        dimensions = tuple(indices + dims))
+                self.los_variables[s.name] = v
+
             if isinstance(s, ActiveSensor):
                 dim = s.name + "_range_bins"
                 root.createDimension(dim, s.range_bins.size - 1)
@@ -240,8 +255,14 @@ class OutputFile:
 
         for s in simulation.sensors:
             var = self.variables[s.name]
-            y   = np.copy(s.y.ravel())
+            y   = s.y
             var.__setitem__(list(args) + [slice(0, None)], y)
+            if s.views > 1:
+                var = self.los_variables[s.name]
+                var.__setitem__(list(args) + [slice(0, None)], s.sensor_line_of_sight)
+                var = self.pos_variables[s.name]
+                var.__setitem__(list(args) + [slice(0, None)], s.sensor_position)
+
 
     def _store_retrieval_results(self, simulation):
 

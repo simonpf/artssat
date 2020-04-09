@@ -27,12 +27,22 @@ from utils.data import scattering_data, scattering_meta
 
 include_path_push(os.path.join(base_path, "tests", "data"))
 
-def arts_simulation(scattering = False):
+def arts_simulation(scattering = False,
+                    multiview = False):
 
     # Sensors
-    ici = ICI(channel_indices = [0, -1], stokes_dimension = 1)
-    ici.sensor_position       = 500e3
-    ici.sensor_line_of_sight  = 180.0
+    if multiview:
+        lines_of_sight = np.array([[135.0],
+                                   [180.0]])
+        positions = np.array([[600e3],
+                              [600e3]])
+        ici = ICI(channel_indices = [0, -1],
+                  lines_of_sight=lines_of_sight,
+                  stokes_dimension=1,
+                  positions=positions)
+    else:
+        ici = ICI(channel_indices = [0, -1], stokes_dimension = 1)
+
     mwi = MWI(channel_indices = [-2, -1], stokes_dimension = 1)
     mwi.sensor_position       = 500e3
     mwi.sensor_line_of_sight  = 180.0
