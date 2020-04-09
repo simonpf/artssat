@@ -7,9 +7,11 @@ import numpy as np
 
 from artssat.arts_object import ArtsObject, arts_property, Dimension
 from pyarts.workspace import Workspace, arts_agenda
-from pyarts.workspace.variables import WorkspaceVariable, \
-                                            workspace_variables
+from pyarts.workspace.variables import (WorkspaceVariable, workspace_variables)
 wsv = workspace_variables
+
+ws = Workspace(verbosity = 0)
+
 
 class Surface:
     """
@@ -37,7 +39,7 @@ class Surface:
         pass
 
     @abstractmethod
-    def get_data(self, ws, provider, *args, **kwargs):
+    def get_data(self, ws, data_provider, *args, **kwargs):
         """
         The method should get required data from the data provider and set required
         field in the workspace.
@@ -68,7 +70,12 @@ class Surface:
 # Tessem
 ################################################################################
 
-class Tessem(Surface):
+#TODO: Need elegant system for on demand WSVs.
+telsem_salinity = ws.create_variable("Numeric", None)
+telsem_windspeed = ws.create_variable("Numeric", None)
+
+class Tessem(Surface,
+             ArtsObject):
     """
     This class represents the " Tool to Estimate Sea‐Surface Emissivity from
     Microwaves to sub‐Millimeter waves" (TESSEM). It is a parametrization for
@@ -91,18 +98,11 @@ class Tessem(Surface):
             wind_speed (float): Wind speed if it should be set to a fixed
                 value.
         """
+        Surface.__init__(self)
+        ArtsObject.__init__(self)
+
         self.tessem_net_h = tessem_net_h
         self.tessem_net_v = tessem_net_v
-
-        ws = Workspace()
-
-        self._surface_temperature_field = ws.add_variable(np.zeros((1, 1)))
-
-        self._surface_salinity       = ws.add_variable(salinity)
-        self._surface_salinity_field = ws.add_variable(np.zeros((1, 1)))
-
-        self._surface_wind_speed_field = ws.add_variable(np.zeros((1, 1)))
-        self._surface_wind_speed = ws.add_variable(wind_speed)
 
     @property
     def required_data(self):
@@ -112,17 +112,21 @@ class Tessem(Surface):
                 ("surface_wind_speed", (1,), True),
                 ("surface_wind_speed", ("n_lat", "n_lon"), True)]
 
-    @property
-    def surface_temperature_field(self):
-        return self._surface_temperature_field.value
+    @arts_property(group="Matrix",
+                   shape=(Dimension.Lat, Dimension.Lon),
+                   wsv=wsv["t_surface"])
+    def surface_temperature(self):
+        return 280.0
 
-    @property
-    def surface_salinity(self):
-        return self._surface_salinity.value
+    @arts_property(group="Numeric",
+                   wsv=telsem_salinity)
+    def salinity(self):
+        return 0.035
 
-    @property
-    def wind_speed(self):
-        return self._surface_wind_speed.value
+    @arts_property(group="Numeric",
+                   wsv=telsem_windspeed)
+    def surface_wind_speed(self):
+        return 1.0
 
     @property
     def surface_agenda(self):
@@ -130,14 +134,10 @@ class Tessem(Surface):
         @arts_agenda
         def surface_rtprop_agenda_tessem(ws):
             ws.specular_losCalc()
-            ws.InterpSurfaceFieldToPosition(out = ws.surface_skin_t,
-                                            field = self._surface_temperature_field)
-            ws.InterpSurfaceFieldToPosition(out = self._surface_salinity,
-                                            field = self._surface_salinity_field)
-            ws.InterpSurfaceFieldToPosition(out = self._surface_wind_speed,
-                                            field = self._surface_wind_speed_field)
-            ws.surfaceTessem(salinity = self._surface_salinity,
-                             wind_speed = self._surface_wind_speed)
+            ws.InterpSurfaceFieldToPosition(out = wsv["surface_skin_t"],
+                                            field = wsv["t_surface"])
+            ws.surfaceTessem(salinity = telsem_salinity,
+                                wind_speed = telsem_windspeed)
         return surface_rtprop_agenda_tessem
 
     def setup(self, ws):
@@ -145,26 +145,8 @@ class Tessem(Surface):
         ws.TessemNNReadAscii(ws.tessem_netv, self.tessem_net_v)
         ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
-    def get_data(self, ws, provider, *args, **kwargs):
-
-        dimensions = ws.t_field.value.shape[1:]
-
-        x = provider.get_surface_temperature(*args, **kwargs)
-        ws.MatrixSet(self._surface_temperature_field, x * np.ones(dimensions))
-
-        if hasattr(provider, "get_surface_salinity"):
-            x = provider.get_surface_salinity(*args, **kwargs)
-        else:
-            x = self._surface_salinity.value
-        ws.MatrixSet(self._surface_salinity_field,
-                     x * np.ones(dimensions))
-
-        if hasattr(provider, "get_surface_wind_speed"):
-            x = provider.get_surface_wind_speed(*args, **kwargs)
-        else:
-            x = self._surface_wind_speed.value
-        ws.MatrixSet(self._surface_wind_speed_field,
-                     x * np.ones(dimensions))
+    def get_data(self, ws, data_provider, *args, **kwargs):
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
 
     def run_checks(self, ws):
         pass
@@ -173,7 +155,8 @@ class Tessem(Surface):
 # Telsem
 ################################################################################
 
-class Telsem(ArtsObject):
+class Telsem(Surface,
+             ArtsObject):
     """
     This class implements the Tool for estimating surface emissivities 2
     (TELSEM2). TELSEM2 is a microwave atlas covering microwave and
@@ -189,7 +172,9 @@ class Telsem(ArtsObject):
             atlas_directory: Directory containing the Telsem atlases
             month: The month of the atlas to use.
         """
-        super().__init__()
+        Surface.__init__(self)
+        ArtsObject.__init__(self)
+
         self.atlas_directory = atlas_directory
         self.month = month
 
