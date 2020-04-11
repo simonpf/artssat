@@ -7,6 +7,7 @@ The `artssat.io` module provides routines for the storing of simulations results
 from netCDF4 import Dataset
 from artssat.sensor import ActiveSensor, PassiveSensor
 import numpy as np
+import os
 
 class OutputFile:
     """
@@ -54,7 +55,16 @@ class OutputFile:
         self.inputs = inputs
 
         self.full_retrieval_output = full_retrieval_output
-        self.initialized = False
+
+        if os.path.isfile(self.filename) and mode == "wb":
+            os.remove(self.filename)
+
+        self._initialized = False
+
+
+    @property
+    def initialized(self):
+        return self._initialized
 
     def _initialize_dimensions(self):
         """
@@ -73,9 +83,6 @@ class OutputFile:
         Create dict attribute :code:`variables` containing variables
         corresponding to each sensor name.
         """
-        self.variables = {}
-        self.los_variables = {}
-        self.pos_variables = {}
         root = self.file_handle
         indices = [n for n, _, _ in self.dimensions]
 
@@ -85,14 +92,12 @@ class OutputFile:
                 dim = s.name + "_views"
                 root.createDimension(dim, s.sensor_position.shape[0])
                 dims += [dim]
-                v = root.createVariable(s.name + "_position",
-                                        self.f_fp,
-                                        dimensions = tuple(indices + dims))
-                self.pos_variables[s.name] = v
-                v = root.createVariable(s.name + "_line_of_sight",
-                                        self.f_fp,
-                                        dimensions = tuple(indices + dims))
-                self.los_variables[s.name] = v
+                root.createVariable(s.name + "_position",
+                                    self.f_fp,
+                                    dimensions = tuple(indices + dims))
+                root.createVariable(s.name + "_line_of_sight",
+                                    self.f_fp,
+                                    dimensions = tuple(indices + dims))
 
             if isinstance(s, ActiveSensor):
                 dim = s.name + "_range_bins"
@@ -107,9 +112,8 @@ class OutputFile:
                 root.createDimension(dim, s.stokes_dimension)
                 dims += [dim]
 
-            v = root.createVariable("y_" + s.name, self.f_fp,
-                                    dimensions = tuple(indices  + dims))
-            self.variables[s.name] = v
+            root.createVariable("y_" + s.name, self.f_fp,
+                                dimensions = tuple(indices  + dims))
 
     def _initialize_retrieval_output(self, simulation):
         """
@@ -190,7 +194,6 @@ class OutputFile:
     def _initialize_inputs(self, simulation):
 
         self.input_dimensions = {}
-        self.input_variables = {}
         indices = [n for n, _, _ in self.dimensions]
         group = self.file_handle.createGroup("inputs")
 
@@ -199,7 +202,7 @@ class OutputFile:
             # Get data from provider.
             fget = getattr(simulation.data_provider, "get_" + v)
             data = fget(*simulation.args, **simulation.kwargs)
-            if not len(data.shape) == len(dims):
+            if not len(data.squeeze().shape) == len(dims):
                 raise ValueError("Shape of input data {} does not match "
                                  " expected dimensions {}.".format(data.shape,
                                                                    dims))
@@ -218,9 +221,7 @@ class OutputFile:
                     group.createDimension(d, s)
                     self.input_dimensions[d] = s
 
-            self.input_variables[v] = group.createVariable(v,
-                                                           self.f_fp,
-                                                           tuple(indices + list(dims)))
+            group.createVariable(v, self.f_fp, tuple(indices + list(dims)))
 
         args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
         kwargs = simulation.kwargs
@@ -237,16 +238,20 @@ class OutputFile:
                                    mode = self.mode,
                                    parallel = self.mpi)
 
-        self._initialize_dimensions()
+        try:
+            self._initialize_dimensions()
 
-        if len(simulation.retrieval.retrieval_quantities) > 0:
-            self._initialize_retrieval_output(simulation)
-        else:
-            self._initialize_forward_simulation_output(simulation)
-        if self.inputs:
-            self._initialize_inputs(simulation)
-
-        self.initialized = True
+            if len(simulation.retrieval.retrieval_quantities) > 0:
+                self._initialize_retrieval_output(simulation)
+            else:
+                self._initialize_forward_simulation_output(simulation)
+            if self.inputs:
+                self._initialize_inputs(simulation)
+        except:
+            raise
+        finally:
+            self._initialized = True
+            self.close()
 
     def _store_forward_simulation_results(self, simulation):
 
@@ -254,14 +259,16 @@ class OutputFile:
         kwargs = simulation.kwargs
 
         for s in simulation.sensors:
-            var = self.variables[s.name]
+            var = self.file_handle["y_" + s.name]
             y   = s.y
             var.__setitem__(list(args) + [slice(0, None)], y)
             if s.views > 1:
-                var = self.los_variables[s.name]
-                var.__setitem__(list(args) + [slice(0, None)], s.sensor_line_of_sight)
-                var = self.pos_variables[s.name]
-                var.__setitem__(list(args) + [slice(0, None)], s.sensor_position)
+                var = self.file_handle[s.name + "_line_of_sight"]
+                var.__setitem__(list(args) + [slice(0, None)],
+                                s.sensor_line_of_sight.ravel())
+                var = self.file_handle[s.name + "_position"]
+                var.__setitem__(list(args) + [slice(0, None)],
+                                s.sensor_position.ravel())
 
 
     def _store_retrieval_results(self, simulation):
@@ -338,15 +345,23 @@ class OutputFile:
 
     def _store_inputs(self, simulation):
 
-        for (v, _) in self.inputs:
+        if self.inputs:
+            input_variables = self.file_handle["inputs"]
+        else:
+            return None
+
+        for (v, dims) in self.inputs:
             # Get data from provider.
             fget = getattr(simulation.data_provider, "get_" + v)
             data = fget(*simulation.args, **simulation.kwargs)
 
             args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
 
-            var = self.input_variables[v]
-            var.__setitem__(list(args) + [slice(0, None)], data)
+            var = input_variables[v]
+            if len(dims) > 0:
+                var.__setitem__(list(args) + [slice(0, None)], data)
+            else:
+                var.__setitem__(list(args), data)
 
     def store_results(self, simulation):
 
@@ -354,9 +369,7 @@ class OutputFile:
         if not self.initialized:
             self.initialize(simulation)
 
-        if not self.file_handle.isopen():
-            self.file_handle = Dataset(self.filename,
-                                       mode = "r+")
+        self.open()
 
         if len(simulation.retrieval.retrieval_quantities) > 0:
             self._store_retrieval_results(simulation)
@@ -365,13 +378,25 @@ class OutputFile:
         if self.inputs:
             self._store_inputs(simulation)
 
-        if not self.mpi:
-            self.close()
+        self.close()
 
     def open(self):
-        if not self.file_handle.isopen():
-            self.file_handle = Dataset(self.filename,
-                                       mode = "r+")
+        if self.initialized and not self.mpi:
+            if hasattr(self, "file_handle"):
+                if not self.file_handle.isopen():
+                    self.file_handle = Dataset(self.filename, mode = "r+")
+            else:
+                self.file_handle = Dataset(self.filename, mode = "r+")
 
     def close(self):
-        self.file_handle.close()
+        if not self.mpi:
+            if hasattr(self, "file_handle"):
+                self.file_handle.close()
+
+    def __getstate__(self):
+        self.close()
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+

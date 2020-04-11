@@ -8,6 +8,31 @@ from artssat.jacobian            import JacobianCalculation
 from artssat.retrieval           import RetrievalCalculation
 from artssat.io                  import OutputFile
 
+################################################################################
+# IPyParallel Cache
+################################################################################
+
+_ipyparallel_simulation = None
+
+def setup_simulation_ipyparallel():
+    global _ipyparallel_simulation
+    _ipyparallel_simulation.setup()
+
+def run_simulation_ipyparallel(args, **kwargs):
+    global _ipyparallel_simulation
+    _ipyparallel_simulation.run(*args, **kwargs)
+    return _ipyparallel_simulation
+
+class AsyncResults():
+    def __init__(self):
+        self.done = {}
+        self.failed = {}
+
+
+################################################################################
+# Arts Simulation
+################################################################################
+
 class ArtsSimulation:
 
     def __init__(self,
@@ -251,6 +276,7 @@ class ArtsSimulation:
         else:
 
             self._run_forward_simulation()
+        return self
 
     def _run_ranges_mpi(self, ranges, *args, callback = None, **kwargs):
         from mpi4py import MPI
@@ -286,20 +312,65 @@ class ArtsSimulation:
             raise ValueError("To run simulations in parallel using ipyparallel,"
                              "the ipyparallel_view keyword argument must be"
                              " provided.")
+        view = ipyparallel_view
 
-        ipyparallel.push({"simulation" : self})
+        view.block=True
+        # Setup simulation on engines.
+        view.push({"simulation" : self})
 
-        def setup_workspaces():
-            simulation.setup()
-        ipyparallel_view.apply(setup_workspaces, block=True)
+        def run_setup(simulation):
+            global _ipyparallel_simulation
+            _ipyparallel_simulation = simulation
+            _ipyparallel_simulation.setup()
 
-        def run_simulation(i):
-            self.run_ranges(ranges[1:], *args, i, **kwargs, callback=callback)
-        results = ipyparallel_view.map(run_simulation, ranges[0], block=false)
-        return results
+        view.apply(run_setup, self)
+
+        # Generate arguments
+        def get_args(ranges):
+            if len(ranges) == 1:
+                return [(a,) for a in ranges[0]]
+            else:
+                return [(a, ) + seqs
+                        for a in ranges[0]
+                        for seqs in get_args(ranges[1:])]
+        args = get_args(ranges)
+
+        # def run_simulation(args, **kwargs):
+        #     global simulation
+        #     simulation.run(*args, **kwargs)
+        #     return simulation
+        results = []
+        for arg in args:
+            results += [view.map(run_simulation_ipyparallel, [arg], block=False)]
+
+
+        result_async = AsyncResults()
+
+        def done_callback(arg, result):
+            print("Done callback.")
+            try:
+                simulation = result.get()[0]
+                if self.output_file:
+                    print("Storing result.", arg)
+                    print(simulation.args)
+                    simulation.output_file = self.output_file
+                    simulation.store_results()
+                result_async.done[arg] = r
+            except:
+                result_async.failed[arg] = r
+
+            
+
+        for arg, r in zip(args, results):
+            r.add_done_callback(lambda x: done_callback(arg, x))
+        # print("parallel range: ", args)
+        # results = view.map(run_simulation, args)
+
+        return result_async
 
     def _run_ranges(self, ranges, *args, callback = None, **kwargs):
         if len(ranges) == 0:
+            print("running:", *args)
             self.run(*args, **kwargs)
 
             if not callback is None:
@@ -322,17 +393,23 @@ class ArtsSimulation:
 
         if mpi is None:
             parallel = self.parallel
+        else:
             if not ipyparallel_view is None:
                 raise ValueError("Simulations can be run either using MPI or "
                                  " IPyParallel, not both. Therefore, only "
                                  "one of the mpi and ipyparallel_view keyword "
                                  "arguments can be given.")
-        else:
             parallel = mpi
 
         ranges = list(args)
+
         if parallel:
             self._run_ranges_mpi(ranges, **kwargs, callback = callback)
+        elif ipyparallel_view:
+            return self._run_ranges_ipyparallel(ranges,
+                                                **kwargs,
+                                                callback = callback,
+                                                ipyparallel_view=ipyparallel_view)
         else:
             self._run_ranges(ranges, **kwargs, callback = callback)
 
@@ -364,3 +441,6 @@ class ArtsSimulation:
             state.pop("workspace")
         return state
 
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._setup = False

@@ -182,8 +182,6 @@ class Telsem(Surface,
         self.r_min = 0.0
         self.r_max = 1.0
         self.d_max = -1.0
-        self.name = "surface"
-
 
     @property
     def required_data(self):
@@ -204,7 +202,7 @@ class Telsem(Surface,
     @arts_property(group="Matrix",
                    shape=(Dimension.Lat, Dimension.Lon),
                    wsv=wsv["t_surface"])
-    def temperature(self):
+    def surface_temperature(self):
         return None
 
     @property

@@ -1,5 +1,9 @@
 import numpy as np
 import pytest
+import os
+import sys
+test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
+sys.path.append(test_path)
 
 import artssat
 from artssat import ArtsSimulation
@@ -9,19 +13,12 @@ from artssat.scattering import ScatteringSpecies, D14
 from artssat.scattering.solvers import RT4, Disort
 from artssat.atmosphere.surface import Tessem
 from artssat.sensor import CloudSat, ICI
-
 from examples.data_provider import DataProvider
-
-import matplotlib.pyplot as plt
-
-scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
-
-import os
-import sys
-test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
-sys.path.append(test_path)
 from utils.data import scattering_data, scattering_meta
 
+################################################################################
+# Absorption only
+################################################################################
 
 def test_simulation_absorption():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
@@ -43,6 +40,11 @@ def test_simulation_absorption():
 
     assert(np.all(np.isclose(y1, y2)))
 
+################################################################################
+# Absorption and scattering
+################################################################################
+
+scattering_solvers = pytest.mark.parametrize("scattering_solver", [RT4, Disort])
 @scattering_solvers
 def test_simulation_scattering(scattering_solver):
 
@@ -65,6 +67,10 @@ def test_simulation_scattering(scattering_solver):
     simulation.scattering_solver = scattering_solver()
     simulation.setup()
     simulation.run()
+
+################################################################################
+# Scattering + Jacobian
+################################################################################
 
 def test_simulation_scattering_jacobian():
 
@@ -89,6 +95,10 @@ def test_simulation_scattering_jacobian():
     simulation.run()
     print(simulation.workspace.particle_bulkprop_field.value)
     return np.copy(simulation.workspace.jacobian.value)
+
+################################################################################
+# Active + Passive, Jacobian
+################################################################################
 
 @scattering_solvers
 def test_simulation_scattering_combined(scattering_solver):
@@ -121,6 +131,10 @@ def test_simulation_scattering_combined(scattering_solver):
     y = np.copy(simulation.workspace.y)
     return y
 
+################################################################################
+# Absorption + Jacobian
+################################################################################
+
 def test_simulation_absorption_jacobian():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
                               surface = Tessem())
@@ -139,6 +153,10 @@ def test_simulation_absorption_jacobian():
     simulation.setup()
     simulation.run()
     return np.copy(simulation.workspace.jacobian.value)
+
+################################################################################
+# Multiple views
+################################################################################
 
 def test_simulation_multiview():
     atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],

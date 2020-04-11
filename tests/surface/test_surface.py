@@ -54,8 +54,8 @@ def test_simulation_telsem():
 
     data_provider = DataProvider()
     data_provider.surface_temperature = 280.0 * np.ones((1, 1))
-    data_provider.surface_latitude = 58.0
-    data_provider.surface_longitude = 12.0
+    data_provider.latitude = 58.0
+    data_provider.longitude = 12.0
     simulation = ArtsSimulation(atmosphere = atmosphere,
                                 data_provider = data_provider,
                                 sensors = [mwi])
