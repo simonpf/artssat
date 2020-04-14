@@ -202,6 +202,9 @@ class OutputFile:
             # Get data from provider.
             fget = getattr(simulation.data_provider, "get_" + v)
             data = fget(*simulation.args, **simulation.kwargs)
+            if type(data) == str:
+                data = np.array([d for d in data], dtype="S1")
+
             if not len(data.squeeze().shape) == len(dims):
                 raise ValueError("Shape of input data {} does not match "
                                  " expected dimensions {}.".format(data.shape,
@@ -210,6 +213,7 @@ class OutputFile:
             # Check if size of dimension has been inferred and if so if
             # it is consistent with previously inferred size.
             # Otherwise create dimension.
+
             for d, s in zip(dims, data.shape):
                 if d in self.input_dimensions:
                     si = self.input_dimensions[d]
@@ -221,7 +225,7 @@ class OutputFile:
                     group.createDimension(d, s)
                     self.input_dimensions[d] = s
 
-            group.createVariable(v, self.f_fp, tuple(indices + list(dims)))
+            group.createVariable(v, data.dtype, tuple(indices + list(dims)))
 
         args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
         kwargs = simulation.kwargs
@@ -354,6 +358,8 @@ class OutputFile:
             # Get data from provider.
             fget = getattr(simulation.data_provider, "get_" + v)
             data = fget(*simulation.args, **simulation.kwargs)
+            if type(data) == str:
+                data = np.array([d for d in data], dtype="S1")
 
             args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
 
