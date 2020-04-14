@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 import os
 import sys
-test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
-sys.path.append(test_path)
 
 import artssat
+test_path = os.path.join(os.path.dirname(artssat.__file__), "..", "tests")
+sys.path.append(test_path)
 from artssat import ArtsSimulation
 from artssat.atmosphere import Atmosphere1D
 from artssat.atmosphere.absorption import O2, N2, H2O

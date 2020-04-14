@@ -24,10 +24,26 @@ def run_simulation_ipyparallel(args, **kwargs):
     return _ipyparallel_simulation
 
 class AsyncResults():
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         self.done = {}
         self.failed = {}
 
+    @property
+    def average_time(self):
+        t = np.array([self.done[k]["time"] for k in self.done])
+        if len(t) > 0:
+            return np.mean(t)
+        else:
+            return np.nan
+
+    def __repr__(self):
+        s = "Distributed ARTS simulation: {} tasks, {} completed, {} failed"
+        s += "\n\t Avg. execution time: {}"
+        return s.format(len(self.args),
+                        len(self.done),
+                        len(self.failed),
+                        self.average_time)
 
 ################################################################################
 # Arts Simulation
@@ -42,7 +58,6 @@ class ArtsSimulation:
                  scattering_solver = RT4(nstreams = 12)):
 
         self._atmosphere        = atmosphere
-        self._data_provider     = data_provider
         self._sensors           = sensors
         self._scattering_solver = scattering_solver
         self._data_provider     = data_provider
@@ -306,17 +321,16 @@ class ArtsSimulation:
                                 ranges,
                                 *args,
                                 callback = None,
-                                ipyparallel_view = None,
+                                ipyparallel_client = None,
                                 **kwargs):
-        if ipyparallel_view is None:
+        if ipyparallel_client is None:
             raise ValueError("To run simulations in parallel using ipyparallel,"
-                             "the ipyparallel_view keyword argument must be"
+                             "the ipyparallel_client keyword argument must be"
                              " provided.")
-        view = ipyparallel_view
+        view = ipyparallel_client.direct_view()
+        view.use_dill()
 
         view.block=True
-        # Setup simulation on engines.
-        view.push({"simulation" : self})
 
         def run_setup(simulation):
             global _ipyparallel_simulation
@@ -335,42 +349,39 @@ class ArtsSimulation:
                         for seqs in get_args(ranges[1:])]
         args = get_args(ranges)
 
-        # def run_simulation(args, **kwargs):
-        #     global simulation
-        #     simulation.run(*args, **kwargs)
-        #     return simulation
         results = []
-        for arg in args:
+        view = ipyparallel_client.load_balanced_view()
+
+        client = ipyparallel_client
+        for i, arg in enumerate(args):
             results += [view.map(run_simulation_ipyparallel, [arg], block=False)]
 
+        result_async = AsyncResults(args)
 
-        result_async = AsyncResults()
-
-        def done_callback(arg, result):
-            print("Done callback.")
-            try:
-                simulation = result.get()[0]
-                if self.output_file:
-                    print("Storing result.", arg)
-                    print(simulation.args)
-                    simulation.output_file = self.output_file
-                    simulation.store_results()
-                result_async.done[arg] = r
-            except:
-                result_async.failed[arg] = r
-
-            
+        def make_callback(arg):
+            def done_callback(result):
+                try:
+                    simulation = result.get()[0]
+                    if self.output_file:
+                        self.output_file.store_results(simulation)
+                    result_async.done[arg] = {"stdout" : result.stdout,
+                                              "stderr" : result.stderr,
+                                              "time" : (result.completed[0]
+                                                        - result.started[0])}
+                except Exception as e:
+                    result_async.failed[arg] = {"exception" : e,
+                                                "time" : (result.completed[0]
+                                                          - result.started[0])}
+                del result
+            return done_callback
 
         for arg, r in zip(args, results):
-            r.add_done_callback(lambda x: done_callback(arg, x))
-        # print("parallel range: ", args)
-        # results = view.map(run_simulation, args)
+            r.add_done_callback(make_callback(arg))
 
         return result_async
 
     def _run_ranges(self, ranges, *args, callback = None, **kwargs):
         if len(ranges) == 0:
-            print("running:", *args)
             self.run(*args, **kwargs)
 
             if not callback is None:
@@ -387,17 +398,17 @@ class ArtsSimulation:
     def run_ranges(self,
                    *args,
                    mpi = None,
-                   ipyparallel_view = None,
+                   ipyparallel_client = None,
                    callback = None,
                    **kwargs):
 
         if mpi is None:
             parallel = self.parallel
         else:
-            if not ipyparallel_view is None:
+            if not ipyparallel_client is None:
                 raise ValueError("Simulations can be run either using MPI or "
                                  " IPyParallel, not both. Therefore, only "
-                                 "one of the mpi and ipyparallel_view keyword "
+                                 "one of the mpi and ipyparallel_client keyword "
                                  "arguments can be given.")
             parallel = mpi
 
@@ -405,11 +416,11 @@ class ArtsSimulation:
 
         if parallel:
             self._run_ranges_mpi(ranges, **kwargs, callback = callback)
-        elif ipyparallel_view:
+        elif ipyparallel_client:
             return self._run_ranges_ipyparallel(ranges,
                                                 **kwargs,
                                                 callback = callback,
-                                                ipyparallel_view=ipyparallel_view)
+                                                ipyparallel_client=ipyparallel_client)
         else:
             self._run_ranges(ranges, **kwargs, callback = callback)
 

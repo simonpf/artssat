@@ -8,6 +8,7 @@ as well as the overriding of get functions.
 """
 
 import numpy as np
+import weakref
 
 ################################################################################
 # Data provider classes
@@ -31,8 +32,20 @@ class DataProviderBase:
     method from the first that provides such a method is returned.
     """
     def __init__(self):
-        self.owner = None
+        self._owner = None
         self.subproviders = []
+
+    @property
+    def owner(self):
+        owner = self._owner()
+        if owner:
+            return owner
+        else:
+            raise ValueError("Parent data provider has been deleted.")
+
+    @owner.setter
+    def owner(self, owner):
+        self._owner = weakref.ref(owner)
 
     def add(self, subprovider):
         """

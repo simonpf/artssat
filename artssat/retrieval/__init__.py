@@ -45,6 +45,7 @@ Reference
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+import weakref
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
@@ -391,7 +392,6 @@ class RetrievalRun:
             rq.fixed = False
 
         self.name           = name
-        self.simulation     = simulation
         self.y              = np.copy(y)
         self.settings       = settings
         self.sensors        = simulation.sensors.copy()
@@ -399,9 +399,29 @@ class RetrievalRun:
         self.rq_indices     = {}
         self.retrieval_quantities = retrieval_quantities.copy()
         self.previous_run   = previous_run
-        self.data_provider  = simulation.data_provider
+
+        self._simulation = weakref.ref(simulation)
+        self._data_provider = weakref.ref(simulation.data_provider)
 
         self.x = None
+
+    @property
+    def simulation(self):
+        simulation = self._simulation()
+        if simulation:
+            return simulation
+        else:
+            raise ValueError("The corresponding simulation has "
+                                    " been deleted.")
+
+    @property
+    def data_provider(self):
+        data_provider = self._data_provider()
+        if data_provider:
+            return data_provider
+        else:
+            raise ValueError("The corresponding data provider has "
+                                    " been destroyed.")
 
     def get_result(self, q, attribute = "x", interpolate = False, transform_back = False):
 
