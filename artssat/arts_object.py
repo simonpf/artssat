@@ -75,6 +75,7 @@ Reference
 import numpy as np
 import inspect
 from abc import ABCMeta, abstractmethod, abstractproperty
+from copy import copy
 from pyarts.workspace.variables import WorkspaceVariable, group_names
 from pyarts.workspace.variables import workspace_variables as wsv
 from pyarts.workspace import Workspace
@@ -754,6 +755,11 @@ class PlaceHolder:
         self.fixed = False
         self.value = None
         self.workspace = None
+
+    def __getstate__(self):
+        state = copy(self.__dict__)
+        state.pop("workspace", None)
+        return state
 
 def add_property(obj, name, dims, t):
     """
