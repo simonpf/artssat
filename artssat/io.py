@@ -185,7 +185,6 @@ class OutputFile:
 
             if self.full_retrieval_output:
 
-
                 n = simulation.workspace.x.value.size
                 m = simulation.workspace.y.value.size
 
@@ -290,10 +289,13 @@ class OutputFile:
 
         if not type(retrieval.results) == list:
             results = [retrieval.results]
+            groups = [self.file_handle.groups[retrieval.results.name]]
         else:
             results = retrieval.results
+            groups = [self.file_handle.groups[r.name] for r in results]
 
-        for g, r in zip(self.groups, results):
+        for g, r in zip(groups, results):
+
             #
             # Retrieved quantities
             #

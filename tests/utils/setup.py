@@ -33,8 +33,10 @@ def arts_simulation(scattering = False,
     # Sensors
     if multiview:
         lines_of_sight = np.array([[135.0],
+                                   [150.0],
                                    [180.0]])
         positions = np.array([[600e3],
+                              [500e3],
                               [600e3]])
         ici = ICI(channel_indices = [0, -1],
                   lines_of_sight=lines_of_sight,
