@@ -7,7 +7,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='artssat',  # Required
-    version='0.0.1',  # Required
+    version='0.0.2',  # Required
     description='High-level simulation and retrieval framework for microwave and IR remote sensing.',
     long_description=long_description,
     long_description_content_type='text/markdown',  # Optional (see note above)
