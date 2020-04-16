@@ -5,9 +5,11 @@ artssat.io
 The `artssat.io` module provides routines for the storing of simulations results.
 """
 from netCDF4 import Dataset
-from artssat.sensor import ActiveSensor, PassiveSensor
+from copy import copy
 import numpy as np
 import os
+
+from artssat.sensor import ActiveSensor, PassiveSensor
 
 class OutputFile:
     """
@@ -17,7 +19,7 @@ class OutputFile:
     def __init__(self,
                  filename,
                  dimensions = None,
-                 mode = "wb",
+                 mode = "a",
                  inputs = [],
                  floating_point_format = "f4",
                  full_retrieval_output = True):
@@ -48,6 +50,7 @@ class OutputFile:
         except:
             self.mpi = False
 
+        filename = os.path.expanduser(filename)
         self.filename   = filename
         self.mode       = mode
         self.dimensions = dimensions
@@ -56,10 +59,14 @@ class OutputFile:
 
         self.full_retrieval_output = full_retrieval_output
 
-        if os.path.isfile(self.filename) and mode == "wb":
-            os.remove(self.filename)
-
-        self._initialized = False
+        if os.path.isfile(self.filename):
+            if mode == "wb":
+                os.remove(self.filename)
+                self._initialized = False
+            else:
+                self._initialized = True
+        else:
+            self._initialized = False
 
 
     @property
@@ -400,9 +407,9 @@ class OutputFile:
                 self.file_handle.close()
 
     def __getstate__(self):
-        self.close()
-        return self.__dict__
+        state = copy(self.__dict__)
+        state.pop("file_handle", None)
+        return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-
