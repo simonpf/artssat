@@ -103,7 +103,6 @@ def test_io_retrieval():
     Test storing of retrieval results to output file.
     """
     path = tempfile.mkdtemp()
-    path = "."
     output_file = os.path.join(path, "output.nc")
 
     simulation = arts_simulation()
@@ -133,7 +132,6 @@ def test_io_multiview():
     Test storing of retrieval results to output file.
     """
     path = tempfile.mkdtemp()
-    path = "."
     output_file = os.path.join(path, "output.nc")
 
     simulation = arts_simulation(multiview=True)
@@ -144,5 +142,5 @@ def test_io_multiview():
     simulation.output_file.open()
     fh      = simulation.output_file.file_handle
     fh.dimensions
-    assert(fh["ici_position"][:].shape[-1] == 2)
-    assert(fh["ici_line_of_sight"][:].shape[-1] == 2)
+    assert(fh["ici_position"][:].shape[-1] == 3)
+    assert(fh["ici_line_of_sight"][:].shape[-1] == 3)
