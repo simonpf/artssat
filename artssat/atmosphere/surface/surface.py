@@ -277,7 +277,10 @@ class CombinedSurface(ArtsObject):
             ws.Touch(ws.surface_emission)
             ws.Touch(ws.surface_los)
             ws.Touch(ws.surface_rmatrix)
-            print("stokes dim: ", ws.stokes_dim)
+            if (self.surface_type == 0):
+                ws.execute_agenda(self.surface_agenda_1)
+            else:
+                ws.execute_agenda(self.surface_agenda_2)
 
         return surface_agenda
 
@@ -293,10 +296,12 @@ class CombinedSurface(ArtsObject):
         self.surface_agenda_1 = self.surface_model_1.surface_agenda
         self.surface_agenda_2 = self.surface_model_2.surface_agenda
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
+
         if self.surface_type <= 0.0:
             ws.Copy(ws.surface_rtprop_agenda, self.surface_model_1.surface_agenda)
         else:
             ws.Copy(ws.surface_rtprop_agenda, self.surface_model_2.surface_agenda)
+        ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
     def run_checks(self, ws):
         pass
