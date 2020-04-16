@@ -129,10 +129,11 @@ class ArtsSimulation:
     # Radiative transfer calculations
     #
 
-    def setup(self, verbosity = 0):
+    def setup(self, verbosity=0):
 
         self.verbosity  = verbosity
-        self._workspace = Workspace(verbosity = verbosity)
+        self._workspace = Workspace(verbosity=verbosity,
+                                    agenda_verbosity=verbosity)
         ws = self._workspace
         for include in self.includes:
             ws.execute_controlfile(include)
@@ -358,25 +359,23 @@ class ArtsSimulation:
 
         result_async = AsyncResults(args)
 
-        def make_callback(arg):
+        def make_callback(arg, output_file):
             def done_callback(result):
                 try:
                     simulation = result.get()[0]
-                    if self.output_file:
-                        self.output_file.store_results(simulation)
+                    if output_file:
+                        output_file.store_results(simulation)
                     result_async.done[arg] = {"stdout" : result.stdout,
                                               "stderr" : result.stderr,
                                               "time" : (result.completed[0]
                                                         - result.started[0])}
                 except Exception as e:
-                    result_async.failed[arg] = {"exception" : e,
-                                                "time" : (result.completed[0]
-                                                          - result.started[0])}
+                    result_async.failed[arg] = {"exception" : e}
                 del result
             return done_callback
 
         for arg, r in zip(args, results):
-            r.add_done_callback(make_callback(arg))
+            r.add_done_callback(make_callback(arg, self.output_file))
 
         return result_async
 
@@ -448,8 +447,8 @@ class ArtsSimulation:
 
     def __getstate__(self):
         state = copy(self.__dict__)
-        if "workspace" in state.keys():
-            state.pop("workspace")
+        if "_workspace" in state.keys():
+            state.pop("_workspace")
         return state
 
     def __setstate__(self, state):
