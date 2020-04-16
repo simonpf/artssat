@@ -38,7 +38,7 @@ def test_moments(random_my05_psd):
     m0     = psd.get_moment(0)
     m0_ref = psd_data.get_moment(0)
 
-    assert np.all(np.isclose(m0, m0_ref, rtol = 1e-2))
+    assert np.all(np.isclose(m0, m0_ref, rtol = 1e-1))
 
     m1     = psd.get_moment(1)
     m1_ref = psd_data.get_moment(1)
