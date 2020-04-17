@@ -355,7 +355,10 @@ class ArtsSimulation:
 
         client = ipyparallel_client
         for i, arg in enumerate(args):
-            results += [view.map(run_simulation_ipyparallel, [arg], block=False)]
+            results += [view.map(run_simulation_ipyparallel,
+                                 [arg],
+                                 block=False,
+                                 **kwargs)]
 
         result_async = AsyncResults(args)
 
