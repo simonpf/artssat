@@ -4,6 +4,7 @@ that are available in ARTS.
 """
 from abc import abstractmethod, abstractproperty
 import numpy as np
+import os
 
 from artssat.arts_object import ArtsObject, arts_property, Dimension
 from pyarts.workspace import Workspace, arts_agenda
@@ -221,9 +222,10 @@ class Telsem(Surface,
 
     def setup(self, ws):
         ws.TelsemAtlasCreate("telsem_atlas")
-        ws.telsem_atlasesReadAscii(directory=self.atlas_directory,
-                                   filename_pattern=self.filename_pattern)
-        ws.Extract(ws.telsem_atlas, wsv["telsem_atlases"], self.month)
+        ws.telsem_atlasReadAscii(ws.telsem_atlas,
+                                 self.atlas_directory,
+                                 self.month,
+                                 self.filename_pattern)
         ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
     def get_data(self, ws, data_provider, *args, **kwargs):

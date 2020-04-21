@@ -94,7 +94,7 @@ class CloudBox:
         return self._checked
 
     def setup(self, ws):
-        ws.Copy(ws.iy_cloudbox_agenda, ws.iy_cloudbox_agenda__LinInterpField)
+        ws.Copy(ws.iy_cloudbox_agenda, ws.iy_cloudbox_agenda__QuarticInterpField)
 
     def get_data(self, ws, provider, *args, **kwargs):
 

@@ -373,6 +373,7 @@ class ArtsSimulation:
                                               "stderr" : result.stderr,
                                               "time" : (result.completed[0]
                                                         - result.started[0])}
+                    del simulation
                 except Exception as e:
                     result_async.failed[arg] = {"exception" : e}
                 del result

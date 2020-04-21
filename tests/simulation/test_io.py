@@ -144,3 +144,19 @@ def test_io_multiview():
     fh.dimensions
     assert(fh["ici_position"][:].shape[-1] == 3)
     assert(fh["ici_line_of_sight"][:].shape[-1] == 3)
+
+def test_io_dimensions():
+    """
+    Test storing of retrieval results to output file.
+    """
+    path = tempfile.mkdtemp()
+    output_file = os.path.join(path, "output.nc")
+
+    simulation = arts_simulation(multiview=True)
+    simulation.setup(verbosity = 0)
+    simulation.initialize_output_file(output_file, [("i", 1, 0), ("j", 2, 0)])
+    simulation.run_ranges(range(1), range(2))
+
+    dimensions = simulation.output_file.dimensions
+    assert(dimensions["i"] == 1)
+    assert(dimensions["j"] == 2)

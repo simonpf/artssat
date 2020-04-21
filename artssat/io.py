@@ -53,9 +53,9 @@ class OutputFile:
         filename = os.path.expanduser(filename)
         self.filename   = filename
         self.mode       = mode
-        self.dimensions = dimensions
         self.f_fp       = floating_point_format
         self.inputs = inputs
+        self._dimensions = dimensions
 
         self.full_retrieval_output = full_retrieval_output
 
@@ -78,7 +78,7 @@ class OutputFile:
         Initialize compute dimension in the output file.
         """
         # indices
-        for n, s, _ in self.dimensions:
+        for n, s, _ in self._dimensions:
             if s < 0:
                 self.file_handle.createDimension(n, None)
             else:
@@ -91,7 +91,7 @@ class OutputFile:
         corresponding to each sensor name.
         """
         root = self.file_handle
-        indices = [n for n, _, _ in self.dimensions]
+        indices = [n for n, _, _ in self._dimensions]
 
         for s in simulation.sensors:
             dims = []
@@ -153,7 +153,7 @@ class OutputFile:
         #
 
         self.groups = []
-        indices = [n for n, _, _ in self.dimensions]
+        indices = [n for n, _, _ in self._dimensions]
 
         if not type(retrieval.results) == list:
             results = [retrieval.results]
@@ -200,7 +200,7 @@ class OutputFile:
     def _initialize_inputs(self, simulation):
 
         self.input_dimensions = {}
-        indices = [n for n, _, _ in self.dimensions]
+        indices = [n for n, _, _ in self._dimensions]
         group = self.file_handle.createGroup("inputs")
 
         for (v, dims) in self.inputs:
@@ -233,7 +233,7 @@ class OutputFile:
 
             group.createVariable(v, data.dtype, tuple(indices + list(dims)))
 
-        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self._dimensions)]
         kwargs = simulation.kwargs
 
     def initialize(self, simulation):
@@ -265,7 +265,7 @@ class OutputFile:
 
     def _store_forward_simulation_results(self, simulation):
 
-        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self._dimensions)]
         kwargs = simulation.kwargs
 
         for s in simulation.sensors:
@@ -284,7 +284,7 @@ class OutputFile:
     def _store_retrieval_results(self, simulation):
 
         retrieval = simulation.retrieval
-        args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+        args   = [a - o for a, (_, _, o) in zip(simulation.args, self._dimensions)]
         kwargs = simulation.kwargs
 
         if not type(retrieval.results) == list:
@@ -370,7 +370,7 @@ class OutputFile:
             if type(data) == str:
                 data = np.array([d for d in data], dtype="S1")
 
-            args   = [a - o for a, (_, _, o) in zip(simulation.args, self.dimensions)]
+            args   = [a - o for a, (_, _, o) in zip(simulation.args, self._dimensions)]
 
             var = input_variables[v]
             if len(dims) > 0:
@@ -394,6 +394,20 @@ class OutputFile:
             self._store_inputs(simulation)
 
         self.close()
+
+    @property
+    def dimensions(self):
+        dimensions = {}
+
+        self.open()
+        try:
+            dims = self.file_handle.dimensions
+            for d in dims:
+                dimensions[d] = dims[d].size
+        except:
+            pass
+        self.close()
+        return dimensions
 
     def open(self):
         if self.initialized and not self.mpi:
