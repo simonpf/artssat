@@ -121,6 +121,8 @@ class OutputFile:
 
             root.createVariable("y_" + s.name, self.f_fp,
                                 dimensions = tuple(indices  + dims))
+            root.createVariable(s.name + "_channels", self.f_fp,
+                                dimensions = tuple(indices  + dims))
 
     def _initialize_retrieval_output(self, simulation):
         """
@@ -279,7 +281,9 @@ class OutputFile:
                 var = self.file_handle[s.name + "_position"]
                 var.__setitem__(list(args) + [slice(0, None)],
                                 s.sensor_position.ravel())
-
+            var = self.file_handle[s.name + "_channels"]
+            var.__setitem__(list(args) + [slice(0, None)],
+                            s.f_grid.ravel())
 
     def _store_retrieval_results(self, simulation):
 

@@ -27,7 +27,8 @@ def test_io_forward_simulation():
     simulation.output_file.open()
     fh      = simulation.output_file.file_handle
     v_names = [v for v in fh.variables]
-    assert(v_names == ["y_" + s.name for s in simulation.sensors])
+    assert(all([s.name + "_channels" in v_names for s in simulation.sensors]))
+    assert(all(["y_" + s.name in v_names for s in simulation.sensors]))
     for s in simulation.sensors:
         assert(np.all(np.isclose(fh.variables["y_" + s.name][-1, -1, :], s.y.ravel())))
 
@@ -50,7 +51,8 @@ def test_io_forward_simulation_polarized():
     simulation.output_file.open()
     fh      = simulation.output_file.file_handle
     v_names = [v for v in fh.variables]
-    assert(v_names == ["y_" + s.name for s in simulation.sensors])
+    assert(all([s.name + "_channels" in v_names for s in simulation.sensors]))
+    assert(all(["y_" + s.name in v_names for s in simulation.sensors]))
     for s in simulation.sensors:
         assert(np.all(np.isclose(fh.variables["y_" + s.name][-1, -1, :], s.y)))
 
