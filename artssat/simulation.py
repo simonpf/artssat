@@ -18,7 +18,8 @@ def setup_simulation_ipyparallel():
     global _ipyparallel_simulation
     _ipyparallel_simulation.setup()
 
-def run_simulation_ipyparallel(args, **kwargs):
+def run_simulation_ipyparallel(args):
+    (args, kwargs) = args
     global _ipyparallel_simulation
     _ipyparallel_simulation.run(*args, **kwargs)
     return _ipyparallel_simulation
@@ -355,7 +356,10 @@ class ArtsSimulation:
 
         client = ipyparallel_client
         for i, arg in enumerate(args):
-            results += [view.map(run_simulation_ipyparallel, [arg], block=False)]
+            results += [view.map(run_simulation_ipyparallel,
+                                 [(arg, kwargs)],
+                                 block=False,
+                                 **kwargs)]
 
         result_async = AsyncResults(args)
 
@@ -369,6 +373,7 @@ class ArtsSimulation:
                                               "stderr" : result.stderr,
                                               "time" : (result.completed[0]
                                                         - result.started[0])}
+                    del simulation
                 except Exception as e:
                     result_async.failed[arg] = {"exception" : e}
                 del result
