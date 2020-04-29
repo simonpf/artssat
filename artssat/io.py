@@ -95,6 +95,7 @@ class OutputFile:
 
         for s in simulation.sensors:
             dims = []
+
             if s.views > 1:
                 dim = s.name + "_views"
                 root.createDimension(dim, s.sensor_position.shape[0])
@@ -114,14 +115,16 @@ class OutputFile:
                 dim = s.name + "_channels"
                 root.createDimension(dim, s.f_grid.size)
                 dims += [dim]
+
+            root.createVariable(s.name + "_channels", self.f_fp,
+                                dimensions = tuple(indices  + dims[-1:]))
+
             if s.stokes_dimension > 1:
                 dim = s.name + "_stokes_dim"
                 root.createDimension(dim, s.stokes_dimension)
                 dims += [dim]
 
             root.createVariable("y_" + s.name, self.f_fp,
-                                dimensions = tuple(indices  + dims))
-            root.createVariable(s.name + "_channels", self.f_fp,
                                 dimensions = tuple(indices  + dims))
 
     def _initialize_retrieval_output(self, simulation):
