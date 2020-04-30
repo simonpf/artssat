@@ -85,7 +85,7 @@ class Tessem(Surface,
     """
 
     def __init__(self,
-                 tessem_net_h = "testdata/tessem_sav_net_V.txt",
+                 tessem_net_h = "testdata/tessem_sav_net_H.txt",
                  tessem_net_v = "testdata/tessem_sav_net_V.txt",
                  salinity = 0.034,
                  wind_speed = 0.0):
@@ -138,7 +138,7 @@ class Tessem(Surface,
             ws.InterpSurfaceFieldToPosition(out = wsv["surface_skin_t"],
                                             field = wsv["t_surface"])
             ws.surfaceTessem(salinity = telsem_salinity,
-                                wind_speed = telsem_windspeed)
+                            wind_speed = telsem_windspeed)
         return surface_rtprop_agenda_tessem
 
     def setup(self, ws):
@@ -298,12 +298,6 @@ class CombinedSurface(ArtsObject):
         self.surface_agenda_1 = self.surface_model_1.surface_agenda
         self.surface_agenda_2 = self.surface_model_2.surface_agenda
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
-
-        if self.surface_type <= 0.0:
-            ws.Copy(ws.surface_rtprop_agenda, self.surface_model_1.surface_agenda)
-        else:
-            ws.Copy(ws.surface_rtprop_agenda, self.surface_model_2.surface_agenda)
-        ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
     def run_checks(self, ws):
         pass

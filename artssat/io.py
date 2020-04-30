@@ -116,7 +116,7 @@ class OutputFile:
                 root.createDimension(dim, s.f_grid.size)
                 dims += [dim]
 
-            root.createVariable(s.name + "_channels", self.f_fp,
+            root.createVariable(s.name + "_frequencies", self.f_fp,
                                 dimensions = tuple(indices  + dims[-1:]))
 
             if s.stokes_dimension > 1:
@@ -284,7 +284,7 @@ class OutputFile:
                 var = self.file_handle[s.name + "_position"]
                 var.__setitem__(list(args) + [slice(0, None)],
                                 s.sensor_position.ravel())
-            var = self.file_handle[s.name + "_channels"]
+            var = self.file_handle[s.name + "_frequencies"]
             var.__setitem__(list(args) + [slice(0, None)],
                             s.f_grid.ravel())
 
