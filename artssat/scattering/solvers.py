@@ -113,10 +113,10 @@ class RT4(ScatteringSolver):
 class Disort(ScatteringSolver):
 
     def __init__(self,
-                 nstreams = 8,
-                 pfct_method = "interpolate",
-                 new_optprop = 1,
-                 Npfct = 181):
+                 nstreams=8,
+                 pfct_method="interpolate",
+                 new_optprop=1,
+                 Npfct=181):
 
         self._nstreams = nstreams
         self._pfct_method = pfct_method

@@ -333,7 +333,7 @@ class FreezingLevel:
 
             **kwargs: Keyword arguments to forward to data_provider.
         """
-        t     = data_provider.get_temperature(*args, **kwargs)
+        t = data_provider.get_temperature(*args, **kwargs)
         inds = np.where(t < 273.15)[0]
         if len(inds) > 0:
             i = inds[0]
@@ -497,7 +497,7 @@ class FixedAPriori(APrioriProviderBase):
             xa = self._xa
 
         if not self.mask is None:
-            mask = np.logical_not(self._get_mask(self, data_provider, *args, **kwargs))
+            mask = np.logical_not(self._get_mask(data_provider, *args, **kwargs))
             xa[mask] = self.mask_value
 
         return xa
@@ -786,7 +786,7 @@ class ReducedVerticalGrid(APrioriProviderBase):
         old_grid, new_grid = self._get_grids(*args, **kwargs)
         if self.quantity == "pressure":
             f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1],
-                                        bounds_error = False, fill_value = np.nan)
+                                        bounds_error = False, fill_value=np.nan)
             yi = f(new_grid[::-1], new_grid[::-1])[::-1, ::-1]
         else:
             f = sp.interpolate.interp2d(old_grid, old_grid, y,
@@ -908,8 +908,11 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         self.transition = transition
 
     def _get_mask(self, data_provider, *args, **kwargs):
-        mask = np.ones((self.n_points + 2,))
-        mask[1] = 0.0
+        _, new_grid = self._get_grids(*args, **kwargs)
+        mask = self.mask(self.owner, *args, **kwargs)
+        n = min(self.n_points + 2, mask.sum() + 2)
+        mask = np.ones((n,))
+        mask[0] = 0.0
         mask[-1] = 0.0
         return mask
 

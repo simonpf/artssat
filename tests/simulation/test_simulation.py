@@ -198,3 +198,25 @@ def test_simulation_multiview_radar():
     y = np.copy(cs.y)
     assert(y.shape[0] == 2)
     assert(y.shape[-1] == 2)
+
+
+ice = ScatteringSpecies("ice", D14(-1.0, 2.0),
+                        scattering_data = scattering_data,
+                        scattering_meta_data = scattering_meta)
+ice.psd.t_min = 0.0
+ice.psd.t_max = 275.0
+
+atmosphere = Atmosphere1D(absorbers = [O2(), N2(), H2O()],
+                            scatterers = [],
+                            surface = Tessem())
+ici = ICI(stokes_dimension = 1, channel_indices = [1, -1])
+ici.sensor_line_of_sight = np.array([[135.0]])
+ici.sensor_position = np.array([[600e3]])
+
+simulation = ArtsSimulation(atmosphere = atmosphere,
+                            data_provider = DataProvider(),
+                            sensors = [ici])
+simulation.scattering_solver = RT4()
+simulation.setup()
+for i in range(100):
+    simulation.run()

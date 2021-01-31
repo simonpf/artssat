@@ -8,6 +8,8 @@ from artssat.jacobian            import JacobianCalculation
 from artssat.retrieval           import RetrievalCalculation
 from artssat.io                  import OutputFile
 
+from memory_profiler import profile
+
 ################################################################################
 # IPyParallel Cache
 ################################################################################
