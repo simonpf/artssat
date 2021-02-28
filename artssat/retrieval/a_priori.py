@@ -413,6 +413,17 @@ class AltitudeMask:
                               z.ravel() <  self.upper_limit)
         return inds
 
+
+class Dilate:
+    def __init__(self, mask, n):
+        self.mask = mask
+        self.n = n
+
+    def __call__(self, data_provider, *args, **kwargs):
+        mask = self.mask(data_provider, *args, **kwargs)
+        return sp.ndimage.binary_dilation(mask)
+
+
 ################################################################################
 # A priori providers
 ################################################################################
