@@ -436,7 +436,8 @@ class DataProviderAPriori(APrioriProviderBase):
 
     def __init__(self,
                  name,
-                 covariance):
+                 covariance,
+                 transformation=None):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -454,7 +455,7 @@ class DataProviderAPriori(APrioriProviderBase):
             spatial_correlation: Functor that is applied to the covariance
                 matrix before this is returned.
         """
-
+        self.transformation = transformation
         super().__init__(name, covariance)
 
     def get_xa(self, *args, **kwargs):
@@ -467,6 +468,9 @@ class DataProviderAPriori(APrioriProviderBase):
                            " {0} from its owning data provider.")
 
         x = f(*args, **kwargs)
+        if self.transformation:
+            x = self.transformation(x)
+
         return x
 
 

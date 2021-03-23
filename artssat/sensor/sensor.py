@@ -404,7 +404,7 @@ class Sensor(ArtsObject):
 
     def get_data(self, ws, data_provider, *args, **kwargs):
         """
-        Get required data from data provided.
+        Get required data from data provider.
 
         This function obtains required data from the data provider
         if it has not been fixed in advance. The data expected
