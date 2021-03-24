@@ -437,7 +437,8 @@ class DataProviderAPriori(APrioriProviderBase):
     def __init__(self,
                  name,
                  covariance,
-                 transformation=None):
+                 transformation=None,
+                 mask=None):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -456,7 +457,16 @@ class DataProviderAPriori(APrioriProviderBase):
                 matrix before this is returned.
         """
         self.transformation = transformation
+        self.mask = mask
         super().__init__(name, covariance)
+
+    def _get_mask(self, data_provider, *args, **kwargs):
+        if self.mask is None:
+            xa = self.get_xa(*args, **kwargs)
+            mask = np.ones(xa.shape, dtype=np.bool)
+        else:
+            mask = self.mask(data_provider, *args, **kwargs)
+        return mask
 
     def get_xa(self, *args, **kwargs):
 
