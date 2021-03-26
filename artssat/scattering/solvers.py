@@ -49,7 +49,6 @@ class ScatteringSolver(metaclass = ABCMeta):
 class RT4(ScatteringSolver):
     def __init__(self,
                  nstreams = 32,
-                 pfct_method = "median",
                  quad_type = "D",
                  add_straight_angles = 1,
                  pfct_aa_grid_size = 38,
@@ -70,10 +69,6 @@ class RT4(ScatteringSolver):
     @property
     def nstreams(self):
         return self._nstreams
-
-    @property
-    def pfct_method(self):
-        return self._pfct_method
 
     @property
     def quad_type(self):
@@ -101,7 +96,6 @@ class RT4(ScatteringSolver):
         def run_solver(ws):
             ws.RT4Calc(**kwargs,
                        nstreams = self._nstreams,
-                       pfct_method = self._pfct_method,
                        quad_type = self._quad_type,
                        add_straight_angles = self._add_straight_angles,
                        pfct_aa_grid_size = self._pfct_aa_grid_size,
@@ -114,12 +108,10 @@ class Disort(ScatteringSolver):
 
     def __init__(self,
                  nstreams=8,
-                 pfct_method="interpolate",
                  new_optprop=1,
                  Npfct=181):
 
         self._nstreams = nstreams
-        self._pfct_method = pfct_method
         self._new_optprop = new_optprop
         self._Npfct = Npfct
 
@@ -133,7 +125,6 @@ class Disort(ScatteringSolver):
 
             ws.DisortCalcWithARTSSurface(**kwargs,
                                          nstreams = self._nstreams,
-                                         pfct_method = self._pfct_method,
                                          Npfct = self._Npfct)
 
         return run_solver
