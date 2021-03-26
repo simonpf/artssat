@@ -119,7 +119,6 @@ class Disort(ScatteringSolver):
                  Npfct=181):
 
         self._nstreams = nstreams
-        self._pfct_method = pfct_method
         self._new_optprop = new_optprop
         self._Npfct = Npfct
 
@@ -133,7 +132,6 @@ class Disort(ScatteringSolver):
 
             ws.DisortCalcWithARTSSurface(**kwargs,
                                          nstreams = self._nstreams,
-                                         pfct_method = self._pfct_method,
                                          Npfct = self._Npfct)
 
         return run_solver

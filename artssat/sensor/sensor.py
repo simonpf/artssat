@@ -238,7 +238,7 @@ class Sensor(ArtsObject):
         """
         The times associated with each measurment block.
         """
-        return np.array(np.zeros(self.sensor_position.shape[0]))
+        return []
 
     @arts_property("Index",
                    wsv = wsv["sensor_norm"])
@@ -445,7 +445,9 @@ class ActiveSensor(Sensor):
                                           "instrument_pol_array",
                                           "instrument_pol",
                                           "iy_transmitter_agenda",
-                                          "extinction_scaling"]
+                                          "extinction_scaling",
+                                          "iy_unit_radar",
+                                          "iy_radar_agenda"]
 
     ############################################################################
     # ARTS properties
@@ -473,13 +475,20 @@ class ActiveSensor(Sensor):
     def instrument_pol_array(self):
         return [[1]]
 
+    @arts_property("String",
+                   wsv = wsv["iy_unit_radar"])
+    def iy_unit_radar(self):
+        """
+        The unit which to use for the measurement vector.
+        """
+        return "dBZe"
+
     @property
     def y_vector_length(self):
         return (self.range_bins.size - 1) * self.f_grid.size * self.stokes_dimension
 
     def __init__(self, name, f_grid, stokes_dimension, range_bins = None):
         super().__init__(name, f_grid, stokes_dimension = stokes_dimension)
-        self.iy_unit    = "dBZe"
 
         if not range_bins is None:
             self.range_bins = range_bins
@@ -517,33 +526,29 @@ class ActiveSensor(Sensor):
         at some point.
         """
 
-        kwargs = self.get_wsm_kwargs(wsm["iyActiveSingleScat2"])
+        kwargs = self.get_wsm_kwargs(wsm["iyRadarSingleScat"])
         @arts_agenda
-        def iy_main_agenda(ws):
+        def iy_radar_agenda(ws):
+            ws.f_grid = self.f_grid
             ws.Ignore(ws.iy_id)
-            ws.Ignore(ws.nlte_field)
-            ws.Ignore(ws.rte_pos2)
-            ws.Ignore(ws.iy_unit)
             ws.Ignore(ws.iy_aux_vars)
-            ws.FlagOff(ws.cloudbox_on)
-            ws.ppathCalc()
-            ws.FlagOn(ws.cloudbox_on)
-            ws.iyActiveSingleScat(**kwargs,
-                                  pext_scaling = self._wsvs["extinction_scaling"],
-                                  trans_in_jacobian = 1)
-        return iy_main_agenda
+            ws.ppathPlaneParallel(cloudbox_on = 0)
+            ws.iyRadarSingleScat(**kwargs,
+                                 pext_scaling = self._wsvs["extinction_scaling"],
+                                 trans_in_jacobian = 1)
+        return iy_radar_agenda
 
     #
     # Specialized setters
     #
 
-    def iy_unit_setter(self, u):
+    def iy_unit_radar_setter(self, u):
         if not u in ["1", "Ze", "dBZe"]:
-            raise Exception("Value of iy_unit for an active sensor must"
+            raise Exception("Value of iy_unit_radar for an active sensor must"
                             " be one of ['1', 'Ze', 'dBZe']")
         else:
-            self._iy_unit.value = u
-            self._iy_unit.fixed = True
+            self._iy_unit_radar.value = u
+            self._iy_unit_radar.fixed = True
 
     def iy_aux_vars_setter(self, v):
         if not type(v) == list:
@@ -558,6 +563,49 @@ class ActiveSensor(Sensor):
             self._iy_aux_vars.value = v
             self._iy_aux_vars.fixed = False
 
+    def setup(self, ws, scattering = True):
+        """
+        General setup for an ARTS sensor.
+
+        This method performs the following steps to setup the sensor:
+
+        - Copy the `iy_main_agenda` of the sensor into a private workspace
+          variable in the workspace
+        - Copy the `f_grid` into a private workspace variable
+        - Compute and check `scat_data` and copy results into private
+          workspace variables.
+        - Copy `iy_aux_vars` and `iy_unit` to the workspace and store
+          in prive workspace variables.
+
+        Paremters:
+
+            ws(pyarts.workspace.Workspace): The workspace on which
+                to perform the setup of the sensor.
+        """
+        print("SENSOR SETUP")
+        self._create_private_wsvs(ws, type(self).private_wsvs)
+        wsvs = self._wsvs
+
+        self.setup_arts_properties(ws)
+
+        #
+        # Scat data
+        #
+        if ws.scat_data_raw.initialized:
+            ws.scat_dataCalc(scat_data_raw=ws.scat_data_raw,
+                             f_grid=wsvs["f_grid"],
+                             interp_order=1)
+            ws.Copy(wsvs["scat_data"], ws.scat_data)
+
+        kwargs = self.get_wsm_kwargs(wsm["scat_data_checkedCalc"])
+        ws.scat_data_checkedCalc(**kwargs, check_level = "sane")
+        wsvs["scat_data_checked"].value = ws.scat_data_checked.value
+
+        #
+        # Need to add agendas in the end so that input arguments
+        # can be replaced by private sensor variables.
+        #
+        print(wsvs)
     #
     # Preparation and y_calc factories.
     #
@@ -602,7 +650,7 @@ class ActiveSensor(Sensor):
             raise Exception("ARTS doesn't support appending measurements from"
                             " active sensors.")
 
-        kwargs = self.get_wsm_kwargs(wsm["yActive"])
+        kwargs = self.get_wsm_kwargs(wsm["yRadar"])
 
         if self.y_min:
             y_min = self.y_min
@@ -610,7 +658,7 @@ class ActiveSensor(Sensor):
             y_min = - np.inf
 
         def y_calc(ws):
-            ws.yActive(**kwargs, dbze_min = y_min)
+            ws.yRadar(**kwargs, dbze_min = y_min)
 
         return y_calc
 
@@ -621,6 +669,7 @@ class ActiveSensor(Sensor):
     def setup(self, ws, scattering = True):
         super().setup(ws, scattering)
         self._wsvs["iy_transmitter_agenda"].value = self.iy_transmitter_agenda
+        self._wsvs["iy_radar_agenda"].value = self.make_iy_main_agenda(scattering)
 
 class PassiveSensor(Sensor):
     """
@@ -670,7 +719,7 @@ class PassiveSensor(Sensor):
             ws.FlagOff(ws.cloudbox_on)
             ws.ppathCalc()
             ws.FlagOn(ws.cloudbox_on)
-            ws.iyHybrid2(**kwargs, t_interp_order = self.t_interp_order)
+            ws.iyHybrid(**kwargs, t_interp_order = self.t_interp_order)
 
         def iy_main_agenda_no_scattering(ws):
             ws.Ignore(ws.iy_id)
@@ -683,7 +732,7 @@ class PassiveSensor(Sensor):
 
         if scattering:
             agenda = iy_main_agenda_scattering
-            kwargs = self.get_wsm_kwargs(wsm["iyHybrid2"])
+            kwargs = self.get_wsm_kwargs(wsm["iyHybrid"])
         else:
             agenda = iy_main_agenda_no_scattering
             kwargs = self.get_wsm_kwargs(wsm["iyEmissionStandard"])
