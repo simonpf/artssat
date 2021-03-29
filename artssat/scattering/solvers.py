@@ -55,7 +55,6 @@ class RT4(ScatteringSolver):
                  auto_inc_nstreams = 64,
                  robust = 1):
         self._nstreams = nstreams
-        self._pfct_method = pfct_method
         self._quad_type = quad_type
         self._add_straight_angles = add_straight_angles
         self._pfct_aa_grid_size = pfct_aa_grid_size
