@@ -305,6 +305,7 @@ class RetrievalQuantity(JacobianQuantity):
     def __init__(self):
         self._fixed          = None
         self._retrieval      = None
+        self.debug_callback = None
         super().__init__()
 
     @property
@@ -550,7 +551,6 @@ class RetrievalRun:
         i1, j1 = self.sensor_indices[sensor.name]
         i2, j2 = self.rq_indices[q]
         dydx = self.jacobian[i1 : j1, i2: j2]
-        print(dydx.shape)
 
         if dydx is None:
             s = "No result for retrieval quantity {} available.".format(q.name)
@@ -698,7 +698,7 @@ class RetrievalRun:
         # Set values of retrieval quantities excluded from retrieval.
         #
 
-        for rq in self.simulation.retrieval.retrieval_quantities:
+        for rq in self.retrieval_quantities:
 
             # Need to setup transformation in case RQ has not yet been
             # retrieved.
@@ -842,6 +842,18 @@ class RetrievalRun:
             self.debug["yf"]              += [np.copy(ws.yf.value)]
             self.debug["jacobian"]        += [np.copy(ws.jacobian.value)]
             self.debug["iteration_index"] += [ws.inversion_iteration_counter.value]
+
+            x = ws.x.value
+
+            for rq in self.simulation.retrieval.retrieval_quantities:
+                if rq.debug_callback is not None:
+                    i, j = self.rq_indices[rq]
+                    x_q = x[i:j]
+                    x_q = rq.transformation.invert(x_q)
+                    grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+                    grids = [g for g in grids if g.size > 0]
+                    x_q = rq.retrieval.interpolate_to_grids(x_q, grids)
+                    rq.debug_callback(ws, x_q)
 
         if debug:
             agenda.append(get_debug)

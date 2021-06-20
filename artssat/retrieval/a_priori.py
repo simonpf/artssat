@@ -438,7 +438,8 @@ class DataProviderAPriori(APrioriProviderBase):
                  name,
                  covariance,
                  transformation=None,
-                 mask=None):
+                 mask=None,
+                 mask_value=None):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -458,6 +459,7 @@ class DataProviderAPriori(APrioriProviderBase):
         """
         self.transformation = transformation
         self.mask = mask
+        self.mask_value = mask_value
         super().__init__(name, covariance)
 
     def _get_mask(self, data_provider, *args, **kwargs):
@@ -474,13 +476,14 @@ class DataProviderAPriori(APrioriProviderBase):
         try:
             f = getattr(self.owner, f_name)
         except:
-            raise Expetion("DataProviderApriori instance requires get method "
-                           " {0} from its owning data provider.")
-
+            raise Exception("DataProviderApriori instance requires get method "
+                            " {0} from its owning data provider.")
         x = f(*args, **kwargs)
+        if self.mask is not None:
+            mask = np.logical_not(self._get_mask(*args, **kwargs))
+            x[mask] = self.mask_value
         if self.transformation:
             x = self.transformation(x)
-
         return x
 
 
