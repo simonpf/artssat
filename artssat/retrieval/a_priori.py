@@ -479,11 +479,11 @@ class DataProviderAPriori(APrioriProviderBase):
             raise Exception("DataProviderApriori instance requires get method "
                             " {0} from its owning data provider.")
         x = f(*args, **kwargs)
-        if self.mask is not None:
-            mask = np.logical_not(self._get_mask(*args, **kwargs))
-            x[mask] = self.mask_value
         if self.transformation:
             x = self.transformation(x)
+        if self.mask is not None:
+            mask = np.logical_not(self._get_mask(self.owner, *args, **kwargs))
+            x[mask] = self.mask_value
         return x
 
 
