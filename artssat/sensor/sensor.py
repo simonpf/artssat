@@ -451,9 +451,13 @@ class ActiveSensor(Sensor):
     # ARTS properties
     ############################################################################
 
-    @arts_property("Numeric", wsv = "extinction_scaling")
+    @arts_property("Numeric", wsv="extinction_scaling")
     def extinction_scaling(self):
         return 1.0
+
+    @arts_property("Numeric")
+    def k2(self):
+        return -1.0
 
     @arts_property("Numeric")
     def y_min(self):
@@ -586,8 +590,8 @@ class ActiveSensor(Sensor):
         return preparations
 
     def make_y_calc_function(self,
-                             append = False,
-                             scattering = False):
+                             append=False,
+                             scattering=False):
         """
         Returns y_calc function, which computes the radar signal
         on an accordingly prepared workspace. This function can
@@ -610,7 +614,9 @@ class ActiveSensor(Sensor):
             y_min = - np.inf
 
         def y_calc(ws):
-            ws.yActive(**kwargs, dbze_min = y_min)
+            ws.yActive(dbze_min=y_min,
+                       k2=self.k2,
+                       **kwargs)
 
         return y_calc
 
