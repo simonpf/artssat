@@ -32,16 +32,19 @@ class NetCDFDataProvider(DataProviderBase):
             v = variable
 
             i = 0
-            while len(args) > 0:
-                d = variable.dimensions[i]
-                i += 1
-                if d in fixed_dimensions:
-                    v = v[fixed_dimensions[d]]
-                else:
-                    a = args.pop()
-                    if d in offsets:
-                        a += offsets[d]
-                    v = v[a]
+            if not len(args):
+                v = v[:]
+            else:
+                while len(args) > 0:
+                    d = variable.dimensions[i]
+                    i += 1
+                    if d in fixed_dimensions:
+                        v = v[fixed_dimensions[d]]
+                    else:
+                        a = args.pop()
+                        if d in offsets:
+                            a += offsets[d]
+                        v = v[a]
 
             if type(v) == np.ma.core.MaskedArray:
                 v = np.ma.getdata(v)

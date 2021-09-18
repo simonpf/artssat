@@ -408,6 +408,22 @@ class Atmosphere:
         else:
             ws.z_surface = ws.z_field.value[0, :, :]
 
+    def __get_latitude__(self, ws, provider, *args, **kwargs):
+        if len(self.dimensions) > 1:
+            dimensions = ws.t_field.value.shape
+            lats = provider.get_latitude(*args, **kwargs)
+            ws.lat_grid = np.arange(lats.size)
+            ws.lat_true = lats
+
+
+    def __get_longitude__(self, ws, provider, *args, **kwargs):
+        if len(self.dimensions) > 1:
+            dimensions = ws.t_field.value.shape
+            lons = provider.get_longitude(*args, **kwargs)
+            ws.lon_true = lons
+        if len(self.dimensions) < 3:
+            ws.lon_grid = []
+
     def __get_absorbers__(self, ws, provider, *args, **kwargs):
 
         dimensions = ws.t_field.value.shape
@@ -435,11 +451,13 @@ class Atmosphere:
 
     def __get_scatterers__(self, ws, provider, *args, **kwargs):
 
-        if not self.scatterers is None and len(self.scatterers) > 0:
-            ws.cloudbox_on = 1
-            ws.cloudboxSetFullAtm()
-
         dimensions = ws.t_field.value.shape
+        ws.cloudbox_on = 1
+        ws.cloudbox_limits = [0, dimensions[0] - 1,
+                              0, dimensions[1] - 1,
+                              0, dimensions[2] - 1]
+        #if not self.scatterers is None and len(self.scatterers) > 0:
+        #    ws.cloudboxSetFullAtm()
 
         for s in self.scatterers:
             s.get_data(ws, provider, *args, **kwargs)
@@ -450,6 +468,8 @@ class Atmosphere:
         self.__get_pressure__(ws, provider, *args, **kwargs)
         self.temperature.get_data(ws, provider, *args, **kwargs)
         self.__get_altitude__(ws, provider, *args, **kwargs)
+        self.__get_latitude__(ws, provider, *args, **kwargs)
+        self.__get_longitude__(ws, provider, *args, **kwargs)
         self.__get_absorbers__(ws, provider, *args, **kwargs)
         self.__get_scatterers__(ws, provider, *args, **kwargs)
 
@@ -493,3 +513,20 @@ class Atmosphere1D(Atmosphere):
                          scatterers = scatterers,
                          surface = surface,
                          catalog = catalog)
+
+
+class Atmosphere2D(Atmosphere):
+
+    def __init__(self,
+                 absorbers=[],
+                 scatterers=[],
+                 surface=None,
+                 levels=None,
+                 catalog=None):
+        if levels is None:
+            dimensions = (0, 0)
+        super().__init__(dimensions,
+                         absorbers=absorbers,
+                         scatterers=scatterers,
+                         surface=surface,
+                         catalog=catalog)

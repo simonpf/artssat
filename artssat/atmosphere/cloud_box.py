@@ -105,7 +105,16 @@ class CloudBox:
             return
 
         if not self._adaptive and self._vertical_limits is None:
-            ws.cloudboxSetFullAtm()
+            dimensions = ws.t_field.value.shape
+            ws.cloudbox_on = 1
+            limits = []
+            for i in range(ws.atmosphere_dim.value):
+                if i == 0:
+                    limits += [0, dimensions[i] - 1]
+                else:
+                    limits += [20, dimensions[i] - 21]
+            ws.cloudbox_limits = limits
+            #ws.cloudboxSetFullAtm()
             return
 
         if self._adaptive:

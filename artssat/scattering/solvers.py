@@ -122,6 +122,7 @@ class Disort(ScatteringSolver):
             ws.Ignore(ws.atmosphere_dim)
             ws.DOAngularGridsSet(N_za_grid = 38, N_aa_grid = 1, za_grid_opt_file = "")
 
+            ws.atmosphere_dim = 1
             ws.DisortCalcWithARTSSurface(**kwargs,
                                          nstreams = self._nstreams,
                                          Npfct = self._Npfct)
