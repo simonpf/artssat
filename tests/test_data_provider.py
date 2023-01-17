@@ -1,5 +1,11 @@
-from artssat.data_provider import DataProviderBase, Constant, \
-    FunctorDataProvider, CombinedProvider
+import numpy as np
+from artssat.data_provider import (
+    DataProviderBase,
+    Constant,
+    FunctorDataProvider,
+    CombinedProvider,
+    Fascod,
+)
 
 ################################################################################
 # Data provider classes
@@ -92,3 +98,27 @@ def test_functional_provider():
     value = dp.get_value()
     assert(value == 2.0 * dp.get_temperature())
 
+
+def test_fascod_provider():
+    """
+    Tests Fascod data provider and ensures that inerpolation works as expected.
+    """
+    fascod = Fascod("midlatitude", "summer")
+
+    z = fascod.get_altitude()
+    p = fascod.get_pressure()
+    h2o = fascod.get_H2O()
+
+    z_c = 0.5 * (z[1:] + z[:-1])
+    h2o_c = 0.5 * (h2o[1:] + h2o[:-1])
+
+    fascod.interpolate_altitude(z_c)
+    h2o_i = fascod.get_H2O()
+    assert np.all(np.isclose(h2o_i, h2o_c))
+
+    log_p = np.log(p)
+    p_c = np.exp(0.5 * (np.log(p)[1:] + np.log(p)[:-1]))
+
+    fascod.interpolate_pressure(p_c)
+    h2o_i = fascod.get_H2O()
+    assert np.all(np.isclose(h2o_c, h2o_i))

@@ -17,6 +17,11 @@ setup(
     install_requires=["pyarts", "typhon", "netCDF4"],
     packages=find_packages(exclude=['examples', 'doc', 'misc', 'tests']),
     python_requires='>=3.6',
+    package_data={
+        "artssat": [
+            "files/fascod/*.nc",
+        ]
+    },
     project_urls={  # Optional
         'Source': 'https://github.com/simonpf/artssat/',
     })

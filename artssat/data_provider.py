@@ -3,16 +3,19 @@ data_provider
 -------------
 
 The :code:`data_provider` module provides a base class for data provider
-classes. This class provides utility function for the composition of data providers
-as well as the overriding of get functions.
+classes. This class provides utility functions for the composition of data
+ providers as well as the overriding of get functions.
 """
+from pathlib import Path
+import weakref
 
 import numpy as np
-import weakref
+import xarray as xr
 
 ################################################################################
 # Data provider classes
 ################################################################################
+
 
 class DataProviderBase:
     """
@@ -22,7 +25,7 @@ class DataProviderBase:
     - Composition of data providers
 
     When a data provider inherits from :code:`DataProviderBase`, the values
-    returned from a :code:`get_<attribute>` can be overriding simply setting
+    returned from a :code:`get_<attribute>` can be overridden simply setting
     the attribute with the name :code:`<attribute>` of the object.
 
     The DataProviderBase also allows composing data provider by adding sub-
@@ -37,11 +40,11 @@ class DataProviderBase:
 
     @property
     def owner(self):
+        """The super provided."""
         owner = self._owner()
         if owner:
             return owner
-        else:
-            raise ValueError("Parent data provider has been deleted.")
+        raise ValueError("Parent data provider has been deleted.")
 
     @owner.setter
     def owner(self, owner):
@@ -70,42 +73,31 @@ class DataProviderBase:
 
         if not name[:4] == "get_":
             return object.__getattribute__(self, name)
-        else:
 
-            attribute_name = name[4:]
+        attribute_name = name[4:]
+        try:
+            attr = object.__getattribute__(self, attribute_name)
+            def wrapper(*_, **__):
+                return attr
+            return wrapper
+        except AttributeError:
+            pass
 
-            #
-            # Get name from self with priority for the attribute.
-            #
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            pass
 
+        for prov in self.subproviders:
             try:
-                x = object.__getattribute__(self, attribute_name)
-
-                def wrapper(*args, **kwargs):
-                    return x
-                return wrapper
-            except:
+                return getattr(prov, name)
+            except AttributeError:
                 pass
 
-            try:
-                return object.__getattribute__(self, name)
-            except:
-                pass
+        raise AttributeError(
+            f"'{self}' object has no attribute 'name'."
+        )
 
-            #
-            # Get name from first list provider which has any of the
-            # has either a fitting attribute or get_method.
-            #
-
-            for p in self.subproviders:
-
-                try:
-                    return getattr(p, name)
-                except:
-                    pass
-
-            raise AttributeError("'{0}' object has no attribute '{1}'."\
-                                 .format(type(self).__name__, name))
 
 class CombinedProvider(DataProviderBase):
     """
@@ -115,6 +107,7 @@ class CombinedProvider(DataProviderBase):
     same order as the providers are provided to the constructor and the
     first hit is returned.
     """
+
     def __init__(self, *args):
         super().__init__()
         self.providers = list(args)
@@ -133,32 +126,28 @@ class CombinedProvider(DataProviderBase):
             Exception: If :code: `provider` argument doesn´t inherit
             from :code:`DataProviderBase`.
         """
-        if not isinstance(subprovider, DataProviderBase):
-            raise Exception("Data provider to add  objects must inherit from "
-                            "DataProviderBase.")
-        subprovider.owner = self
+        if not isinstance(provider, DataProviderBase):
+            raise Exception(
+                "Data provider to add  objects must inherit from DataProviderBase."
+            )
+        provider.owner = self
         self.providers += [provider]
 
     def __getattribute__(self, name):
 
         if not name[:4] == "get_":
             return object.__getattribute__(self, name)
-        else:
 
-            #
-            # Get name from first list provider which has any of the
-            # has either a fitting attribute or get_method.
-            #
+        for prov in self.providers:
+            try:
+                return getattr(prov, name)
+            except AttributeError:
+                pass
 
-            for p in self.providers:
+        raise AttributeError(
+            f"'{self}' object has no attribute 'name'."
+        )
 
-                try:
-                    return getattr(p, name)
-                except:
-                    pass
-
-            raise AttributeError("'{0}' object has no attribute '{1}'."\
-                                 .format(type(self).__name__, name))
 
 class Constant(DataProviderBase):
     """
@@ -182,8 +171,10 @@ class Constant(DataProviderBase):
         self.value = value
         self.__dict__["get_" + name] = self.get
 
-    def get(self, *args, **kwargs):
+    def get(self, *_, **__):
+        """Template function for the final get_'name' method."""
         return self.value
+
 
 class FunctorDataProvider(DataProviderBase):
     """
@@ -191,7 +182,8 @@ class FunctorDataProvider(DataProviderBase):
     provides a get function for the results of the given function applied
     to a variable from the parent provider.
     """
-    def __init__(self, name, variable, f):
+
+    def __init__(self, name, variable, func):
         """
         Create a data provider for quantity :code:`name` that
         returns the result of function `f` applied to variable
@@ -209,23 +201,168 @@ class FunctorDataProvider(DataProviderBase):
                 function of the parent data provider and the values as
                 arguments to the function :code:`f`
 
-            f(:code:`function`): Function to apply to the values of
+            func(:code:`function`): Function to apply to the values of
                 :code:`variable`. The results are returned as the values
                 of the quantity :code:`name` by the :code:`FunctionDataProvider`
                 object.
         """
         super().__init__()
-        self.variable   = variable
-        self.f          = f
+        self.variable = variable
+        self.func = func
         self.__dict__["get_" + name] = self.get
 
     def get(self, *args, **kwargs):
         try:
             f_get = getattr(self.owner, "get_" + self.variable)
-            x = f_get(*args, **kwargs)
-        except:
-            raise Exception("Could not get variable {} from data provider."
-                            .format(self.variable))
+            f_in = f_get(*args, **kwargs)
+        except AttributeError:
+            raise Exception(
+                f"Could not get variable {self.variable} from data provider."
+            )
 
-        y = self.f(x)
-        return y
+        result = self.func(f_in)
+        return result
+
+
+class Fascod(DataProviderBase):
+    """
+    Data provider for 1D Fascod atmospheres.
+    """
+    def __init__(
+            self,
+            climate="midlatitude",
+            season="summer",
+            altitudes=None,
+            pressures=None
+    ):
+        """
+        Args:
+            climate: The climate for which to load the atmosphere data. Should
+                be one of ['tropical', 'midlatitude', 'subarctic']
+            season: The season for which to load the atmosphere data. Should
+                be one of ['summer', 'winter'].
+            altitudes: If provided, data will be provided on the gives altitude
+                grid.
+            pressures: If provided, data will be provided on the given pressure
+                grid.
+        """
+        climate = climate.lower()
+        season = season.lower()
+
+        climates = ["midlatitude", "tropical", "subarctic"]
+        if climate not in climates:
+            raise ValueError(
+                f"The climate for the Fascod data provider must be one of {climates}."
+            )
+        seasons = ["summer", "winter"]
+        if season not in seasons:
+            raise ValueError(
+                "The season for the Fascod data provider must be one of {seasons}."
+            )
+
+        data_folder = Path(__file__).parent / "files" / "fascod"
+        if climate == "tropical":
+            filename = f"{climate}.nc"
+        else:
+            filename = f"{climate}_{season}.nc"
+
+        self.data_raw = xr.load_dataset(data_folder / filename)
+        self.data = self.data_raw
+
+    def interpolate_altitude(self, altitudes, extrapolate=False, method="linear"):
+        """
+        Interpolate data in altitude.
+
+        Interpolates the data of the provider to a given altitude grid. After that
+        all get methods will return data on the given grid.
+
+        Args:
+            altitudes: The altitudes to interpolate the data to.
+
+        """
+        kwargs = {
+            "fill_value": np.nan
+        }
+        if extrapolate:
+            kwargs["fill_value"] = "extrapolate"
+        self.data = self.data.interp(z=altitudes, method=method, kwargs=kwargs)
+
+    def interpolate_pressure(self, pressures, extrapolate=False, method="linear"):
+        """
+        Interpolate data in pressure.
+
+        Interpolates the data of the provider to a given pressure grid. After that
+        all get methods will return data on the given grid.
+
+        Args:
+            pressures:
+
+        """
+        kwargs = {
+            "fill_value": np.nan
+        }
+        if extrapolate:
+            kwargs["fill_value"] = "extrapolate"
+
+
+        log_pressures = np.log(pressures)
+        data = self.data_raw.copy()
+        log_p = np.log(data.p.data)
+
+        data.coords["log_p"] = (("z",), log_p)
+        data = data.swap_dims({"z": "log_p"})[{"log_p": slice(None, None, -1)}]
+
+        data = data.interp(log_p=log_pressures, method=method, kwargs=kwargs)
+        self.data = data
+
+    def get_temperature(self, *args, **kwargs):
+        """Return temperature in atmospheric column."""
+        return self.data.t.data
+
+    def get_pressure(self, *args, **kwargs):
+        """Return pressure in atmospheric column."""
+        return self.data.p.data
+
+    def get_altitude(self, *args, **kwargs):
+        """Return altitude in atmospheric column."""
+        return self.data.z.data
+
+    def get_O2(self, *args, **kwargs):
+        """Return O2 VMR in atmospheric column."""
+        return self.data.O2.data
+
+    def get_H2O(self, *args, **kwargs):
+        """Return water vapor VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_CO2(self, *args, **kwargs):
+        """Return CO2 VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_O3(self, *args, **kwargs):
+        """Return CO3 VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_CO(self, *args, **kwargs):
+        """Return CO VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_N2O(self, *args, **kwargs):
+        """Return N2O VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_N2(self, *args, **kwargs):
+        """Return N2 VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_NO2(self, *args, **kwargs):
+        """Return NO2 VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_NO(self, *args, **kwargs):
+        """Return NO VMR in atmospheric column."""
+        return self.data.H2O.data
+
+    def get_surface_temperature(self, *args, **kargs):
+        return self.data.t.data[0]
+
