@@ -94,7 +94,6 @@ def test_simulation_scattering_jacobian():
     simulation.setup()
     simulation.run()
     print(simulation.workspace.particle_bulkprop_field.value)
-    return np.copy(simulation.workspace.jacobian.value)
 
 ################################################################################
 # Active + Passive, Jacobian
@@ -129,7 +128,6 @@ def test_simulation_scattering_combined(scattering_solver):
     simulation.setup()
     simulation.run()
     y = np.copy(simulation.workspace.y)
-    return y
 
 ################################################################################
 # Absorption + Jacobian
@@ -152,7 +150,6 @@ def test_simulation_absorption_jacobian():
     simulation.jacobian.add(h2o)
     simulation.setup()
     simulation.run()
-    return np.copy(simulation.workspace.jacobian.value)
 
 ################################################################################
 # Multiple views
