@@ -438,7 +438,7 @@ class JacobianBase(ArtsObject, metaclass=ABCMeta):
         else:
             xi = mesh_grids[0].reshape(-1, 1)
 
-        y = interp(xi)
+        y = interp(xi.copy())
 
         inds = np.array(np.isnan(y))
         interp = sp.interpolate.RegularGridInterpolator(
