@@ -274,7 +274,7 @@ class PSDData:
             size_parameter(SizeParameter): The size parameter to convert the
                 data to.
 
-            rho(np.float): Particle density.
+            rho(float): Particle density.
 
         """
 

@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.com/simonpf/artssat.svg?branch=master)](https://travis-ci.com/simonpf/artssat)
+![example workflow](https://github.com/simonpf/artssat/actions/workflows/install_and_test.yml/badge.svg)
+
 
 # artssat
 

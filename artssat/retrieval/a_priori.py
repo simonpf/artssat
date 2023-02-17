@@ -125,7 +125,7 @@ class Thikhonov:
     ):
         """
         Arguments:
-            scaling(:code:`np.float`): Scalar to scale the precision matrix with.
+            scaling(:code:float`): Scalar to scale the precision matrix with.
 
             mask: A mask object defining indices on the diagonal on the precision
                 matrix to which to as :code:`mask_value`.
@@ -175,7 +175,7 @@ class Thikhonov:
             d += self.diagonal
 
         if not self.mask is None:
-            mask = self.mask(data_provider, *args, **kwargs).astype(np.float32)
+            mask = self.mask(data_provider, *args, **kwargs).astype(np.float64)
             if not z_old is None:
                 f = sp.interpolate.interp1d(
                     z_old,
@@ -572,7 +572,7 @@ class FunctionalAPriori(APrioriProviderBase):
 
     def _get_mask(self, data_provider, *args, **kwargs):
         mask = self.mask(data_provider, *args, **kwargs)
-        return mask.astype(np.float)
+        return mask.astype(np.float64)
 
     def get_xa(self, *args, **kwargs):
 

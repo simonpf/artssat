@@ -60,8 +60,8 @@ class MY05(ArtsPSD):
     properties = [
         ("number_density", (dim.p, dim.lat, dim.lon), np.ndarray),
         ("mass_density", (dim.p, dim.lat, dim.lon), np.ndarray),
-        ("nu", (), np.float),
-        ("mu", (), np.float),
+        ("nu", (), np.float64),
+        ("mu", (), np.float64),
     ]
 
     @classmethod
