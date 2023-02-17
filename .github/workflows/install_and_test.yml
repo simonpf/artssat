@@ -1,7 +1,7 @@
-name: test_retrieval
+name: install_and_test
 on: [push]
 jobs:
-  run_retrieval_gmi:
+  install_and_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

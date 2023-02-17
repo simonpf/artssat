@@ -84,7 +84,6 @@ from pyarts.workspace import Workspace
 # The Dimension class
 ################################################################################
 
-
 class Dimension:
     """
     Service class to keep track of related dimensions throughout an ARTS
@@ -102,21 +101,18 @@ class Dimension:
     #
     class P:
         """Singleton class representing the pressure dimension."""
-
         @classmethod
         def __repr__(self):
             return "pressure"
 
     class Lat:
         """Singleton class representing the latitude dimension."""
-
         @classmethod
         def __repr__(self):
             return "latitude"
 
     class Lon:
         """Singleton class representing the longitude dimension."""
-
         @classmethod
         def __repr__(self):
             return "longitude"
@@ -126,14 +122,12 @@ class Dimension:
         Singleton class representing the number of dimensions of the
         Atmosphere.
         """
-
         @classmethod
         def __repr__(self):
             return "atmosphere"
 
     class Los:
-        """Singleton class representing the line-of-sight dimension."""
-
+        """ Singleton class representing the line-of-sight dimension. """
         @classmethod
         def __repr__(self):
             return "line-of-sight"
@@ -143,14 +137,12 @@ class Dimension:
         Singleton dimension representing the number of measurement
         blocks.
         """
-
         @classmethod
         def __repr__(cls):
             return "measurement block"
 
     class Frq:
         """Singleton class representing the number of frequencies."""
-
         @classmethod
         def __repr__(self):
             return "frequency"
@@ -160,7 +152,6 @@ class Dimension:
         Singleton class representing dimensions that can take an
         arbitrary value.
         """
-
         pass
 
     dimensions = [P, Lat, Lon, Atm, Los, Obs, Frq, Joker]
@@ -221,10 +212,8 @@ class Dimension:
         if dim in self.dimensions:
             other, _ = self.dimensions[dim]
             if not other == value:
-                raise Exception(
-                    "A conflicting value for dimension {0} has "
-                    "aready been deduced.".format(dim)
-                )
+                raise Exception("A conflicting value for dimension {0} has "\
+                                "aready been deduced.".format(dim))
         else:
             self.dimensions[dim] = (value, who)
 
@@ -256,23 +245,18 @@ class Dimension:
                 if v1 == 1 or v2 == 1:
                     continue
 
-                s = (
-                    r"Contradictory dimensions deduced for dimension {0}:"
-                    "{1} deduced from {2} and {3} deduced from {4}.".format(
-                        k, v1, who1, v2, who2
-                    )
-                )
+                s = r"Contradictory dimensions deduced for dimension {0}:" \
+                    "{1} deduced from {2} and {3} deduced from {4}."\
+                    .format(k, v1, who1, v2, who2)
                 raise Exception(s)
             else:
                 other.dimensions[k] = self.dimensions[k]
 
         self.dimensions = other.dimensions
 
-
 ################################################################################
 # ARTS properties
 ################################################################################
-
 
 def get_shape(obj):
     """
@@ -297,7 +281,6 @@ def get_shape(obj):
             return (len(obj),) + get_shape(obj[0])
     else:
         return ()
-
 
 def broadcast(shape, obj):
     """
@@ -326,13 +309,11 @@ def broadcast(shape, obj):
         if shape == ():
             return obj
         else:
-            raise Exception(
-                "Degree of nesting of list is inconsitent with"
-                " length of the provided shape tuple."
-            )
+            raise Exception("Degree of nesting of list is inconsitent with"\
+                            " length of the provided shape tuple.")
 
 
-def arts_property(group, shape=None, wsv=None, optional=False):
+def arts_property(group, shape = None, wsv = None, optional = False):
     """
     The :code:`arts_property` decorator.
 
@@ -374,16 +355,12 @@ def arts_property(group, shape=None, wsv=None, optional=False):
         wsv(pyarts.workspace.WorkspaceVariable): The workspace variable
         corresponding to the ARTS property.
     """
-
     class ArtsPropertySpecialization(ArtsProperty):
         def __init__(self, fdefault):
             super().__init__(fdefault, group, shape, wsv, optional)
-
     return ArtsPropertySpecialization
 
-
-ws = Workspace(verbosity=0)
-
+ws = Workspace(verbosity = 0)
 
 class ArtsProperty:
     """
@@ -410,7 +387,6 @@ class ArtsProperty:
     fixes the :code:`group, shape` and :code:`wsv` values of the :code:`__init__`
     method.
     """
-
     def __init__(self, fdefault, group, shape, wsv, optional):
         """
         Create a :code:`ArtsProperty` instance.
@@ -442,21 +418,18 @@ class ArtsProperty:
                 if hasattr(ws, wsv):
                     wsv = getattr(ws, wsv)
                 else:
-                    raise Exception(
-                        "Workspace variable {0} associated with"
-                        " ARTS property {1} does not exist.".format(
-                            wsv, fdefault.__name__
-                        )
-                    )
+                    raise Exception("Workspace variable {0} associated with"\
+                                    " ARTS property {1} does not exist."\
+                                    .format(wsv, fdefault.__name__))
         self.wsv = wsv
-        self.fsetup = None
+        self.fsetup    = None
         self.fget_data = None
-        self.fset = None
+        self.fset      = None
 
-        self.name = fdefault.__name__
+        self.name  = fdefault.__name__
         self.fdefault = fdefault
 
-    def get_name(self, owner, separator="_"):
+    def get_name(self, owner, separator = "_"):
         """
         Return a qualified name of the ARTS property.
 
@@ -547,19 +520,17 @@ class ArtsProperty:
             converted = WorkspaceVariable.convert(self.group, value)
 
             if converted is None:
-                raise Exception(
-                    "Provided value of type {0} cannot be converted"
-                    " to ARTS group {1}".format(type(value), self.group)
-                )
+                raise Exception("Provided value of type {0} cannot be converted"
+                                " to ARTS group {1}".format(type(value),
+                                                            self.group))
             value = converted
         elif type(self.group) == list:
             g_i = WorkspaceVariable.get_group_id(value)
             g = group_names[g_i]
             if not g in self.group:
-                raise Exception(
-                    "Provided value of type {0} is not of any of "
-                    " the expected ARTS groups {1}.".format(type(value), self.group)
-                )
+                raise Exception("Provided value of type {0} is not of any of "
+                                " the expected ARTS groups {1}."\
+                                .format(type(value), self.group))
 
         return value
 
@@ -579,7 +550,7 @@ class ArtsProperty:
             specification the ARTS property.
 
         """
-        who = self.get_name(owner, separator=".")
+        who = self.get_name(owner, separator = ".")
         shape = get_shape(value)
 
         if self.shape is None:
@@ -588,17 +559,13 @@ class ArtsProperty:
         # catch inconsistent number of dimensions.
         if not len(shape) == len(self.shape):
 
-            s = (
-                "The provided value for {0} has {1} dimensions but {2} were"
+            s = "The provided value for {0} has {1} dimensions but {2} were"\
                 " expected.".format(who, len(shape), len(self.shape))
-            )
             raise Exception(s)
 
         # deduce and compare dimensions.
-        error = (
-            "The provided value has dimension {1} along axis {0} but {2}"
-            "were expected."
-        )
+        error = "The provided value has dimension {1} along axis {0} but {2}" \
+                "were expected."
 
         deduced = tuple()
         for i in range(len(self.shape)):
@@ -621,24 +588,20 @@ class ArtsProperty:
                     deduced += (n,)
                     if n == shape[i] or shape[i] == 1:
                         continue
-                    s = (
-                        "The value provided for the {0} property was expected"
-                        " to match the {1} dimension of the simulation  along"
-                        " axis {2} but this is not the case. The value of the"
-                        " {1} dimension has been deduced to be to be {3}"
+                    s = "The value provided for the {0} property was expected"\
+                        " to match the {1} dimension of the simulation  along"\
+                        " axis {2} but this is not the case. The value of the"\
+                        " {1} dimension has been deduced to be to be {3}"\
                         " from the value of the {4} property."
-                    )
                     raise Exception(s.format(who, self.shape[i], i, n, who2))
             else:
-                raise Exception(
-                    "Shape specification should consist of either"
-                    " integers or symbolic dimensions."
-                )
+                raise Exception("Shape specification should consist of either"\
+                                " integers or symbolic dimensions.")
 
         value = broadcast(deduced, value)
         return value
 
-    def __get__(self, owner, objtype=None):
+    def __get__(self, owner, objtype = None):
 
         if owner is None:
             return self
@@ -684,9 +647,11 @@ class ArtsProperty:
         :code:`ArtsProperty` object.
         """
         if self.fget_data is None:
-            self._default_get_data(owner, ws, data_provider, *args, **kwargs)
+            self._default_get_data(owner, ws, data_provider,
+                                   *args, **kwargs)
         else:
-            self.fget_data(owner, ws, data_provider, *args, **kwargs)
+            self.fget_data(owner, ws, data_provider,
+                           *args, **kwargs)
 
     def _default_setup(self, owner, ws):
         """
@@ -701,7 +666,7 @@ class ArtsProperty:
             owner(obj): The object that this :code:`ArtsProperty` belongs
             to.
 
-            ws(arts.typhon.workspace.Workspace): Ths workspace which to
+            ws(pyarts.workspace.Workspace): Ths workspace which to
             setup.
         """
         ph = owner.__dict__["_" + self.name]
@@ -729,7 +694,7 @@ class ArtsProperty:
         """
         ph = owner.__dict__["_" + self.name]
         if not ph.fixed:
-            getter_name = "get_" + self.get_name(owner, separator="_")
+            getter_name = "get_" + self.get_name(owner, separator = "_")
 
             default = self.fdefault(owner)
 
@@ -759,11 +724,9 @@ class ArtsProperty:
 
             # No value - throw exception
             elif not self.optional:
-                raise Exception(
-                    "Neither a default value nor a get method "
-                    " has been provided for the ARTS property "
-                    "{0}.".format(self.get_name(owner, "."))
-                )
+                raise Exception("Neither a default value nor a get method "
+                                " has been provided for the ARTS property "
+                                "{0}.".format(self.get_name(owner, ".")))
             else:
                 return
 
@@ -773,7 +736,6 @@ class PlaceHolder:
     Data that is required for an ARTS simulation and can be set
     either to a fixed value, or taken from a data provider.
     """
-
     def __init__(self):
         """
         Create a PlaceHolder object representing the property
@@ -799,7 +761,6 @@ class PlaceHolder:
         state.pop("workspace", None)
         return state
 
-
 def add_property(obj, name, dims, t):
     """
     Add an ARTS property to an existing object.
@@ -823,10 +784,8 @@ def add_property(obj, name, dims, t):
     ph = PlaceHolder(name, dims, t)
     setattr(obj, "_" + name, ph)
 
-
 def is_arts_property(obj):
     return isinstance(obj, ArtsProperty)
-
 
 class ArtsObject:
     """
@@ -840,7 +799,7 @@ class ArtsObject:
         """
         Create an :code:`ArtsObject` instance.
         """
-        self._wsvs = {}
+        self._wsvs      = {}
         self.dimensions = Dimension()
 
         for _, ap in inspect.getmembers(type(self), is_arts_property):
@@ -904,7 +863,7 @@ class ArtsObject:
             value(obj): The value to set the WSV :code:`wsv` to.
         """
         if wsv.name in self._wsvs:
-            self._wsvs[wsv.name].ws = ws
+            self._wsvs[wsv.name].ws    = ws
             self._wsvs[wsv.name].value = value
         else:
             setattr(ws, wsv.name, value)
@@ -967,7 +926,8 @@ class ArtsObject:
         """
         for name in names:
             wsv = ws.__getattr__(name)
-            wsv_private = ws.create_variable(wsv.group, self.name + "_" + name)
+            wsv_private = ws.create_variable(wsv.group,
+                                             self.name + "_" + name)
             self._wsvs[name] = wsv_private
 
     def get_wsm_kwargs(self, wsm):
@@ -998,3 +958,6 @@ class ArtsObject:
             else:
                 kwargs[name] = wsv[name]
         return kwargs
+
+
+

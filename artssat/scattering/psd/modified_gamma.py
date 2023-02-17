@@ -54,16 +54,16 @@ class ModifiedGamma(ArtsPSD):
             size_parameter(SizeParameter): The SizeParameter instance describing
             the size parameter that should be used fo PSD.
 
-            intercept_parameter(numpy.float or ndarray): The intercept parameter
+            intercept_parameter(numpy.float64 or ndarray): The intercept parameter
             :math:`N`
 
-            alpha(numpy.float or ndarray): The shape parameter :math:`\alpha`.
+            alpha(numpy.float64 or ndarray): The shape parameter :math:`\alpha`.
                 Must be broadcastable into the shape of N.
 
-            lmbd(numpy.float or ndarray): The slope parameter :math:`\lambda`.
+            lmbd(numpy.float64 or ndarray): The slope parameter :math:`\lambda`.
                 Must be broadcastable into the shape of N.
 
-            nu(numpy.float or ndarray): The :math:`\nu` parameter. Must be
+            nu(numpy.float64 or ndarray): The :math:`\nu` parameter. Must be
                 broadcastable into the shape of N.
         """
         if not intercept_parameter is None:
@@ -184,7 +184,7 @@ class ModifiedGamma(ArtsPSD):
             {\Gamma({1 + \alpha})}.
 
         Parameters:
-            p(np.float): Which moment of the PSD to compute.
+            p(float): Which moment of the PSD to compute.
 
         Raises:
             Exception: If any of the parameters of the PSD is not set.

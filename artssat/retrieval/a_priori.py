@@ -175,7 +175,7 @@ class Thikhonov:
             d += self.diagonal
 
         if not self.mask is None:
-            mask = self.mask(data_provider, *args, **kwargs).astype(np.float)
+            mask = self.mask(data_provider, *args, **kwargs).astype(np.float32)
             if not z_old is None:
                 f = sp.interpolate.interp1d(
                     z_old,

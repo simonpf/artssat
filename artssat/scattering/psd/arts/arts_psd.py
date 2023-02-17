@@ -31,9 +31,9 @@ class ArtsPSD:
 
     properties = [
         ("size_parameter", (), SizeParameter),
-        ("t_min", (), np.float),
-        ("t_max", (), np.float),
-        ("x_fit_start", (), np.float),
+        ("t_min", (), np.float64),
+        ("t_max", (), np.float64),
+        ("x_fit_start", (), np.float64),
     ]
 
     size_parameter_names = {D_eq: "dveq", D_max: "dmax", Mass: "mass", Area: "area"}
@@ -43,9 +43,9 @@ class ArtsPSD:
         Parameters:
             size_parameter(SizeParameter) :class:`SizeParameter` enum specifying the
                 size parameter that is used by the PSD.
-            t_min(numpy.float): ARTS parameter, minimum temperature for which PSD values
+            t_min(numpy.float64): ARTS parameter, minimum temperature for which PSD values
                 will be produced.
-            m_max(numpy.float): ARTS parameter, maximum temperature for which PSD values
+            m_max(numpy.float64): ARTS parameter, maximum temperature for which PSD values
                 will be produced.
         """
         self.size_parameter = size_parameter
