@@ -236,10 +236,14 @@ def test_simulation_absorption_retrieval():
     simulation.setup()
     simulation.run()
 
-    return simulation.workspace.x.value
 
 def test_retrieval_runs():
     """
+    Test retrieval with callback.
+
+    Runs a retrieval in two steps: First using only ICI then
+    using both ICI and MWI using the results from the ICI retrieval
+    as start values.
     """
     mwi = ICI(stokes_dimension = 1)
     mwi.name = "mwi"
@@ -296,5 +300,3 @@ def test_retrieval_runs():
 
     simulation.setup()
     simulation.run()
-
-    return simulation.workspace.x.value
