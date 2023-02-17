@@ -15,6 +15,7 @@ import numpy as np
 # Size parameter classes
 ################################################################################
 
+
 class SizeParameter:
     """
     General representation of a size parameter of a PSD. The size parameter
@@ -61,8 +62,12 @@ class SizeParameter:
             and PSD data :code:`y`
         """
         x = (src.a / self.a) ** (1.0 / self.b) * x ** (src.b / self.b)
-        y = y * (self.a / src.a) ** (1.0 / src.b) * (self.b / src.b) \
+        y = (
+            y
+            * (self.a / src.a) ** (1.0 / src.b)
+            * (self.b / src.b)
             * x ** (self.b / src.b - 1.0)
+        )
         return x, y
 
     def get_mass_density(self, x, y):
@@ -78,29 +83,34 @@ class SizeParameter:
             the size grid :code:`x`.
 
         """
-        return np.trapz(self.a * x ** self.b * y, x = x, axis = -1)
+        return np.trapz(self.a * x**self.b * y, x=x, axis=-1)
+
 
 class Area(SizeParameter):
     def __ini__(self, a, b):
         super().__init__(a, b)
 
-class D_eq(SizeParameter):
 
+class D_eq(SizeParameter):
     def __init__(self, rho):
         self.rho = rho
         super().__init__(self.rho * np.pi / 6.0, 3.0)
+
 
 class D_max(SizeParameter):
     def __init__(self, a, b):
         super().__init__(a, b)
 
+
 class Mass(SizeParameter):
     def __init__(self):
         super().__init__(1.0, 1.0)
 
+
 ################################################################################
 # PSD Data
 ################################################################################
+
 
 class PSDData:
     """
@@ -120,6 +130,7 @@ class PSDData:
         size_parameter(SizeParameter): The size parameter used to represent
         the PSD.
     """
+
     def __init__(self, x, data, size_parameter):
         """
         Create a PSDData object from data.
@@ -143,19 +154,22 @@ class PSDData:
         x = x.reshape(x_shape)
 
         if data.shape[-1] != x.shape[-1]:
-            raise Exception("Size grid 'x' and PSD data 'y' must have the same"\
-                            " number of elements along the last dimension.")
-
+            raise Exception(
+                "Size grid 'x' and PSD data 'y' must have the same"
+                " number of elements along the last dimension."
+            )
 
         self.data = data
         self.x = x
 
         if not isinstance(size_parameter, SizeParameter):
-            raise Exception("Provided size_parameter is not a valid value of "
-                            "of type SizeParameter.")
+            raise Exception(
+                "Provided size_parameter is not a valid value of "
+                "of type SizeParameter."
+            )
         self.size_parameter = size_parameter
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         """
         Compute the :math:`p` th moment :math:M(p) of the PSD data:
 
@@ -190,7 +204,7 @@ class PSDData:
         else:
             c = 1.0
 
-        return c * np.trapz(self.data * self.x ** p, x = self.x)
+        return c * np.trapz(self.data * self.x**p, x=self.x)
 
     def __add__(self, other):
         """
@@ -208,20 +222,23 @@ class PSDData:
         """
         # TODO: Make an abstract base class for PSDs
         if hasattr(other, "evaluate"):
-            x2, _ = other.size_parameter.convert(self.size_parameter,
-                                                 self.x,
-                                                 self.data)
+            x2, _ = other.size_parameter.convert(self.size_parameter, self.x, self.data)
             other = other.evaluate(self.x2)
             other.change_size_parameter(self.size_parameter)
 
-        if (not self.size_parameter.a == other.size_parameter.a) or \
-           (not self.size_parameter.b == other.size_parameter.b):
-           raise Exception("Addition of PSD data is only defined for PSDs"
-                           " given w.r.t. the same size parameter.")
+        if (not self.size_parameter.a == other.size_parameter.a) or (
+            not self.size_parameter.b == other.size_parameter.b
+        ):
+            raise Exception(
+                "Addition of PSD data is only defined for PSDs"
+                " given w.r.t. the same size parameter."
+            )
 
         if not np.all(np.isclose(self.x, other.x)):
-            raise Exception("Addition of PSD data is only defined for PSDs"
-                            " defined over the same size grid.")
+            raise Exception(
+                "Addition of PSD data is only defined for PSDs"
+                " defined over the same size grid."
+            )
 
         size_parameter = self.size_parameter
         y = self.data + other.data
@@ -237,7 +254,7 @@ class PSDData:
             The particle number density for each volume element.
 
         """
-        return self.get_moment(p = 0)
+        return self.get_moment(p=0)
 
     def get_mass_density(self):
         """
@@ -261,6 +278,7 @@ class PSDData:
 
         """
 
-        self.x, self.data = size_parameter.convert(self.size_parameter,
-                                                   self.x, self.data)
+        self.x, self.data = size_parameter.convert(
+            self.size_parameter, self.x, self.data
+        )
         self.size_parameter = size_parameter

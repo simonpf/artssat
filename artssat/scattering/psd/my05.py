@@ -31,19 +31,21 @@ from scipy.special import gamma
 from pyarts.workspace import arts_agenda
 
 from artssat import dimensions as dim
-from artssat.scattering.psd.modified_gamma     import ModifiedGamma
-from artssat.scattering.psd.data.psd_data      import D_max
+from artssat.scattering.psd.modified_gamma import ModifiedGamma
+from artssat.scattering.psd.data.psd_data import D_max
 from artssat.scattering.psd.arts.arts_psd import ArtsPSD
 from artssat.scattering.psd.data.psd_data import PSDData
 
 
+settings = {
+    "cloud_ice": (0.0, 1.0, 440.0, 3.0),
+    "rain": (0.0, 1.0, 523.5988, 3.0),
+    "snow": (0.0, 1.0, 52.35988, 3.0),
+    "graupel": (0.0, 1.0, 209.4395, 3.0),
+    "hail": (0.0, 1.0, 471.2389, 3.0),
+    "cloud_water": (1.0, 1.0, 523.5988, 3.0),
+}
 
-settings = {"cloud_ice" : (0.0, 1.0, 440., 3.0),
-            "rain" : (0.0, 1.0, 523.5988, 3.0),
-            "snow" : (0.0, 1.0, 52.35988, 3.0),
-            "graupel" : (0.0, 1.0, 209.4395, 3.0),
-            "hail" : (0.0, 1.0, 471.2389, 3.0),
-            "cloud_water" : (1.0, 1.0, 523.5988, 3.0)}
 
 class MY05(ArtsPSD):
     r"""
@@ -55,10 +57,12 @@ class MY05(ArtsPSD):
     on the hydrometeor type.
     """
 
-    properties = [("number_density", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("mass_density", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("nu", (), np.float),
-                  ("mu", (), np.float)]
+    properties = [
+        ("number_density", (dim.p, dim.lat, dim.lon), np.ndarray),
+        ("mass_density", (dim.p, dim.lat, dim.lon), np.ndarray),
+        ("nu", (), np.float),
+        ("mu", (), np.float),
+    ]
 
     @classmethod
     def from_psd_data(self, psd, nu, mu, a, b):
@@ -84,18 +88,20 @@ class MY05(ArtsPSD):
         """
         size_parameter = D_max(a, b)
         number_density = psd.get_moment(0)
-        mass_density   = psd.get_mass_density()
+        mass_density = psd.get_mass_density()
 
         return MY05(nu, mu, a, b, None, number_density, mass_density)
 
-    def __init__(self,
-                 nu = None,
-                 mu = None,
-                 a  = None,
-                 b  = None,
-                 hydrometeor_type = None,
-                 number_density = None,
-                 mass_density = None):
+    def __init__(
+        self,
+        nu=None,
+        mu=None,
+        a=None,
+        b=None,
+        hydrometeor_type=None,
+        number_density=None,
+        mass_density=None,
+    ):
         r"""
         Parameters:
             nu(:code:`numpy.float`): The :math:`\nu` parameter of the PSD
@@ -120,9 +126,12 @@ class MY05(ArtsPSD):
             if hydrometeor_type in settings:
                 nu, mu, a, b = settings[hydrometeor_type]
             else:
-                raise Exception("Expected keyword hydrometeor type to be one of"
-                                " {0} but got '{1}'.".format(list(settings.keys()),
-                                                           hydrometeor_type))
+                raise Exception(
+                    "Expected keyword hydrometeor type to be one of"
+                    " {0} but got '{1}'.".format(
+                        list(settings.keys()), hydrometeor_type
+                    )
+                )
 
         self.nu = nu
         self.mu = mu
@@ -148,7 +157,7 @@ class MY05(ArtsPSD):
             member functions.
         """
         self.number_density = psd.get_moment(0)
-        self.mass_density   = psd.get_mass_density()
+        self.mass_density = psd.get_mass_density()
 
     def _get_parameters(self):
         """
@@ -171,41 +180,45 @@ class MY05(ArtsPSD):
         # Number density
         n = self.number_density
         if n is None:
-           raise Exception("The number density needs to be set to use"
-                            " this function.")
+            raise Exception(
+                "The number density needs to be set to use" " this function."
+            )
         shape = n.shape
 
         # Mass density
         m = self.mass_density
         if m is None:
-           raise Exception("The mass density needs to be set to use"
-                            " this function.")
+            raise Exception("The mass density needs to be set to use" " this function.")
         try:
             m = np.broadcast_to(m, shape)
         except:
-            raise Exception("Could not broadcast mass density to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast mass density to the shape"
+                "of the provided intercept parameter N."
+            )
 
         # Alpha parameter
         try:
             mu = np.broadcast_to(self.mu, shape)
         except:
-            raise Exception("Could not broadcast alpha paramter to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast alpha paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         # Nu parameter
         try:
             nu = np.broadcast_to(self.nu, shape)
         except:
-            raise Exception("Could not broadcast nu paramter to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast nu paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         a = self.size_parameter.a
         b = self.size_parameter.b
 
-        lmbd = (a * n) / m \
-               * gamma((nu + 1 + b) / mu) \
-               / gamma((nu + 1) / mu)
+        lmbd = (a * n) / m * gamma((nu + 1 + b) / mu) / gamma((nu + 1) / mu)
         lmbd = lmbd ** (mu / b)
 
         inds = np.logical_or(n == 0.0, m == 0.0)
@@ -235,14 +248,18 @@ class MY05(ArtsPSD):
         """
         The ARTS WSM implementing the MY05 PSD.
         """
+
         @arts_agenda
         def pnd_call(ws):
-            ws.psdMilbrandtYau05(hydrometeor_type = self.hydrometeor_type,
-                                 t_min = self.t_min,
-                                 t_max = self.t_max)
+            ws.psdMilbrandtYau05(
+                hydrometeor_type=self.hydrometeor_type,
+                t_min=self.t_min,
+                t_max=self.t_max,
+            )
+
         return pnd_call
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         r"""
         Analytically computes the :math:`p` th moment :math:`M(p)` of the PSD
         using
@@ -315,12 +332,12 @@ class MY05(ArtsPSD):
         shape = n0.shape
         result_shape = shape + (1,)
 
-        n0   = np.reshape(n0, result_shape)
+        n0 = np.reshape(n0, result_shape)
         lmbd = np.broadcast_to(lmbd, shape).reshape(result_shape)
-        mu   = np.broadcast_to(mu, shape).reshape(result_shape)
-        nu   = np.broadcast_to(nu, shape).reshape(result_shape)
+        mu = np.broadcast_to(mu, shape).reshape(result_shape)
+        nu = np.broadcast_to(nu, shape).reshape(result_shape)
 
         x = x.reshape((1,) * len(shape) + (-1,))
 
-        y = n0 * x ** nu * np.exp(- lmbd * x ** mu)
+        y = n0 * x**nu * np.exp(-lmbd * x**mu)
         return PSDData(x, y, self.size_parameter)

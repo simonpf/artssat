@@ -18,6 +18,7 @@ Attributes:
 
 """
 
+
 class Dimension:
     """
     Dimensions of data arrays in ARTS.
@@ -33,6 +34,7 @@ class Dimension:
     from user-provided data.
 
     """
+
     def __init__(self, name):
         """
         Create dimension with given name.
@@ -113,14 +115,15 @@ class Dimension:
         if len(ds) > 0:
             return ds[0][0]
         else:
-            raise Exception("No value for dimension of the {0} has been "
-                            "deduced.")
+            raise Exception("No value for dimension of the {0} has been " "deduced.")
+
 
 class Joker(Dimension):
     """
     A dimension that can take an arbitrary value.
 
     """
+
     def __init__(self, name):
         """
         Create dimension with given name.
@@ -159,9 +162,10 @@ class Joker(Dimension):
 
         raise Exception("Can't get the value of a joker dimension.")
 
-p     = Dimension("pressure grid")
-lat   = Dimension("latitude grid")
-lon   = Dimension("longitude grid")
-atm   = Dimension("atmospheric dimension")
-los   = Dimension("line of sight dimension")
+
+p = Dimension("pressure grid")
+lat = Dimension("latitude grid")
+lon = Dimension("longitude grid")
+atm = Dimension("atmospheric dimension")
+los = Dimension("line of sight dimension")
 joker = Joker("This dimension can take any value.")

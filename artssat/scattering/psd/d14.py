@@ -57,6 +57,7 @@ from scipy.special import gamma
 # General PSD function
 ################################################################################
 
+
 def evaluate_d14(x, n0, dm, alpha, beta):
     """
     Compute the particle size distribution of the D14 PSD.
@@ -97,42 +98,47 @@ def evaluate_d14(x, n0, dm, alpha, beta):
     try:
         dm = np.broadcast_to(dm, shape).reshape(result_shape)
     except:
-        raise Exception("Could not broadcast 'dm' parameter to shape of 'n0' "
-                        "parameter.")
+        raise Exception(
+            "Could not broadcast 'dm' parameter to shape of 'n0' " "parameter."
+        )
 
     try:
         alpha = np.broadcast_to(alpha, shape).reshape(result_shape)
     except:
-        raise Exception("Could not broadcast 'alpha' parameter to shape of 'n0' "
-                        "parameter.")
+        raise Exception(
+            "Could not broadcast 'alpha' parameter to shape of 'n0' " "parameter."
+        )
 
     try:
         beta = np.broadcast_to(beta, shape).reshape(result_shape)
     except:
-        raise Exception("Could not broadcast 'beta' parameter to shape of 'n0' "
-                        "parameter.")
+        raise Exception(
+            "Could not broadcast 'beta' parameter to shape of 'n0' " "parameter."
+        )
 
     x = x.reshape((1,) * len(shape) + (-1,))
     x = x / dm
 
-    c1 = gamma(4.0) / 4 ** 4
-    c2 = gamma((alpha + 5) / beta) ** (4 + alpha) / \
-         gamma((alpha + 4) / beta) ** (5 + alpha)
-    c3 = gamma((alpha + 5) / beta) / \
-         gamma((alpha + 4) / beta)
+    c1 = gamma(4.0) / 4**4
+    c2 = gamma((alpha + 5) / beta) ** (4 + alpha) / gamma((alpha + 4) / beta) ** (
+        5 + alpha
+    )
+    c3 = gamma((alpha + 5) / beta) / gamma((alpha + 4) / beta)
 
     y = n0 * beta * c1 * c2
-    y = y * x ** alpha
-    y *= np.exp(- (x * c3) ** beta)
+    y = y * x**alpha
+    y *= np.exp(-((x * c3) ** beta))
 
     # Set invalid values to zero
     y[np.broadcast_to(dm == 0.0, y.shape)] = 0.0
 
     return y
 
+
 ################################################################################
 # PSD classes
 ################################################################################
+
 
 class D14(ArtsPSD):
     """
@@ -177,8 +183,8 @@ class D14(ArtsPSD):
         """
         md = psd.get_mass_density()
 
-        m4 = psd.get_moment(4.0, reference_size_parameter = self.size_parameter)
-        m3 = psd.get_moment(3.0, reference_size_parameter = self.size_parameter)
+        m4 = psd.get_moment(4.0, reference_size_parameter=self.size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter=self.size_parameter)
 
         dm = m4 / m3
         dm[m3 == 0.0] = 0.0
@@ -186,9 +192,9 @@ class D14(ArtsPSD):
         self.mass_density = md
         self.mass_weighted_diameter = dm
 
-    def __init__(self, alpha, beta, rho = 917.0,
-                 mass_density = None,
-                 mass_weighted_diameter = None):
+    def __init__(
+        self, alpha, beta, rho=917.0, mass_density=None, mass_weighted_diameter=None
+    ):
         """
         Parameters:
 
@@ -213,7 +219,7 @@ class D14(ArtsPSD):
         from artssat.scattering.psd.data.psd_data import D_eq
 
         self.alpha = alpha
-        self.beta  = beta
+        self.beta = beta
         self.rho = rho
 
         if not mass_density is None:
@@ -238,52 +244,64 @@ class D14(ArtsPSD):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdDelanoeEtAl14(n0Star = -999.0,
-                                Dm     = np.nan,
-                                iwc    = np.nan,
-                                rho    = self.rho,
-                                alpha  = self.alpha,
-                                beta   = self.beta,
-                                t_min  = self.t_min,
-                                dm_min = self.dm_min,
-                                t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(
+                n0Star=-999.0,
+                Dm=np.nan,
+                iwc=np.nan,
+                rho=self.rho,
+                alpha=self.alpha,
+                beta=self.beta,
+                t_min=self.t_min,
+                dm_min=self.dm_min,
+                t_max=self.t_max,
+            )
+
         return pnd_call
 
     def _get_parameters(self):
 
         md = self.mass_density
         if md is None:
-            raise Exception("The 'mass_density' array needs to be set to use"
-                            "this function.")
+            raise Exception(
+                "The 'mass_density' array needs to be set to use" "this function."
+            )
 
         shape = md.shape
 
         dm = self.mass_weighted_diameter
         if dm is None:
-            raise Exception("The 'mass_weighted_diameter' array needs to be set "
-                            "to use this function.")
+            raise Exception(
+                "The 'mass_weighted_diameter' array needs to be set "
+                "to use this function."
+            )
 
         try:
             dm = np.broadcast_to(dm, shape)
         except:
-            raise Exception("Could not broadcast the 'mass_weighted_diameter'"
-                            "data into the shape of the mass density data.")
+            raise Exception(
+                "Could not broadcast the 'mass_weighted_diameter'"
+                "data into the shape of the mass density data."
+            )
 
         try:
             alpha = np.broadcast_to(self.alpha, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'alpha' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'alpha' "
+                " parameter  into the shape the mass density data."
+            )
 
         try:
             beta = np.broadcast_to(self.beta, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'beta' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'beta' "
+                " parameter  into the shape the mass density data."
+            )
 
         return md, dm, alpha, beta
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         """
         Computes the moments of the PSD analytically.
 
@@ -311,18 +329,21 @@ class D14(ArtsPSD):
             c = 1.0
 
         md, dm, alpha, beta = self._get_parameters()
-        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
+        n0 = 4.0**4 / (np.pi * self.rho) * md / dm**4.0
 
-        nu_mgd    = beta
-        lmbd_mgd  = gamma((alpha + 5) / beta) / \
-                    gamma((alpha + 4) / beta)
+        nu_mgd = beta
+        lmbd_mgd = gamma((alpha + 5) / beta) / gamma((alpha + 4) / beta)
         alpha_mgd = (alpha + 1) / beta - 1
-        n_mgd = n0 * gamma(4.0) / 4.0 ** 4 * \
-                gamma((alpha + 1) / beta) * \
-                gamma((alpha + 5) / beta) ** 3 / \
-                gamma((alpha + 4) / beta) ** 4
+        n_mgd = (
+            n0
+            * gamma(4.0)
+            / 4.0**4
+            * gamma((alpha + 1) / beta)
+            * gamma((alpha + 5) / beta) ** 3
+            / gamma((alpha + 4) / beta) ** 4
+        )
 
-        m = n_mgd / lmbd_mgd ** p
+        m = n_mgd / lmbd_mgd**p
         m *= gamma(1 + alpha_mgd + p / nu_mgd)
         m /= gamma(1 + alpha_mgd)
 
@@ -359,19 +380,24 @@ class D14(ArtsPSD):
         try:
             md = self.mass_density
         except:
-            raise Exception("The 'mass_density' array needs to be set,  before"
-                            " the PSD can be evaluated.")
+            raise Exception(
+                "The 'mass_density' array needs to be set,  before"
+                " the PSD can be evaluated."
+            )
 
         try:
             dm = self.mass_weighted_diameter
         except:
-            raise Exception("The 'mass_weighted_diameter' array needs to be"
-                            " set,  before the PSD can be evaluated.")
+            raise Exception(
+                "The 'mass_weighted_diameter' array needs to be"
+                " set,  before the PSD can be evaluated."
+            )
 
-        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4.0
+        n0 = 4.0**4 / (np.pi * self.rho) * md / dm**4.0
 
-        y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
+        y = evaluate_d14(x, n0, dm, self.alpha, self.beta)
         return PSDData(x, y, D_eq(self.rho))
+
 
 class D14N(ArtsPSD):
     """
@@ -406,22 +432,26 @@ class D14N(ArtsPSD):
 
         md = psd.get_mass_density()
 
-        m4 = psd.get_moment(4.0, reference_size_parameter = self.size_parameter)
-        m3 = psd.get_moment(3.0, reference_size_parameter = self.size_parameter)
+        m4 = psd.get_moment(4.0, reference_size_parameter=self.size_parameter)
+        m3 = psd.get_moment(3.0, reference_size_parameter=self.size_parameter)
 
         dm = m4 / m3
         dm[m3 == 0.0] = 0.0
-        n0 = 4.0 ** 4 / (np.pi * self.rho) * md / dm ** 4
+        n0 = 4.0**4 / (np.pi * self.rho) * md / dm**4
         n0[m3 == 0.0] = 0.0
 
         self.mass_density = md
         self.intercept_parameter = n0
         self.mass_weighted_diameter = dm
 
-
-    def __init__(self, alpha, beta, rho = 917.0,
-                 intercept_parameter = None,
-                 mass_weighted_diameter = None):
+    def __init__(
+        self,
+        alpha,
+        beta,
+        rho=917.0,
+        intercept_parameter=None,
+        mass_weighted_diameter=None,
+    ):
         """
         Parameters:
 
@@ -446,7 +476,7 @@ class D14N(ArtsPSD):
         from artssat.scattering.psd.data.psd_data import D_eq
 
         self.alpha = alpha
-        self.beta  = beta
+        self.beta = beta
         self.rho = rho
 
         if not intercept_parameter is None:
@@ -473,51 +503,63 @@ class D14N(ArtsPSD):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdDelanoeEtAl14(n0Star = np.nan,
-                                Dm     = np.nan,
-                                iwc    = -999.0,
-                                rho    = self.rho,
-                                alpha  = self.alpha,
-                                beta   = self.beta,
-                                t_min  = self.t_min,
-                                dm_min = self.dm_min,
-                                t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(
+                n0Star=np.nan,
+                Dm=np.nan,
+                iwc=-999.0,
+                rho=self.rho,
+                alpha=self.alpha,
+                beta=self.beta,
+                t_min=self.t_min,
+                dm_min=self.dm_min,
+                t_max=self.t_max,
+            )
+
         return pnd_call
 
     def _get_parameters(self):
 
         n0 = self.intercept_parameter
         if n0 is None:
-            raise Exception("The 'intercept_parameter' data needs to be set to "
-                            " use this function.")
+            raise Exception(
+                "The 'intercept_parameter' data needs to be set to "
+                " use this function."
+            )
 
         shape = n0.shape
 
         dm = self.mass_weighted_diameter
         if dm is None:
-            raise Exception("The 'mass_weighted_diameter' array needs to be set "
-                            "to use this function.")
+            raise Exception(
+                "The 'mass_weighted_diameter' array needs to be set "
+                "to use this function."
+            )
 
         try:
             dm = np.broadcast_to(dm, shape)
         except:
-            raise Exception("Could not broadcast the 'mass_weighted_diameter'"
-                            "data into the shape of the mass density data.")
+            raise Exception(
+                "Could not broadcast the 'mass_weighted_diameter'"
+                "data into the shape of the mass density data."
+            )
 
         try:
             alpha = np.broadcast_to(self.alpha, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'alpha' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'alpha' "
+                " parameter  into the shape the mass density data."
+            )
 
         try:
             beta = np.broadcast_to(self.beta, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'beta' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'beta' "
+                " parameter  into the shape the mass density data."
+            )
 
         return n0, dm, alpha, beta
-
 
     def get_mass_density(self):
         """
@@ -525,16 +567,21 @@ class D14N(ArtsPSD):
             Array containing the mass density for all the bulk volumes described
             by this PSD.
         """
-        if self.intercept_parameter is None \
-           or self.mass_weighted_diameter is None :
+        if self.intercept_parameter is None or self.mass_weighted_diameter is None:
             raise Exception("The parameters of the PSD have not been set.")
         else:
-            c = gamma(4.0) / 4.0 ** 4.0
-            m = c * np.pi * self.rho / 6.0 * self.intercept_parameter \
-                * self.mass_weighted_diameter ** 4.0
+            c = gamma(4.0) / 4.0**4.0
+            m = (
+                c
+                * np.pi
+                * self.rho
+                / 6.0
+                * self.intercept_parameter
+                * self.mass_weighted_diameter**4.0
+            )
             return m
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         """
         Computes the moments of the PSD analytically.
 
@@ -570,16 +617,19 @@ class D14N(ArtsPSD):
 
         n0, dm, alpha, beta = self._get_parameters()
 
-        nu_mgd    = beta
-        lmbd_mgd  = gamma((alpha + 5) / beta) / \
-                    gamma((alpha + 4) / beta)
+        nu_mgd = beta
+        lmbd_mgd = gamma((alpha + 5) / beta) / gamma((alpha + 4) / beta)
         alpha_mgd = (alpha + 1) / beta - 1
-        n_mgd = n0 * gamma(4.0) / 4.0 ** 4 * \
-                gamma((alpha + 1) / beta) * \
-                gamma((alpha + 5) / beta) ** 3 / \
-                gamma((alpha + 4) / beta) ** 4
+        n_mgd = (
+            n0
+            * gamma(4.0)
+            / 4.0**4
+            * gamma((alpha + 1) / beta)
+            * gamma((alpha + 5) / beta) ** 3
+            / gamma((alpha + 4) / beta) ** 4
+        )
 
-        m = n_mgd / lmbd_mgd ** p
+        m = n_mgd / lmbd_mgd**p
         m *= gamma(1 + alpha_mgd + p / nu_mgd)
         m /= gamma(1 + alpha_mgd)
 
@@ -603,16 +653,21 @@ class D14N(ArtsPSD):
         """
         n0 = self.intercept_parameter
         if n0 is None:
-            raise Exception("The 'intercept_parameter' array needs to be set,  before"
-                            " the PSD can be evaluated.")
+            raise Exception(
+                "The 'intercept_parameter' array needs to be set,  before"
+                " the PSD can be evaluated."
+            )
 
         dm = self.mass_weighted_diameter
         if dm is None:
-            raise Exception("The 'mass_weighted_diameter' array needs to be"
-                            " set,  before the PSD can be evaluated.")
+            raise Exception(
+                "The 'mass_weighted_diameter' array needs to be"
+                " set,  before the PSD can be evaluated."
+            )
 
-        y =  evaluate_d14(x, n0, dm, self.alpha, self.beta)
+        y = evaluate_d14(x, n0, dm, self.alpha, self.beta)
         return PSDData(x, y, D_eq(self.rho))
+
 
 class D14MN(D14N):
     """
@@ -621,9 +676,10 @@ class D14MN(D14N):
     parameter :math:`N_0^*` as free parameters.
 
     """
-    def __init__(self, alpha, beta, rho = 917.0,
-                 mass_density = None,
-                 intercept_parameter = None):
+
+    def __init__(
+        self, alpha, beta, rho=917.0, mass_density=None, intercept_parameter=None
+    ):
         """
         Parameters:
 
@@ -649,7 +705,9 @@ class D14MN(D14N):
 
         if (not mass_density is None) and (not intercept_parameter is None):
             self.mass_density = mass_density
-            dm = (4.0 ** 4 / np.pi / rho * mass_density / intercept_parameter) ** (1 / 4.0)
+            dm = (4.0**4 / np.pi / rho * mass_density / intercept_parameter) ** (
+                1 / 4.0
+            )
         else:
             dm = None
 
@@ -667,47 +725,56 @@ class D14MN(D14N):
     def pnd_call_agenda(self):
         @arts_agenda
         def pnd_call(ws):
-            ws.psdDelanoeEtAl14(n0Star = np.nan,
-                                Dm     = -999.0,
-                                iwc    = np.nan,
-                                rho    = self.rho,
-                                alpha  = self.alpha,
-                                beta   = self.beta,
-                                t_min  = self.t_min,
-                                dm_min = self.dm_min,
-                                t_max  = self.t_max)
+            ws.psdDelanoeEtAl14(
+                n0Star=np.nan,
+                Dm=-999.0,
+                iwc=np.nan,
+                rho=self.rho,
+                alpha=self.alpha,
+                beta=self.beta,
+                t_min=self.t_min,
+                dm_min=self.dm_min,
+                t_max=self.t_max,
+            )
+
         return pnd_call
 
     def _get_parameters(self):
 
         md = self.mass_density
         if md is None:
-            raise Exception("The 'intercept_parameter' data needs to be set to "
-                            " use this function.")
+            raise Exception(
+                "The 'intercept_parameter' data needs to be set to "
+                " use this function."
+            )
         shape = md.shape
 
         n0 = self.intercept_parameter
         if n0 is None:
-            raise Exception("The 'intercept_parameter' data needs to be set to "
-                            " use this function.")
+            raise Exception(
+                "The 'intercept_parameter' data needs to be set to "
+                " use this function."
+            )
 
-        dm = (4.0 ** 4 / np.pi / self.rho * md / n0) ** 0.25
-
+        dm = (4.0**4 / np.pi / self.rho * md / n0) ** 0.25
 
         try:
             alpha = np.broadcast_to(self.alpha, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'alpha' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'alpha' "
+                " parameter  into the shape the mass density data."
+            )
 
         try:
             beta = np.broadcast_to(self.beta, shape)
         except:
-            raise Exception("Could not broadcast the data for the 'beta' "
-                            " parameter  into the shape the mass density data.")
+            raise Exception(
+                "Could not broadcast the data for the 'beta' "
+                " parameter  into the shape the mass density data."
+            )
 
         return n0, dm, alpha, beta
-
 
     def get_mass_density(self):
         """
@@ -734,5 +801,5 @@ class D14MN(D14N):
 
         """
         n0, dm, alpha, beta = self._get_parameters()
-        y =  evaluate_d14(x, n0, dm, alpha, beta)
+        y = evaluate_d14(x, n0, dm, alpha, beta)
         return PSDData(x, y, D_eq(self.rho))

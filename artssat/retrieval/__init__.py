@@ -49,22 +49,24 @@ import weakref
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from pyarts.workspace         import arts_agenda
+from pyarts.workspace import arts_agenda
 from pyarts.workspace.agendas import Agenda
 from pyarts.workspace.methods import workspace_methods
+
 wsm = workspace_methods
 
-from artssat.jacobian    import JacobianBase, JacobianQuantity, Transformation
+from artssat.jacobian import JacobianBase, JacobianQuantity, Transformation
 from artssat.arts_object import ArtsObject, arts_property
 from artssat.arts_object import Dimension as dim
-from artssat.sensor      import ActiveSensor, PassiveSensor
+from artssat.sensor import ActiveSensor, PassiveSensor
 
 
 ################################################################################
 # RetrievalBase
 ################################################################################
 
-class RetrievalBase(ArtsObject, metaclass = ABCMeta):
+
+class RetrievalBase(ArtsObject, metaclass=ABCMeta):
     """
     Base class for quantity-specific retrieval classes.
 
@@ -99,7 +101,8 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         :math:`log_{10}`-transformed, :code:`xa` should be given as :code:`-5`.
 
     """
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
+
+    @arts_property(["Sparse, Matrix"], shape=(dim.Joker, dim.Joker), optional=True)
     def covariance_matrix(self):
         """
         The covariance matrix for the retrieval quantity.
@@ -109,7 +112,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property(["Sparse, Matrix"], shape = (dim.Joker, dim.Joker), optional = True)
+    @arts_property(["Sparse, Matrix"], shape=(dim.Joker, dim.Joker), optional=True)
     def precision_matrix(self):
         """
         The inverse of the covariance matrix.
@@ -119,7 +122,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Vector", shape = (dim.Joker,))
+    @arts_property("Vector", shape=(dim.Joker,))
     def xa(self):
         """
         The mean of the Gaussian a priori distribution assumed for the
@@ -127,14 +130,14 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Vector", shape = (dim.Joker,), optional = True)
+    @arts_property("Vector", shape=(dim.Joker,), optional=True)
     def x0(self):
         """
         Optional start value for the retrieval iteration.
         """
         return None
 
-    @arts_property("Numeric", optional = True)
+    @arts_property("Numeric", optional=True)
     def limit_low(self):
         """
         Optional lower cutoff to apply to an iteration state :math:`x_i` before
@@ -143,7 +146,7 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
         """
         return None
 
-    @arts_property("Numeric", optional = True)
+    @arts_property("Numeric", optional=True)
     def limit_high(self):
         """
         Optional upper cutoff to apply to an iteration state :math:`x_i` before
@@ -172,9 +175,12 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             self.xa = xa_fun(*args, **kwargs)
 
         except AttributeError:
-            raise Exception("The data provider must provide a get method for "
-                           "the a priori state of retrieval quantity {0}."
-                           .format(self.quantity.name))
+            raise Exception(
+                "The data provider must provide a get method for "
+                "the a priori state of retrieval quantity {0}.".format(
+                    self.quantity.name
+                )
+            )
 
     def setup(self, ws, data_provider, *args, **kwargs):
         """
@@ -239,16 +245,18 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             raise e
 
         if covmat is None and precmat is None:
-            raise Exception("The data provider must provide a get method for "
-                            "the covariance or the precision matrix of retrieval"
-                            "quantity {0}." .format(self.quantity.name))
+            raise Exception(
+                "The data provider must provide a get method for "
+                "the covariance or the precision matrix of retrieval"
+                "quantity {0}.".format(self.quantity.name)
+            )
 
         self.quantity.transformation.setup(ws, data_provider, *args, **kwargs)
 
         if not covmat is None:
-            ws.covmat_sxAddBlock(block = covmat)
+            ws.covmat_sxAddBlock(block=covmat)
         if not precmat is None:
-            ws.covmat_sxAddInverseBlock(block = precmat)
+            ws.covmat_sxAddInverseBlock(block=precmat)
 
     def get_iteration_preparations(self, index):
 
@@ -264,13 +272,15 @@ class RetrievalBase(ArtsObject, metaclass = ABCMeta):
             limit_high = self._limit_high.value
 
         def agenda(ws):
-            ws.xClip(ijq = index, limit_low = limit_low, limit_high = limit_high)
+            ws.xClip(ijq=index, limit_low=limit_low, limit_high=limit_high)
 
         return arts_agenda(agenda)
+
 
 ################################################################################
 # RetrievalQuantity
 ################################################################################
+
 
 class RetrievalQuantity(JacobianQuantity):
     """
@@ -303,8 +313,8 @@ class RetrievalQuantity(JacobianQuantity):
     """
 
     def __init__(self):
-        self._fixed          = None
-        self._retrieval      = None
+        self._fixed = None
+        self._retrieval = None
         self.debug_callback = None
         super().__init__()
 
@@ -346,11 +356,13 @@ class RetrievalQuantity(JacobianQuantity):
 
     @retrieval.setter
     def retrieval(self, r):
-        if not isinstance(r, self.retrieval_class):# or \
-           #not isinstance(r, RetrievalBase):
-            raise ValueError("The retrieval property of a RetrievalQuantity"\
-                             " can only be set to an instance of the objects"\
-                             "own retrieval_class.")
+        if not isinstance(r, self.retrieval_class):  # or \
+            # not isinstance(r, RetrievalBase):
+            raise ValueError(
+                "The retrieval property of a RetrievalQuantity"
+                " can only be set to an instance of the objects"
+                "own retrieval_class."
+            )
         else:
             self._retrieval = r
 
@@ -358,6 +370,7 @@ class RetrievalQuantity(JacobianQuantity):
 ################################################################################
 # RetrievalCalculation
 ################################################################################
+
 
 class RetrievalRun:
     """
@@ -380,26 +393,29 @@ class RetrievalRun:
         settings(:code:`dict`): A dictionary holding the retrieval
             settings.
     """
-    def __init__(self,
-                 name,
-                 simulation,
-                 y,
-                 settings,
-                 sensor_indices,
-                 retrieval_quantities,
-                 previous_run = None):
+
+    def __init__(
+        self,
+        name,
+        simulation,
+        y,
+        settings,
+        sensor_indices,
+        retrieval_quantities,
+        previous_run=None,
+    ):
 
         for rq in retrieval_quantities:
             rq.fixed = False
 
-        self.name           = name
-        self.y              = np.copy(y)
-        self.settings       = settings
-        self.sensors        = simulation.sensors.copy()
+        self.name = name
+        self.y = np.copy(y)
+        self.settings = settings
+        self.sensors = simulation.sensors.copy()
         self.sensor_indices = sensor_indices
-        self.rq_indices     = {}
+        self.rq_indices = {}
         self.retrieval_quantities = retrieval_quantities.copy()
-        self.previous_run   = previous_run
+        self.previous_run = previous_run
 
         self._simulation = weakref.ref(simulation)
         self._data_provider = weakref.ref(simulation.data_provider)
@@ -412,8 +428,7 @@ class RetrievalRun:
         if simulation:
             return simulation
         else:
-            raise ValueError("The corresponding simulation has "
-                                    " been deleted.")
+            raise ValueError("The corresponding simulation has " " been deleted.")
 
     @property
     def data_provider(self):
@@ -421,17 +436,16 @@ class RetrievalRun:
         if data_provider:
             return data_provider
         else:
-            raise ValueError("The corresponding data provider has "
-                                    " been destroyed.")
+            raise ValueError("The corresponding data provider has " " been destroyed.")
 
-    def get_result(self, q, attribute = "x", interpolate = False, transform_back = False):
+    def get_result(self, q, attribute="x", interpolate=False, transform_back=False):
 
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, attribute)
             if x is None:
                 return x
-            x = x[i : j]
+            x = x[i:j]
 
             if transform_back:
                 x = q.transformation.invert(x)
@@ -445,11 +459,11 @@ class RetrievalRun:
             return x
 
         if not self.previous_run is None:
-            return self.previous_run.get_result(q, attribute = attribute)
+            return self.previous_run.get_result(q, attribute=attribute)
         else:
             return None
 
-    def get_xa(self, q, interpolate = True, transform_back = False):
+    def get_xa(self, q, interpolate=True, transform_back=False):
 
         if transform_back:
             xa = q.transformation.invert(q.retrieval.xa)
@@ -468,10 +482,10 @@ class RetrievalRun:
         if q in self.retrieval_quantities:
             i, j = self.rq_indices[q]
             x = getattr(self, "avk")
-            return x[i : j, i : j]
+            return x[i:j, i:j]
 
         if not self.previous_run is None:
-            return self.previous_run.get_result(q, attribute = "avk")
+            return self.previous_run.get_result(q, attribute="avk")
         else:
             return None
 
@@ -479,14 +493,16 @@ class RetrievalRun:
     # Plotting functions
     #
 
-    def plot_result(self,
-                    q,
-                    ax = None,
-                    transform_back = True,
-                    include_prior = True,
-                    data_provider = None,
-                    args = [],
-                    kwargs = {}):
+    def plot_result(
+        self,
+        q,
+        ax=None,
+        transform_back=True,
+        include_prior=True,
+        data_provider=None,
+        args=[],
+        kwargs={},
+    ):
         """
         Plot retrieved results of given quantity.
 
@@ -503,9 +519,7 @@ class RetrievalRun:
                 using a dashed line.
         """
 
-        x = self.get_result(q,
-                            interpolate = True,
-                            transform_back = transform_back)
+        x = self.get_result(q, interpolate=True, transform_back=transform_back)
         if x is None:
             s = "No result for retrieval quantity {} available.".format(q.name)
             raise Exception(s)
@@ -515,25 +529,20 @@ class RetrievalRun:
 
         z = self.simulation.workspace.z_field.value.ravel()
 
-        ls = ax.plot(x, z, label = q.name)
+        ls = ax.plot(x, z, label=q.name)
 
         if include_prior:
-            xa = self.get_xa(q,
-                             interpolate = True,
-                             transform_back = transform_back)
-            ax.plot(xa, z, label = q.name, c = ls[0].get_color(), ls = "--")
+            xa = self.get_xa(q, interpolate=True, transform_back=transform_back)
+            ax.plot(xa, z, label=q.name, c=ls[0].get_color(), ls="--")
 
         if data_provider:
             getter = getattr(data_provider, "get_" + q.name)
             x = getter(*args, **kwargs)
-            ax.plot(x, z, label = "Reference", c = ls[0].get_color(), ls = "-.")
+            ax.plot(x, z, label="Reference", c=ls[0].get_color(), ls="-.")
 
         return ax
 
-    def plot_jacobian(self,
-                      sensor,
-                      q,
-                      ax = None):
+    def plot_jacobian(self, sensor, q, ax=None):
         """
         Plot the Jacobian of observations from a given sensor w.r.t.
         a given retrieval quantity. Note that the Jacobian is always
@@ -550,7 +559,7 @@ class RetrievalRun:
         """
         i1, j1 = self.sensor_indices[sensor.name]
         i2, j2 = self.rq_indices[q]
-        dydx = self.jacobian[i1 : j1, i2: j2]
+        dydx = self.jacobian[i1:j1, i2:j2]
 
         if dydx is None:
             s = "No result for retrieval quantity {} available.".format(q.name)
@@ -560,7 +569,7 @@ class RetrievalRun:
             _, ax = plt.subplots(1, 1)
 
         for i in range(dydx.shape[0]):
-            ax.plot(dydx[i, :], label = "Channel {}".format(i))
+            ax.plot(dydx[i, :], label="Channel {}".format(i))
         return ax
 
     def plot_a_priori_errors(self, *args, **kwargs):
@@ -573,9 +582,7 @@ class RetrievalRun:
             _, ax = plt.subplots(1, 1)
 
             xa = q.retrieval.xa
-            x = self.get_result(q,
-                                interpolate = False,
-                                transform_back = False)
+            x = self.get_result(q, interpolate=False, transform_back=False)
             dx = x - xa
 
             data_provider = self.simulation.data_provider
@@ -603,7 +610,7 @@ class RetrievalRun:
                 c = dx * np.linalg.solve(covmat, dx)
 
             ax.plot(c)
-            ax.set_title(q.name, loc = "left")
+            ax.set_title(q.name, loc="left")
 
     def plot_observation_errors(self):
         """
@@ -618,13 +625,13 @@ class RetrievalRun:
         for s in self.sensors:
             _, ax = plt.subplots(1, 1)
             i, j = self.sensor_indices[s.name]
-            y = self.y[i : j]
-            yf = self.yf[i : j]
+            y = self.y[i:j]
+            yf = self.yf[i:j]
             dy = yf - y
-            s = covmat_se[i : j, i : j]
+            s = covmat_se[i:j, i:j]
             c = dy * np.dot(s, dy)
             ax.plot(c)
-            ax.set_title(s.name, loc = "left")
+            ax.set_title(s.name, loc="left")
 
     def setup_a_priori(self, *args, **kwargs):
         """
@@ -657,7 +664,7 @@ class RetrievalRun:
                 to the data provider.
         """
 
-        ws            = self.simulation.workspace
+        ws = self.simulation.workspace
         data_provider = self.data_provider
 
         xa = []
@@ -674,25 +681,25 @@ class RetrievalRun:
 
         for rq in self.retrieval_quantities:
 
-                rq.retrieval.setup(ws, data_provider, *args, **kwargs)
+            rq.retrieval.setup(ws, data_provider, *args, **kwargs)
 
-                xa += [rq.retrieval.xa]
+            xa += [rq.retrieval.xa]
 
-                if not self.previous_run is None:
-                    r = self.previous_run.get_result(rq)
+            if not self.previous_run is None:
+                r = self.previous_run.get_result(rq)
+            else:
+                r = None
+
+            if not r is None:
+                x0 += [r]
+            else:
+                if rq.retrieval.x0 is None:
+                    x0 += [rq.retrieval.xa]
                 else:
-                    r = None
+                    x0 += [rq.retrieval.x0]
 
-                if not r is None:
-                    x0 += [r]
-                else:
-                    if rq.retrieval.x0 is None:
-                        x0 += [rq.retrieval.xa]
-                    else:
-                        x0 += [rq.retrieval.x0]
-
-                self.rq_indices[rq] = (rq_index, rq_index + xa[-1].size)
-                rq_index += xa[-1].size
+            self.rq_indices[rq] = (rq_index, rq_index + xa[-1].size)
+            rq_index += xa[-1].size
 
         #
         # Set values of retrieval quantities excluded from retrieval.
@@ -723,7 +730,7 @@ class RetrievalRun:
         self.x0 = np.concatenate(x0)
 
         ws.xa = self.xa
-        ws.x  = self.x0
+        ws.x = self.x0
 
         #
         # We extract from the observation error covariance matrix
@@ -735,7 +742,7 @@ class RetrievalRun:
         covmat_se = f(*args, **kwargs)
 
         if sp.sparse.issparse(covmat_se):
-            covmat_se = covmat_se.todense()
+            covmat_se = np.array(covmat_se.todense())
 
         covmat_blocks = []
 
@@ -749,25 +756,24 @@ class RetrievalRun:
                 (i, j) = self.sensor_indices[s.name]
                 covmat_blocks += [covmat_se[i:j, i:j]]
 
-        covmat_se = sp.sparse.block_diag(covmat_blocks, format = "coo")
-        ws.covmat_seAddBlock(block = covmat_se)
+        print(len(covmat_blocks))
+
+        covmat_se = sp.sparse.block_diag(covmat_blocks, format="coo")
+        ws.covmat_seAddBlock(block=covmat_se)
 
     def setup_iteration_agenda(self):
 
         debug = self.simulation.retrieval.debug_mode
 
         if debug:
-            self.debug = {"x"               : [],
-                          "yf"              : [],
-                          "jacobian"        : [],
-                          "iteration_index" : []}
+            self.debug = {"x": [], "yf": [], "jacobian": [], "iteration_index": []}
 
-        ws            = self.simulation.workspace
+        ws = self.simulation.workspace
         data_provider = self.data_provider
 
         s = self.sensors[0]
-        ws.Copy(ws.sensor_los,  s._wsvs["sensor_los"])
-        ws.Copy(ws.sensor_pos,  s._wsvs["sensor_pos"])
+        ws.Copy(ws.sensor_los, s._wsvs["sensor_los"])
+        ws.Copy(ws.sensor_pos, s._wsvs["sensor_pos"])
         ws.Copy(ws.sensor_time, s._wsvs["sensor_time"])
 
         #
@@ -779,7 +785,8 @@ class RetrievalRun:
         @arts_agenda
         def debug_print(ws):
             ws.Print(ws.x, 0)
-        #agenda.append(debug_print)
+
+        # agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
@@ -795,7 +802,7 @@ class RetrievalRun:
 
         i_active = []
         i_passive = []
-        for i,s in enumerate(self.sensors):
+        for i, s in enumerate(self.sensors):
             if isinstance(s, ActiveSensor):
                 i_active += [i]
             if isinstance(s, PassiveSensor):
@@ -808,7 +815,7 @@ class RetrievalRun:
         if len(i_active) > 0:
             s = self.sensors[i_active[0]]
 
-            agenda.append(arts_agenda(s.make_y_calc_function(append = False)))
+            agenda.append(arts_agenda(s.make_y_calc_function(append=False)))
 
             i += 1
 
@@ -819,14 +826,14 @@ class RetrievalRun:
             # Scattering solver call
             if scattering:
                 scattering_solver = self.simulation.scattering_solver
-                agenda.append(arts_agenda(scattering_solver.make_solver_call(atmosphere, s)))
+                agenda.append(
+                    arts_agenda(scattering_solver.make_solver_call(atmosphere, s))
+                )
 
-            agenda.append(arts_agenda(
-                s.make_y_calc_function(append = i > 0,
-                                       scattering = scattering)
-            ))
+            agenda.append(
+                arts_agenda(s.make_y_calc_function(append=i > 0, scattering=scattering))
+            )
             i += 1
-
 
         def iteration_finalize(ws):
             ws.Ignore(ws.inversion_iteration_counter)
@@ -838,9 +845,9 @@ class RetrievalRun:
 
         @arts_agenda
         def get_debug(ws):
-            self.debug["x"]               += [np.copy(ws.x.value)]
-            self.debug["yf"]              += [np.copy(ws.yf.value)]
-            self.debug["jacobian"]        += [np.copy(ws.jacobian.value)]
+            self.debug["x"] += [np.copy(ws.x.value)]
+            self.debug["yf"] += [np.copy(ws.yf.value)]
+            self.debug["jacobian"] += [np.copy(ws.jacobian.value)]
             self.debug["iteration_index"] += [ws.inversion_iteration_counter.value]
 
             x = ws.x.value
@@ -860,7 +867,6 @@ class RetrievalRun:
 
         ws.inversion_iterate_agenda = agenda
 
-
     def run(self, *args, **kwargs):
 
         ws = self.simulation.workspace
@@ -872,18 +878,18 @@ class RetrievalRun:
         for s in self.sensors:
             if isinstance(s, ActiveSensor):
                 i, j = self.sensor_indices[s.name]
-                y_blocks += [self.y[i : j]]
+                y_blocks += [self.y[i:j]]
         for s in self.sensors:
             if not isinstance(s, ActiveSensor):
                 i, j = self.sensor_indices[s.name]
-                y_blocks += [self.y[i : j]]
+                y_blocks += [self.y[i:j]]
 
         try:
 
             y = np.concatenate(y_blocks)
             self._y = y
-            ws.y  = y
-            ws.yf       = []
+            ws.y = y
+            ws.yf = []
             ws.jacobian = []
 
             self.simulation.run_checks()
@@ -891,28 +897,28 @@ class RetrievalRun:
 
         except Exception as e:
             ws.oem_diagnostics = 9 * np.ones(5)
-            ws.yf       = None
+            ws.yf = None
             ws.jacobian = None
             ws.oem_errors = ["Error in OEM computation.", str(e)]
 
-        self.x               = np.copy(ws.x.value)
+        self.x = np.copy(ws.x.value)
         self.oem_diagnostics = np.copy(ws.oem_diagnostics)
-        self.yf              = np.copy(ws.yf.value)
-        self.jacobian        = np.copy(ws.jacobian.value)
+        self.yf = np.copy(ws.yf.value)
+        self.jacobian = np.copy(ws.jacobian.value)
 
         if self.oem_diagnostics[0] <= 2.0:
             ws.avkCalc()
-            self.dxdy      = np.copy(ws.dxdy)
-            self.jacobian  = np.copy(ws.jacobian)
-            self.avk       = np.copy(ws.avk)
+            self.dxdy = np.copy(ws.dxdy)
+            self.jacobian = np.copy(ws.jacobian)
+            self.avk = np.copy(ws.avk)
             ws.covmat_soCalc()
             self.covmat_so = np.copy(ws.covmat_so.value)
             ws.covmat_ssCalc()
             self.covmat_ss = np.copy(ws.covmat_ss.value)
         else:
-            self.dxdy      = None
-            self.jacobian  = None
-            self.avk       = None
+            self.dxdy = None
+            self.jacobian = None
+            self.avk = None
             self.covmat_so = None
             self.covmat_ss = None
 
@@ -939,20 +945,22 @@ class RetrievalCalculation:
         debug_mode(:code:`bool`): If set to true, debug information will be
             collected while the retrieval is run.
     """
-    def __init__(self,
-                 debug_mode = False):
+
+    def __init__(self, debug_mode=False):
 
         self.retrieval_quantities = []
         self.y = None
 
-        self.settings = {"method" : "lm",
-                         "max_start_cost" : np.inf,
-                         "x_norm" : np.zeros(0),
-                         "max_iter" : 20,
-                         "stop_dx" : 0.1,
-                         "lm_ga_settings" : np.array([1000.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
-                         "clear_matrices" : 0,
-                         "display_progress" : 1}
+        self.settings = {
+            "method": "lm",
+            "max_start_cost": np.inf,
+            "x_norm": np.zeros(0),
+            "max_iter": 20,
+            "stop_dx": 0.1,
+            "lm_ga_settings": np.array([1000.0, 5.0, 2.0, 1e6, 1.0, 1.0]),
+            "clear_matrices": 0,
+            "display_progress": 1,
+        }
 
         self.callbacks = []
         self.debug_mode = debug_mode
@@ -977,7 +985,6 @@ class RetrievalCalculation:
         rq.retrieval = rq.retrieval_class(rq, len(self.retrieval_quantities))
         self.retrieval_quantities += [rq]
 
-
     def _get_y_vector(self, simulation, *args, **kwargs):
 
         if len(simulation.sensors) == 0:
@@ -996,8 +1003,10 @@ class RetrievalCalculation:
                         fname = "get_y_" + s.name
                         f = getattr(simulation.data_provider, fname, None)
                         if f is None:
-                            raise Exception("No measurement vector provided for "
-                                            " sensor {0}.".format(s.name))
+                            raise Exception(
+                                "No measurement vector provided for "
+                                " sensor {0}.".format(s.name)
+                            )
                         ys += [f(*args, **kwargs).ravel()]
                 y = np.concatenate(ys)
         return y
@@ -1046,7 +1055,7 @@ class RetrievalCalculation:
 
         self._y = self._get_y_vector(simulation, *args, **kwargs)
 
-        ws   = simulation.workspace
+        ws = simulation.workspace
 
         previous_run = None
         if self.callbacks == []:
@@ -1054,12 +1063,14 @@ class RetrievalCalculation:
             # No retrieval callback provided. The retrieval consists only
             # of a single run.
             #
-            retrieval = RetrievalRun("Retrieval",
-                                     simulation,
-                                     self._y,
-                                     self.settings,
-                                     self.sensor_indices,
-                                     self.retrieval_quantities)
+            retrieval = RetrievalRun(
+                "Retrieval",
+                simulation,
+                self._y,
+                self.settings,
+                self.sensor_indices,
+                self.retrieval_quantities,
+            )
             retrieval.run(*args, **kwargs)
             self.results = retrieval
         else:
@@ -1076,13 +1087,15 @@ class RetrievalCalculation:
                 else:
                     name = str(len(self.results))
 
-                retrieval = RetrievalRun(name,
-                                         simulation,
-                                         self._y,
-                                         self.settings,
-                                         self.sensor_indices,
-                                         self.retrieval_quantities,
-                                         previous_run = previous_run)
+                retrieval = RetrievalRun(
+                    name,
+                    simulation,
+                    self._y,
+                    self.settings,
+                    self.sensor_indices,
+                    self.retrieval_quantities,
+                    previous_run=previous_run,
+                )
 
                 if not cb is None:
                     cb(retrieval)
@@ -1090,3 +1103,54 @@ class RetrievalCalculation:
                 retrieval.run(*args, **kwargs)
                 self.results += [retrieval]
                 previous_run = retrieval
+
+    def get_results(self, full_retrieval_output=False):
+        """
+        Return retrieval results as dictionary.
+
+        Args:
+            full_retrieval_output: Whether to include advanced OEM diagnostic
+                in output.
+
+        Return:
+            A dictionary containing the retrieval results.
+        """
+        if not isinstance(self.results, list):
+            results = [results.results]
+        else:
+            results = self.results
+
+        data = {}
+
+        for result in results:
+            for q_r in self.retrieval_quantities:
+                res = result.get_result(q_r, interpolate=True, transform_back=True)
+                if res is None:
+                    res = result.get_xa(q_r, interpolate=True, transform_back=True)
+                data.setdefault(q_r.name, []).append(res)
+
+            # OEM diagnostics.
+            data.setdefault("diagnostics", []).append(res)
+
+            # Observation and fit.
+            for sensor in result.sensors:
+                i, j = result.sensor_indices[sensor.name]
+                y_t = result.y[i:j]
+                y_f = result.yf[i:j]
+
+                name = "y_" + sensor.name
+                data.setdefault(name, []).append(y_t)
+                name = "yf_" + sensor.name
+                data.setdefault(name, []).append(y_f)
+
+            # Remaining retrieval output
+            if full_retrieval_output and result.oem_diagnostics[0] <= 2.0:
+                ws = result.simulation.workspace
+
+                data.setdefault("A", []).append(ws.avk.value)
+                data.setdefault("G", []).append(ws.dxdy.value)
+                data.setdefault("covmat_ss", []).append(ws.covmat_ss.value)
+                data.setdefault("covmat_so", []).append(ws.covmat_so.value)
+                data.setdefault("jacobian", []).append(ws.jacobian.value)
+
+        return data

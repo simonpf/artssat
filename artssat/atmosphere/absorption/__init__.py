@@ -4,27 +4,33 @@ Absorption
 
 """
 from abc import ABCMeta, abstractmethod, abstractproperty
-from artssat.atmosphere.atmospheric_quantity \
-    import AtmosphericQuantity, extend_dimensions
-
-from artssat.arts_object import ArtsObject, arts_property
-from artssat.jacobian    import JacobianBase
-from artssat.retrieval   import RetrievalBase, RetrievalQuantity
+from artssat.atmosphere.atmospheric_quantity import (
+    AtmosphericQuantity,
+    extend_dimensions,
+)
 
 import numpy as np
 from pyarts.workspace import arts_agenda
-from typhon.physics.atmosphere import vmr2relative_humidity, \
-    relative_humidity2vmr
+
+from artssat.arts_object import ArtsObject, arts_property
+from artssat.jacobian import JacobianBase
+from artssat.retrieval import RetrievalBase, RetrievalQuantity
+from artssat.atmosphere.absorption.utils import (
+    vmr2relative_humidity,
+    relative_humidity2vmr,
+)
 
 ################################################################################
 # Retrieval units
 ################################################################################
 
-class Unit(metaclass = ABCMeta):
+
+class Unit(metaclass=ABCMeta):
     """
     Abstract base class for classes representing units used for the calculation
     of Jacobians and retrievals of absorption species.
     """
+
     def __init__():
         pass
 
@@ -67,10 +73,11 @@ class VMR(Unit):
     def arts_name(self):
         return "vmr"
 
+
 class Relative(Unit):
     """
     In relative units, the amount of a quantity is specified relative to a
-    reference profile or field. 
+    reference profile or field.
 
     If this unit is used in a Jacobian calculation, then the Jacobian is
     calculated w.r.t. a relative perturbation.
@@ -79,6 +86,7 @@ class Relative(Unit):
     interpreted as multiplicative perturbations of the reference profile
     or field.
     """
+
     def __init__(self, x_ref):
         self.x_ref = x_ref
 
@@ -92,10 +100,12 @@ class Relative(Unit):
     def arts_name(self):
         return "rel"
 
+
 class RelativeHumidity(Unit):
     """
     Relative humidity is available only for the retrieval of H2O.
     """
+
     def __init__(self):
         pass
 
@@ -116,8 +126,8 @@ class RelativeHumidity(Unit):
             :code:`numpy.ndarray` containing the converted RH values.
 
         """
-        p   = ws.p_grid.value.reshape(-1, 1, 1)
-        t   = ws.t_field.value
+        p = ws.p_grid.value.reshape(-1, 1, 1)
+        t = ws.t_field.value
         vmr = relative_humidity2vmr(rh, p, t)
         return vmr
 
@@ -139,8 +149,8 @@ class RelativeHumidity(Unit):
             :code:`numpy.ndarray` containing the converted RH values.
 
         """
-        p  = ws.p_grid.value.reshape(-1, 1, 1)
-        t  = ws.t_field.value
+        p = ws.p_grid.value.reshape(-1, 1, 1)
+        t = ws.t_field.value
         rh = vmr2relative_humidity(vmr, p, t)
         return rh
 
@@ -148,12 +158,13 @@ class RelativeHumidity(Unit):
     def arts_name(self):
         return "rh"
 
+
 ################################################################################
 # The Jacobian class
 ################################################################################
 
-class Jacobian(JacobianBase, ArtsObject):
 
+class Jacobian(JacobianBase, ArtsObject):
     @arts_property("Numeric")
     def perturbation(self):
         return 0.01
@@ -168,17 +179,21 @@ class Jacobian(JacobianBase, ArtsObject):
 
     def _make_setup_kwargs(self, ws):
         kwargs = self.get_grids(ws)
-        kwargs.update({"species" : self.quantity.get_tag_string(),
-                       "unit" : self.unit.arts_name,
-                       "for_species_tag" : self.for_species_tag})
+        kwargs.update(
+            {
+                "species": self.quantity.get_tag_string(),
+                "unit": self.unit.arts_name,
+                "for_species_tag": self.for_species_tag,
+            }
+        )
         return kwargs
 
     def setup(self, ws):
         kwargs = self._make_setup_kwargs(ws)
         ws.jacobianAddAbsSpecies(**kwargs)
 
-class Retrieval(RetrievalBase, Jacobian):
 
+class Retrieval(RetrievalBase, Jacobian):
     def __init__(self, quantity, index):
         super().__init__(quantity, index)
 
@@ -187,44 +202,41 @@ class Retrieval(RetrievalBase, Jacobian):
 
 
 class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
+    def __init__(
+        self,
+        name,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model=None,
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="no_shape",
+        normalization="no_norm",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
 
-    def __init__(self,
-                 name,
-                 from_catalog = False,
-                 cia = None,
-                 frequency_range = None,
-                 isotopologues = None,
-                 model = None,
-                 on_the_fly = True,
-                 zeeman = False,
-                 lineshape = "no_shape",
-                 normalization = "no_norm",
-                 cutoff = -1,
-                 cutoff_type = "ByBand"):
-
-
-        AtmosphericQuantity.__init__(self,
-                                     name,
-                                     (0, 0, 0))
+        AtmosphericQuantity.__init__(self, name, (0, 0, 0))
         RetrievalQuantity.__init__(self)
 
         self._dimensions = (0, 0, 0)
 
-        self._from_catalog    = from_catalog
-        self._cia             = cia
+        self._from_catalog = from_catalog
+        self._cia = cia
         self._frequency_range = frequency_range
-        self._isotopologues   = isotopologues
-        self._jacobian        = None
-        self._model           = model
-        self._on_the_fly      = on_the_fly
-        self._retrieval       = None
-        self._zeeman          = zeeman
+        self._isotopologues = isotopologues
+        self._jacobian = None
+        self._model = model
+        self._on_the_fly = on_the_fly
+        self._retrieval = None
+        self._zeeman = zeeman
 
         self._lineshape = lineshape
         self._normalization = normalization
         self._cutoff = cutoff
         self._cutoff_type = cutoff_type
-
 
     #
     # Abstract properties
@@ -281,31 +293,29 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
     def normalization(self):
         return self._normalization
 
-    def _get_tag_string(self,
-                        zeeman = False,
-                        isotopologue = None,
-                        model = None,
-                        frequency_range = None):
+    def _get_tag_string(
+        self, zeeman=False, isotopologue=None, model=None, frequency_range=None
+    ):
 
         ts = self._name
-        ts += "-"
 
         if zeeman:
-            ts += "Z"
             ts += "-"
+            ts += "Z"
 
         if not isotopologue is None:
-            ts += isotopologues
             ts += "-"
+            ts += isotopologue
 
         if not model is None:
-            ts += model
             ts += "-"
+            ts += model
 
         if not frequency_range is None:
-           ts += frequency_range[0]
-           ts += "-"
-           ts += frequency_range[1]
+            ts += "-"
+            ts += str(frequency_range[0])
+            ts += "-"
+            ts += str(frequency_range[1])
         return ts
 
     def get_tag_string(self):
@@ -331,7 +341,6 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
             frequency_ranges = self._frequency_range
         else:
             frequency_ranges = [self._frequency_range]
-
 
         for i in isotopologues:
             for m in models:
@@ -364,8 +373,10 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
         x = unit.to_arts(ws, x)
 
         if self._wsv_index is None:
-            raise Exception("Absorber's wsv_index is unknown. This is likely "
-                            "its setup(...) routine has not been called.")
+            raise Exception(
+                "Absorber's wsv_index is unknown. This is likely "
+                "its setup(...) routine has not been called."
+            )
 
         ws.vmr_field.value[self._wsv_index, :, :, :] = x
 
@@ -394,115 +405,147 @@ class AbsorptionSpecies(AtmosphericQuantity, RetrievalQuantity):
             x = extend_dimensions(x)
 
             if not x.shape == dimensions:
-                raise Exception("Shape of {0} field is inconsistent with "
-                                "the dimensions of the atmosphere."
-                                .format(self.name))
+                raise Exception(
+                    "Shape of {0} field is inconsistent with "
+                    "the dimensions of the atmosphere.".format(self.name)
+                )
 
             ws.vmr_field.value[self._wsv_index, :, :, :] = x
 
+
 class H2O(AbsorptionSpecies):
-    def __init__(self,
-                 from_catalog = False,
-                 cia = None,
-                 frequency_range = None,
-                 isotopologues = None,
-                 model = "PWR98",
-                 on_the_fly = True,
-                 zeeman = False,
-                 lineshape = "VP",
-                 normalization = "VVW",
-                 cutoff = -1,
-                 cutoff_type = "ByBand"):
-        super().__init__("H2O",
-                         from_catalog = from_catalog,
-                         cia = cia,
-                         frequency_range = frequency_range,
-                         isotopologues = isotopologues,
-                         model = model,
-                         on_the_fly = on_the_fly,
-                         zeeman = zeeman,
-                         lineshape = lineshape,
-                         normalization = normalization,
-                         cutoff = cutoff,
-                         cutoff_type = cutoff_type)
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="PWR98",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "H2O",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
 
 class N2(AbsorptionSpecies):
-    def __init__(self,
-                 from_catalog = False,
-                 cia = None,
-                 frequency_range = None,
-                 isotopologues = None,
-                 model = "SelfContStandardType",
-                 on_the_fly = True,
-                 zeeman = False,
-                 lineshape = "VP",
-                 normalization = "VVH",
-                 cutoff = -1,
-                 cutoff_type = "ByBand"):
-        super().__init__("N2",
-                         from_catalog = from_catalog,
-                         cia = cia,
-                         frequency_range = frequency_range,
-                         isotopologues = isotopologues,
-                         model = model,
-                         on_the_fly = on_the_fly,
-                         zeeman = zeeman,
-                         lineshape = lineshape,
-                         normalization = normalization,
-                         cutoff = cutoff,
-                         cutoff_type = cutoff_type)
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="SelfContStandardType",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVH",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "N2",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
 
 class O2(AbsorptionSpecies):
-    def __init__(self,
-                 from_catalog = False,
-                 cia = None,
-                 frequency_range = None,
-                 isotopologues = None,
-                 model = "PWR93",
-                 on_the_fly = True,
-                 zeeman = False,
-                 lineshape = "VP",
-                 normalization = "VVW",
-                 cutoff = -1,
-                 cutoff_type = "ByBand"):
-        super().__init__("O2",
-                         from_catalog = from_catalog,
-                         cia = cia,
-                         frequency_range = frequency_range,
-                         isotopologues = isotopologues,
-                         model = model,
-                         on_the_fly = on_the_fly,
-                         zeeman = zeeman,
-                         lineshape = lineshape,
-                         normalization = normalization,
-                         cutoff = cutoff,
-                         cutoff_type = cutoff_type)
+    """
+    Oxygen gas absorption.
+
+    Including an instance of this class in the absorbers of
+    an atmosphere will cause the inclusion of absorption from
+    Oxygen in the simulation.
+
+    The default configuration uses the PWR98 model to model Oxygen
+    absorption.
+    """
+
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="PWR98",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "O2",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
 
 class CloudWater(AbsorptionSpecies):
-    def __init__(self,
-                 from_catalog = False,
-                 cia = None,
-                 frequency_range = None,
-                 isotopologues = None,
-                 model = "MPM93",
-                 on_the_fly = True,
-                 zeeman = False,
-                 lineshape = "VP",
-                 normalization = "RQ",
-                 cutoff = -1,
-                 cutoff_type = "ByBand"):
-        super().__init__("cloud_water",
-                         from_catalog = from_catalog,
-                         cia = cia,
-                         frequency_range = frequency_range,
-                         isotopologues = isotopologues,
-                         model = model,
-                         on_the_fly = on_the_fly,
-                         zeeman = zeeman,
-                         lineshape = lineshape,
-                         normalization = normalization,
-                         cutoff = cutoff,
-                         cutoff_type = cutoff_type)
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="MPM93",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="RQ",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "cloud_water",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
 
     def get_tag_string(self):
 
@@ -514,3 +557,127 @@ class CloudWater(AbsorptionSpecies):
             ts += "-"
 
         return ts
+
+
+class CH4(AbsorptionSpecies):
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "CH4",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
+
+class N2O(AbsorptionSpecies):
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "N2O",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
+
+class CO2(AbsorptionSpecies):
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "CO2",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues=isotopologues,
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )
+
+
+class O3(AbsorptionSpecies):
+    def __init__(
+        self,
+        from_catalog=False,
+        cia=None,
+        frequency_range=None,
+        isotopologues=None,
+        model="",
+        on_the_fly=True,
+        zeeman=False,
+        lineshape="VP",
+        normalization="VVW",
+        cutoff=-1,
+        cutoff_type="ByBand",
+    ):
+        super().__init__(
+            "N2O",
+            from_catalog=from_catalog,
+            cia=cia,
+            frequency_range=frequency_range,
+            isotopologues="446",
+            model=model,
+            on_the_fly=on_the_fly,
+            zeeman=zeeman,
+            lineshape=lineshape,
+            normalization=normalization,
+            cutoff=cutoff,
+            cutoff_type=cutoff_type,
+        )

@@ -14,5 +14,6 @@ import numpy as np
 import os
 import os.path
 import artssat
+
 artssat_path = os.path.dirname(artssat.__file__)
 plt.style.use(os.path.join(artssat_path, "..", "misc", "notebook_style_sheet"))

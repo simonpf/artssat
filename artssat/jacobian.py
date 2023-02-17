@@ -46,7 +46,7 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from artssat.sensor      import ActiveSensor, PassiveSensor
+from artssat.sensor import ActiveSensor, PassiveSensor
 from artssat.arts_object import ArtsObject, arts_property
 from artssat.arts_object import Dimension as dim
 
@@ -54,7 +54,8 @@ from artssat.arts_object import Dimension as dim
 # Transformations
 ################################################################################
 
-class Transformation(metaclass = ABCMeta):
+
+class Transformation(metaclass=ABCMeta):
     """
     Abstract base class for transformations of Jacobian quantities.
 
@@ -73,6 +74,7 @@ class Transformation(metaclass = ABCMeta):
     - :code:`__call__`: Transformation objects should be callable and calling
       them should apply the transformation to a given numeric argument.
     """
+
     def __init__(self):
         pass
 
@@ -87,33 +89,37 @@ class Transformation(metaclass = ABCMeta):
     @abstractmethod
     def invert(self, y):
         pass
+
 
 class Log10(Transformation):
     """
     The decadal logarithm transformation $f(x) = \log_{10}(x)$.
     """
-    def __init__(self, minimum = 1e-20):
+
+    def __init__(self, minimum=1e-20):
         Transformation.__init__(self)
         self.minimum = minimum
 
     def setup(self, ws, data_provider, *args, **kwargs):
-        ws.jacobianSetFuncTransformation(transformation_func = "log10")
+        ws.jacobianSetFuncTransformation(transformation_func="log10")
 
     def __call__(self, x):
         return np.log10(np.maximum(x, self.minimum))
 
     def invert(self, y):
-        return 10.0 ** y
+        return 10.0**y
+
 
 class Log(Transformation):
     """
     The natural logarithm transformation $f(x) = \log_{10}(x)$.
     """
+
     def __init__(self):
         pass
 
     def setup(self, ws, data_provider, *args, **kwargs):
-        ws.jacobianSetFuncTransformation(transformation_func = "log")
+        ws.jacobianSetFuncTransformation(transformation_func="log")
 
     def __call__(self, x):
         return np.log(x)
@@ -121,9 +127,9 @@ class Log(Transformation):
     def invert(self, y):
         return np.exp(1) ** y
 
-class Atanh(Transformation):
 
-    def __init__(self, z_min = 0.0, z_max = 1.0):
+class Atanh(Transformation):
+    def __init__(self, z_min=0.0, z_max=1.0):
         Transformation.__init__(self)
         ArtsObject.__init__(self)
 
@@ -139,9 +145,9 @@ class Atanh(Transformation):
         return 1.2
 
     def setup(self, ws, data_provider, *args, **kwargs):
-        ws.jacobianSetFuncTransformation(transformation_func = "atanh",
-                                         z_min = self.z_min,
-                                         z_max = self.z_max)
+        ws.jacobianSetFuncTransformation(
+            transformation_func="atanh", z_min=self.z_min, z_max=self.z_max
+        )
 
     def __call__(self, x):
         x = np.minimum(x, 0.99 * self.z_max)
@@ -151,10 +157,12 @@ class Atanh(Transformation):
     def invert(self, y):
         return (np.tanh(y) + 1) * 0.5 * (self.z_max - self.z_min) + self.z_min
 
+
 class Identity(Transformation):
     """
     The identity transformation $f(x) = x$.
     """
+
     def __init__(self):
         pass
 
@@ -167,6 +175,7 @@ class Identity(Transformation):
     def invert(self, y):
         return y
 
+
 class Composition(Transformation):
     """
     Composition of multiple transformations.
@@ -177,12 +186,13 @@ class Composition(Transformation):
     Arguments:
         *args: Sequence of transformations.
     """
+
     def __init__(self, *args):
         if not all([isinstance(a, Transformation) for a in args]):
-            raise Exception("All provided transformation must implement the "
-                            "abstract base class.")
+            raise Exception(
+                "All provided transformation must implement the " "abstract base class."
+            )
         self.transformations = args
-
 
         if any([hasattr(t, "initialize") for t in self.transformations]):
             self.__dict__["initialize"] = self._initialize
@@ -206,15 +216,18 @@ class Composition(Transformation):
             y = t.invert(y)
         return y
 
+
 ################################################################################
 # JacobianCalculation
 ################################################################################
+
 
 class JacobianCalculation:
     """
     The :class:`JacobianCalculation` keeps track of the quantities for which
     to compute a Jacobian and coordinates their setup.
     """
+
     def __init__(self):
         """
         Initialize an empty Jacobian calculation.
@@ -268,7 +281,8 @@ class JacobianCalculation:
 # JacobianQuantity
 ################################################################################
 
-class JacobianQuantity(metaclass = ABCMeta):
+
+class JacobianQuantity(metaclass=ABCMeta):
     """
     Abstract interface for quantities for which a Jacobian can be computed.
 
@@ -305,10 +319,12 @@ class JacobianQuantity(metaclass = ABCMeta):
     @jacobian.setter
     def jacobian(self, j):
         if not isinstance(j, self.jacobian_class):
-           #not isinstance(j, JacobianBase):
-            raise ValueError("The jacobian property of a JacobianQuantity"\
-                             " can only be set to an instance of the objects"\
-                             "own jacobian_class.")
+            # not isinstance(j, JacobianBase):
+            raise ValueError(
+                "The jacobian property of a JacobianQuantity"
+                " can only be set to an instance of the objects"
+                "own jacobian_class."
+            )
         else:
             self._jacobian = j
 
@@ -322,31 +338,36 @@ class JacobianQuantity(metaclass = ABCMeta):
     @transformation.setter
     def transformation(self, t):
         if not isinstance(t, Transformation):
-            raise TypeError("The transformation of a retrieval quantity must"\
-                            " be of type Transformation.")
+            raise TypeError(
+                "The transformation of a retrieval quantity must"
+                " be of type Transformation."
+            )
         else:
             self._transformation = t
+
 
 ################################################################################
 # JacobianBase
 ################################################################################
 
-class JacobianBase(ArtsObject, metaclass = ABCMeta):
+
+class JacobianBase(ArtsObject, metaclass=ABCMeta):
     """
     Abstract base class for the Jacobian classes that encapsulate the
     quantity-specific calls and settings of the Jacobian. This class
     muss be inherited by the :code:`jacobian_class` of each
     :code:`JacobianQuantity` object.
     """
-    @arts_property("Vector", shape = (dim.Joker,))
+
+    @arts_property("Vector", shape=(dim.Joker,))
     def p_grid(self):
         return np.zeros(0)
 
-    @arts_property("Vector", shape = (dim.Joker,))
+    @arts_property("Vector", shape=(dim.Joker,))
     def lat_grid(self):
         return np.zeros(0)
 
-    @arts_property("Vector", shape = (dim.Joker,))
+    @arts_property("Vector", shape=(dim.Joker,))
     def lon_grid(self):
         return np.zeros(0)
 
@@ -354,7 +375,7 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
 
         super().__init__()
         self.quantity = quantity
-        self.index    = index
+        self.index = index
 
         if self.quantity.transformation is None:
             self.quantity.transformation = Identity()
@@ -388,12 +409,10 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
         else:
             g3 = self.lon_grid
 
-        return {"g1" : g1, "g2" : g2, "g3" : g3}
+        return {"g1": g1, "g2": g2, "g3": g3}
 
     def interpolate_to_grids(self, x, grids):
-        retrieval_grids = [self.p_grid,
-                           self.lat_grid,
-                           self.lon_grid]
+        retrieval_grids = [self.p_grid, self.lat_grid, self.lon_grid]
         used_grids = []
         for i, g in enumerate(grids):
             if retrieval_grids[i].size == 0:
@@ -409,24 +428,22 @@ class JacobianBase(ArtsObject, metaclass = ABCMeta):
         retrieval_grids[0] = retrieval_grids[0][::-1]
         grids[0] = grids[0][::-1]
 
-        interp = sp.interpolate.RegularGridInterpolator(retrieval_grids, x,
-                                                        method = "linear",
-                                                        bounds_error = False,
-                                                        fill_value = np.nan)
+        interp = sp.interpolate.RegularGridInterpolator(
+            retrieval_grids, x, method="linear", bounds_error=False, fill_value=np.nan
+        )
 
         mesh_grids = np.meshgrid(grids)
         if len(mesh_grids) > 1:
-            xi = np.transpose(np.stack(mesh_grids), axes = (0, -1))
+            xi = np.transpose(np.stack(mesh_grids), axes=(0, -1))
         else:
             xi = mesh_grids[0].reshape(-1, 1)
 
-        y  = interp(xi)
+        y = interp(xi)
 
         inds = np.array(np.isnan(y))
-        interp = sp.interpolate.RegularGridInterpolator(retrieval_grids, x,
-                                                        method = "nearest",
-                                                        bounds_error = False,
-                                                        fill_value = None)
+        interp = sp.interpolate.RegularGridInterpolator(
+            retrieval_grids, x, method="nearest", bounds_error=False, fill_value=None
+        )
         y[inds] = interp(xi)[inds]
 
         grids_shape = [g.size for g in grids]

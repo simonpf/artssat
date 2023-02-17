@@ -11,4 +11,9 @@ ws.NumericCreate("surface_temperature")
 ws.NumericCreate("surface_salinity")
 ws.NumericCreate("surface_windspeed")
 
-from artssat.atmosphere.surface.surface import Tessem, Telsem, CombinedSurface
+from artssat.atmosphere.surface.surface import (
+    Tessem,
+    Telsem,
+    CombinedSurface,
+    Blackbody,
+)

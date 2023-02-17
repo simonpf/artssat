@@ -1,5 +1,4 @@
 """
-
 The :code:`artssat` package provides a modular framework for
 radiative transfer simulations. It does so by defining a general
 computing workflow that allows hiding away much of the complexity

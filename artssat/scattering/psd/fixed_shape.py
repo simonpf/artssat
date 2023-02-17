@@ -14,6 +14,7 @@ from pyarts.workspace import Workspace, arts_agenda
 
 ws = Workspace()
 
+
 class FixedShape(ArtsPSD, ArtsObject):
     """
     Fixed shape particle size distribution.
@@ -21,6 +22,7 @@ class FixedShape(ArtsPSD, ArtsObject):
     This PSD class takes a mass density as input and returns a given PSD shape
     scaled in the vertical dimension to match the provided mass density.
     """
+
     @arts_property("Vector")
     def x(self):
         return None
@@ -29,7 +31,7 @@ class FixedShape(ArtsPSD, ArtsObject):
     def shape(self):
         return None
 
-    def __init__(self, x, data, size_parameter = D_eq(1000.0)):
+    def __init__(self, x, data, size_parameter=D_eq(1000.0)):
         """
         Create PSD with shape given by :code:`x` and :code:`data`.
 
@@ -45,8 +47,8 @@ class FixedShape(ArtsPSD, ArtsObject):
         """
         ArtsObject.__init__(self)
         ArtsPSD.__init__(self, self.psd.size_parameter)
-        self.psd  = PSDData(x, data, size_parameter)
-        self.x    = x
+        self.psd = PSDData(x, data, size_parameter)
+        self.x = x
         self.data = data
 
         shape = self.psd.data.reshape((1, -1))
@@ -73,7 +75,7 @@ class FixedShape(ArtsPSD, ArtsObject):
             md = ws.pnd_agenda_input.value.reshape(-1, 1)
             ws.pnd_size_grid = self.x
             ws.psd_size_grid = self.x
-            ws.psd_data    = self.shape * md
+            ws.psd_data = self.shape * md
             ws.psd_data_dx = self.shape
 
         return pnd_call

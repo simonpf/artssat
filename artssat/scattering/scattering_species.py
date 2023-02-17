@@ -1,10 +1,12 @@
 import numpy as np
-from artssat.atmosphere.atmospheric_quantity \
-    import AtmosphericQuantity, extend_dimensions
+from artssat.atmosphere.atmospheric_quantity import (
+    AtmosphericQuantity,
+    extend_dimensions,
+)
 from artssat.arts_object import add_property
 from artssat.scattering.psd.arts.arts_psd import ArtsPSD
 
-from artssat.jacobian  import JacobianBase
+from artssat.jacobian import JacobianBase
 from artssat.retrieval import RetrievalBase, RetrievalQuantity
 
 from pyarts.workspace import arts_agenda
@@ -13,17 +15,17 @@ from pyarts.workspace import arts_agenda
 # Jacobian
 ################################################################################
 
-class Jacobian(JacobianBase):
 
+class Jacobian(JacobianBase):
     def __init__(self, quantity, index):
         super().__init__(quantity, index)
-
 
     def _make_setup_kwargs(self, ws):
 
         kwargs = self.get_grids(ws)
-        kwargs.update({"species" : self.quantity._species_name,
-                      "quantity" : self.quantity.name})
+        kwargs.update(
+            {"species": self.quantity._species_name, "quantity": self.quantity.name}
+        )
 
         return kwargs
 
@@ -32,12 +34,13 @@ class Jacobian(JacobianBase):
         kwargs = self._make_setup_kwargs(ws)
         ws.jacobianAddScatSpecies(**kwargs)
 
+
 ################################################################################
 # Retrieval
 ################################################################################
 
-class Retrieval(RetrievalBase, Jacobian):
 
+class Retrieval(RetrievalBase, Jacobian):
     def __init__(self, quantity, index):
         RetrievalBase.__init__(self)
         Jacobian.__init__(self, quantity, index)
@@ -45,22 +48,18 @@ class Retrieval(RetrievalBase, Jacobian):
     def add(self, ws):
         ws.retrievalAddScatSpecies(**self._make_setup_kwargs(ws))
 
+
 class Moment(AtmosphericQuantity, RetrievalQuantity):
-    def __init__(self,
-                 species_name,
-                 moment_name,
-                 data = None,
-                 jacobian = False):
+    def __init__(self, species_name, moment_name, data=None, jacobian=False):
 
         name = species_name + "_" + moment_name
         AtmosphericQuantity.__init__(self, name, (0, 0, 0), jacobian)
         RetrievalQuantity.__init__(self)
 
-
         self._jacobian = None
         self._retrieval = None
         self._species_name = species_name
-        self._moment_name  = moment_name
+        self._moment_name = moment_name
         self._data = data
 
     #
@@ -87,11 +86,14 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
                     if len(x.shape) < len(pbf_shape):
                         n = len(pbf_shape) - len(x.shape)
                         x = np.reshape(x, x.shape + (1,) * n)
-                    ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] \
-                        = np.broadcast_to(x, pbf_shape)
+                    ws.particle_bulkprop_field.value[
+                        self._wsv_index, :, :, :
+                    ] = np.broadcast_to(x, pbf_shape)
                 except Exception as e:
-                    raise Exception("Encountered error trying to get data for "
-                                    " moment {0}: {1}".format(self.name, e))
+                    raise Exception(
+                        "Encountered error trying to get data for "
+                        " moment {0}: {1}".format(self.name, e)
+                    )
 
     #
     # Jacobian & retrieval
@@ -120,7 +122,9 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
         x = self.retrieval.interpolate_to_grids(x, grids)
 
         pbf_shape = ws.particle_bulkprop_field.value.shape[1:]
-        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(x, pbf_shape)
+        ws.particle_bulkprop_field.value[self._wsv_index, :, :, :] = np.reshape(
+            x, pbf_shape
+        )
 
     #
     # Properties
@@ -133,16 +137,14 @@ class Moment(AtmosphericQuantity, RetrievalQuantity):
     def species_name(self):
         return self._species_name
 
+
 class ScatteringSpecies:
-    def __init__(self,
-                 name,
-                 psd,
-                 scattering_data,
-                 scattering_meta_data = None,
-                 jacobian = False):
+    def __init__(
+        self, name, psd, scattering_data, scattering_meta_data=None, jacobian=False
+    ):
 
         self._name = name
-        self._psd  = psd
+        self._psd = psd
 
         if hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
             scattering_meta_data = scattering_data.meta
@@ -164,7 +166,7 @@ class ScatteringSpecies:
         try:
             moment_data = self.psd.moments
             for m, d in zip(self.psd.moment_names, moment_data):
-                moment = Moment(self.name, m, data = d)
+                moment = Moment(self.name, m, data=d)
                 self._moments += [moment]
                 self.__dict__[m] = moment
         except:
@@ -189,7 +191,9 @@ class ScatteringSpecies:
     @psd.setter
     def psd(self, psd):
         if not isinstance(psd, ArtsPSD):
-            raise ValueError("PSD of scattering species must implement the ArtsPsd ABC.")
+            raise ValueError(
+                "PSD of scattering species must implement the ArtsPsd ABC."
+            )
         self._psd = psd
 
     @property
@@ -201,7 +205,7 @@ class ScatteringSpecies:
 
         if type(scattering_data) == tuple:
             scattering_data, scattering_meta_data = scattering_data
-        elif  hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
+        elif hasattr(scattering_data, "path") and hasattr(scattering_data, "meta"):
             scattering_meta_data = scattering_data.meta
             scattering_data = scattering_data.path
         else:

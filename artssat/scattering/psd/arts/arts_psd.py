@@ -7,9 +7,9 @@ The ArtsPSD class
 import numpy as np
 import scipy as sp
 from abc import abstractproperty
-from artssat.scattering.psd.data.psd_data import SizeParameter, Area, D_eq,\
-    D_max, Mass
+from artssat.scattering.psd.data.psd_data import SizeParameter, Area, D_eq, D_max, Mass
 from pyarts.workspace import arts_agenda
+
 
 class ArtsPSD:
     r"""
@@ -29,20 +29,16 @@ class ArtsPSD:
 
     """
 
-    properties = [("size_parameter", (), SizeParameter),
-                  ("t_min", (), np.float),
-                  ("t_max", (), np.float),
-                  ("x_fit_start", (), np.float)]
+    properties = [
+        ("size_parameter", (), SizeParameter),
+        ("t_min", (), np.float),
+        ("t_max", (), np.float),
+        ("x_fit_start", (), np.float),
+    ]
 
-    size_parameter_names = {D_eq : "dveq",
-                            D_max : "dmax",
-                            Mass : "mass",
-                            Area : "area"}
+    size_parameter_names = {D_eq: "dveq", D_max: "dmax", Mass: "mass", Area: "area"}
 
-    def __init__(self,
-                 size_parameter,
-                 t_min = 0.0,
-                 t_max = 999.0):
+    def __init__(self, size_parameter, t_min=0.0, t_max=999.0):
         """
         Parameters:
             size_parameter(SizeParameter) :class:`SizeParameter` enum specifying the
@@ -96,9 +92,11 @@ class ArtsPSD:
             ws.Ignore(ws.pnd_agenda_input)
             ws.Ignore(ws.pnd_agenda_input_names)
             ws.Ignore(ws.dpnd_data_dx_names)
-            ws.ScatSpeciesSizeMassInfo(species_index = ws.agenda_array_index,
-                                       x_unit = size_parameter,
-                                       x_fit_start = self.x_fit_start)
+            ws.ScatSpeciesSizeMassInfo(
+                species_index=ws.agenda_array_index,
+                x_unit=size_parameter,
+                x_fit_start=self.x_fit_start,
+            )
             ws.Copy(ws.psd_size_grid, ws.scat_species_x)
             ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
             INCLUDE(self.pnd_call_agenda)

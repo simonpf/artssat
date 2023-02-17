@@ -8,10 +8,11 @@ import os
 
 from artssat.arts_object import ArtsObject, arts_property, Dimension
 from pyarts.workspace import Workspace, arts_agenda
-from pyarts.workspace.variables import (WorkspaceVariable, workspace_variables)
+from pyarts.workspace.variables import WorkspaceVariable, workspace_variables
+
 wsv = workspace_variables
 
-ws = Workspace(verbosity = 0)
+ws = Workspace(verbosity=0)
 
 
 class Surface:
@@ -67,16 +68,17 @@ class Surface:
         """
         pass
 
+
 ################################################################################
 # Tessem
 ################################################################################
 
-#TODO: Need elegant system for on demand WSVs.
+# TODO: Need elegant system for on demand WSVs.
 telsem_salinity = ws.create_variable("Numeric", None)
 telsem_windspeed = ws.create_variable("Numeric", None)
 
-class Tessem(Surface,
-             ArtsObject):
+
+class Tessem(Surface, ArtsObject):
     """
     This class represents the " Tool to Estimate Sea‐Surface Emissivity from
     Microwaves to sub‐Millimeter waves" (TESSEM). It is a parametrization for
@@ -84,11 +86,13 @@ class Tessem(Surface,
     emissivity.
     """
 
-    def __init__(self,
-                 tessem_net_h = "testdata/tessem_sav_net_H.txt",
-                 tessem_net_v = "testdata/tessem_sav_net_V.txt",
-                 salinity = 0.034,
-                 wind_speed = 0.0):
+    def __init__(
+        self,
+        tessem_net_h="testdata/tessem_sav_net_H.txt",
+        tessem_net_v="testdata/tessem_sav_net_V.txt",
+        salinity=0.034,
+        wind_speed=0.0,
+    ):
         """
         Args:
             tessem_net_h(:code:`str`): Path to the network to use for
@@ -107,38 +111,38 @@ class Tessem(Surface,
 
     @property
     def required_data(self):
-        return [("surface_temperature", ("n_lat", "n_lon"), False),
-                ("surface_salinity", (1,), True),
-                ("surface_salinity", ("n_lat", "n_lon"), True),
-                ("surface_wind_speed", (1,), True),
-                ("surface_wind_speed", ("n_lat", "n_lon"), True)]
+        return [
+            ("surface_temperature", ("n_lat", "n_lon"), False),
+            ("surface_salinity", (1,), True),
+            ("surface_salinity", ("n_lat", "n_lon"), True),
+            ("surface_wind_speed", (1,), True),
+            ("surface_wind_speed", ("n_lat", "n_lon"), True),
+        ]
 
-    @arts_property(group="Matrix",
-                   shape=(Dimension.Lat, Dimension.Lon),
-                   wsv=wsv["t_surface"])
+    @arts_property(
+        group="Matrix", shape=(Dimension.Lat, Dimension.Lon), wsv=wsv["t_surface"]
+    )
     def surface_temperature(self):
         return 280.0
 
-    @arts_property(group="Numeric",
-                   wsv=telsem_salinity)
+    @arts_property(group="Numeric", wsv=telsem_salinity)
     def salinity(self):
         return 0.035
 
-    @arts_property(group="Numeric",
-                   wsv=telsem_windspeed)
+    @arts_property(group="Numeric", wsv=telsem_windspeed)
     def surface_wind_speed(self):
         return 1.0
 
     @property
     def surface_agenda(self):
-
         @arts_agenda
         def surface_rtprop_agenda_tessem(ws):
             ws.specular_losCalc()
-            ws.InterpSurfaceFieldToPosition(out = wsv["surface_skin_t"],
-                                            field = wsv["t_surface"])
-            ws.surfaceTessem(salinity = telsem_salinity,
-                            wind_speed = telsem_windspeed)
+            ws.InterpSurfaceFieldToPosition(
+                out=wsv["surface_skin_t"], field=wsv["t_surface"]
+            )
+            ws.surfaceTessem(salinity=telsem_salinity, wind_speed=telsem_windspeed)
+
         return surface_rtprop_agenda_tessem
 
     def setup(self, ws):
@@ -152,12 +156,13 @@ class Tessem(Surface,
     def run_checks(self, ws):
         pass
 
+
 ################################################################################
 # Telsem
 ################################################################################
 
-class Telsem(Surface,
-             ArtsObject):
+
+class Telsem(Surface, ArtsObject):
     """
     This class implements the Tool for estimating surface emissivities 2
     (TELSEM2). TELSEM2 is a microwave atlas covering microwave and
@@ -165,9 +170,8 @@ class Telsem(Surface,
     one for each month that contain microwave emissivities of land-surfaces on
     an equal-area grid.
     """
-    def __init__(self,
-                 atlas_directory,
-                 month=6):
+
+    def __init__(self, atlas_directory, month=6):
         """
         Args:
             atlas_directory: Directory containing the Telsem atlases
@@ -188,44 +192,42 @@ class Telsem(Surface,
     def required_data(self):
         return [("temperature", ("n_lat", "n_lon"), False)]
 
-    @arts_property(group="Vector",
-                   shape=(Dimension.Lat,),
-                   wsv=wsv["lat_true"])
+    @arts_property(group="Vector", shape=(Dimension.Lat,), wsv=wsv["lat_true"])
     def latitude(self):
         return None
 
-    @arts_property(group="Vector",
-                  shape=(Dimension.Lon,),
-                  wsv=wsv["lon_true"])
+    @arts_property(group="Vector", shape=(Dimension.Lon,), wsv=wsv["lon_true"])
     def longitude(self):
         return None
 
-    @arts_property(group="Matrix",
-                   shape=(Dimension.Lat, Dimension.Lon),
-                   wsv=wsv["t_surface"])
+    @arts_property(
+        group="Matrix", shape=(Dimension.Lat, Dimension.Lon), wsv=wsv["t_surface"]
+    )
     def surface_temperature(self):
         return None
 
     @property
     def surface_agenda(self):
-
         @arts_agenda
         def surface_rtprop_agenda_telsem(ws):
             ws.specular_losCalc()
-            ws.InterpSurfaceFieldToPosition(out = wsv["surface_skin_t"],
-                                            field = wsv["t_surface"])
-            ws.surfaceTelsem(atlas=ws.telsem_atlas,
-                             r_min=self.r_min,
-                             r_max=self.r_max,
-                             d_max=self.d_max)
+            ws.InterpSurfaceFieldToPosition(
+                out=wsv["surface_skin_t"], field=wsv["t_surface"]
+            )
+            ws.surfaceTelsem(
+                atlas=ws.telsem_atlas,
+                r_min=self.r_min,
+                r_max=self.r_max,
+                d_max=self.d_max,
+            )
+
         return surface_rtprop_agenda_telsem
 
     def setup(self, ws):
         ws.TelsemAtlasCreate("telsem_atlas")
-        ws.telsem_atlasReadAscii(ws.telsem_atlas,
-                                 self.atlas_directory,
-                                 self.month,
-                                 self.filename_pattern)
+        ws.telsem_atlasReadAscii(
+            ws.telsem_atlas, self.atlas_directory, self.month, self.filename_pattern
+        )
         ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
     def get_data(self, ws, data_provider, *args, **kwargs):
@@ -234,19 +236,21 @@ class Telsem(Surface,
     def run_checks(self, ws):
         pass
 
+
 ################################################################################
 # Combined surface
 ################################################################################
+
 
 class CombinedSurface(ArtsObject):
     """
     This class combines two surface models and switches between them depending
     on a surface property variable provided by the data provider.
     """
-    def __init__(self,
-                 surface_model_1,
-                 surface_model_2,
-                 surface_type_variable = "surface_type"):
+
+    def __init__(
+        self, surface_model_1, surface_model_2, surface_type_variable="surface_type"
+    ):
         """
         Args:
             surface_model_1: The surface model to use when surface type is 0
@@ -269,7 +273,6 @@ class CombinedSurface(ArtsObject):
 
     @property
     def surface_agenda(self):
-
         @arts_agenda
         def surface_agenda(ws):
             ws.Ignore(ws.f_grid)
@@ -279,7 +282,7 @@ class CombinedSurface(ArtsObject):
             ws.Touch(ws.surface_emission)
             ws.Touch(ws.surface_los)
             ws.Touch(ws.surface_rmatrix)
-            if (self.surface_type == 0):
+            if self.surface_type == 0:
                 ws.execute_agenda(self.surface_agenda_1)
             else:
                 ws.execute_agenda(self.surface_agenda_2)
@@ -291,12 +294,56 @@ class CombinedSurface(ArtsObject):
         self.surface_model_2.setup(ws)
         ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
 
-
     def get_data(self, ws, data_provider, *args, **kwargs):
         self.surface_model_1.get_data(ws, data_provider, *args, **kwargs)
         self.surface_model_2.get_data(ws, data_provider, *args, **kwargs)
         self.surface_agenda_1 = self.surface_model_1.surface_agenda
         self.surface_agenda_2 = self.surface_model_2.surface_agenda
+        self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
+
+    def run_checks(self, ws):
+        pass
+
+
+class Blackbody(Surface, ArtsObject):
+    """
+    A black body surface
+    """
+
+    def __init__(self, emissivity=1.0):
+        """
+        Args:
+            tessem_net_h(:code:`str`): Path to the network to use for
+                h-polarization.
+            tessem_net_v(:code:`str`): Path to the network to use for
+                v-polarization.
+            salinity (float): The salinity to assume for the sea surface.
+            wind_speed (float): Wind speed if it should be set to a fixed
+                value.
+        """
+        Surface.__init__(self)
+        ArtsObject.__init__(self)
+        self.emissivity = emissivity
+
+    @property
+    def required_data(self):
+        return []
+
+    @property
+    def surface_agenda(self):
+        @arts_agenda
+        def surface_rtprop_agenda(ws):
+            ws.InterpSurfaceFieldToPosition(
+                out=wsv["surface_skin_t"], field=wsv["t_surface"]
+            )
+            ws.surfaceBlackbody()
+
+        return surface_rtprop_agenda
+
+    def setup(self, ws):
+        ws.Copy(ws.surface_rtprop_agenda, self.surface_agenda)
+
+    def get_data(self, ws, data_provider, *args, **kwargs):
         self.get_data_arts_properties(ws, data_provider, *args, **kwargs)
 
     def run_checks(self, ws):

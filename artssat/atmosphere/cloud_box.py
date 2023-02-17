@@ -1,5 +1,5 @@
 class CloudBox:
-    def __init__(self, n_dimensions, scattering = True):
+    def __init__(self, n_dimensions, scattering=True):
 
         self._scattering = scattering
         self._adaptive = None
@@ -34,8 +34,7 @@ class CloudBox:
 
     @property
     def altitude_limits(self):
-        if self._vertical_limits is None \
-           or self._vertical_limits_type != "altitude":
+        if self._vertical_limits is None or self._vertical_limits_type != "altitude":
             raise Exception("No altitude limits have been set.")
         return self._vertical_limits
 
@@ -45,8 +44,9 @@ class CloudBox:
         self._vertical_limits_type = "altitude"
 
         if not z1 < z2:
-            raise Exception("The cloudbox limits pressure limits must "
-                            "satisfy z1 > z2.")
+            raise Exception(
+                "The cloudbox limits pressure limits must " "satisfy z1 > z2."
+            )
         self._vertical_limits = (z1, z2)
 
     #
@@ -55,8 +55,7 @@ class CloudBox:
 
     @property
     def pressure_limits(self):
-        if self._vertical_limits is None \
-           or self._vertical_limits_type != "pressure":
+        if self._vertical_limits is None or self._vertical_limits_type != "pressure":
             raise Exception("No pressure limits have been set.")
         return self._pressure_limits
 
@@ -67,8 +66,9 @@ class CloudBox:
         self._vertical_limits_type == "pressure"
 
         if not p1 > p2:
-            raise Exception("The cloudbox limits pressure limits must "
-                            "satisfy p1 > p2.")
+            raise Exception(
+                "The cloudbox limits pressure limits must " "satisfy p1 > p2."
+            )
         self._pressure_limits = (p1, p2)
 
     #
@@ -114,12 +114,11 @@ class CloudBox:
                 else:
                     limits += [20, dimensions[i] - 21]
             ws.cloudbox_limits = limits
-            #ws.cloudboxSetFullAtm()
+            # ws.cloudboxSetFullAtm()
             return
 
         if self._adaptive:
-            ws.cloudboxSetAutomatically(particle_field =
-                                        ws.particle_bulkprop_field)
+            ws.cloudboxSetAutomatically(particle_field=ws.particle_bulkprop_field)
             return
 
         v1 = self._vertical_limits[0]
@@ -146,20 +145,14 @@ class CloudBox:
             lon_2 = ws.lon_grid.value[-1]
 
         if self._vertical_limits_type == "pressure":
-            ws.cloudboxSetManually(p1 = v1,
-                                   p2 = v2,
-                                   lat1 = lat1,
-                                   lat2 = lat2,
-                                   lon1 = lon1,
-                                   lon2 = lon2)
+            ws.cloudboxSetManually(
+                p1=v1, p2=v2, lat1=lat1, lat2=lat2, lon1=lon1, lon2=lon2
+            )
 
         if self._vertical_limits_type == "altitude":
-            ws.cloudboxSetManuallyAltitude(z1 = v1,
-                                           z2 = v2,
-                                           lat1 = lat1,
-                                           lat2 = lat2,
-                                           lon1 = lon1,
-                                           lon2 = lon2)
+            ws.cloudboxSetManuallyAltitude(
+                z1=v1, z2=v2, lat1=lat1, lat2=lat2, lon1=lon1, lon2=lon2
+            )
             ws._checked = False
 
     def run_checks(self, ws):
@@ -169,4 +162,3 @@ class CloudBox:
 
         ws.pnd_fieldCalcFromParticleBulkProps()
         ws.cloudbox_checkedCalc()
-

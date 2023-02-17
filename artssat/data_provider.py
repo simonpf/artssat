@@ -34,6 +34,7 @@ class DataProviderBase:
     is forwarded to the subproviders in the order they were added. The get
     method from the first that provides such a method is returned.
     """
+
     def __init__(self):
         self._owner = None
         self.subproviders = []
@@ -77,8 +78,10 @@ class DataProviderBase:
         attribute_name = name[4:]
         try:
             attr = object.__getattribute__(self, attribute_name)
+
             def wrapper(*_, **__):
                 return attr
+
             return wrapper
         except AttributeError:
             pass
@@ -94,9 +97,7 @@ class DataProviderBase:
             except AttributeError:
                 pass
 
-        raise AttributeError(
-            f"'{self}' object has no attribute 'name'."
-        )
+        raise AttributeError(f"'{self}' object has no attribute '{name}'.")
 
 
 class CombinedProvider(DataProviderBase):
@@ -144,9 +145,7 @@ class CombinedProvider(DataProviderBase):
             except AttributeError:
                 pass
 
-        raise AttributeError(
-            f"'{self}' object has no attribute 'name'."
-        )
+        raise AttributeError(f"'{self}' object has no attribute 'name'.")
 
 
 class Constant(DataProviderBase):
@@ -154,6 +153,7 @@ class Constant(DataProviderBase):
     Returns a data provider that returns a constant value for a given
     quantity.
     """
+
     def __init__(self, name, value):
         """
         Create a data provider for quantity :code:`name` that
@@ -228,12 +228,9 @@ class Fascod(DataProviderBase):
     """
     Data provider for 1D Fascod atmospheres.
     """
+
     def __init__(
-            self,
-            climate="midlatitude",
-            season="summer",
-            altitudes=None,
-            pressures=None
+        self, climate="midlatitude", season="summer", altitudes=None, pressures=None
     ):
         """
         Args:
@@ -246,6 +243,8 @@ class Fascod(DataProviderBase):
             pressures: If provided, data will be provided on the given pressure
                 grid.
         """
+        super().__init__()
+
         climate = climate.lower()
         season = season.lower()
 
@@ -269,6 +268,11 @@ class Fascod(DataProviderBase):
         self.data_raw = xr.load_dataset(data_folder / filename)
         self.data = self.data_raw
 
+        if altitudes is not None:
+            self.interpolate_altitude(altitudes)
+        elif pressures is not None:
+            self.interpolate_pressure(pressures)
+
     def interpolate_altitude(self, altitudes, extrapolate=False, method="linear"):
         """
         Interpolate data in altitude.
@@ -280,9 +284,7 @@ class Fascod(DataProviderBase):
             altitudes: The altitudes to interpolate the data to.
 
         """
-        kwargs = {
-            "fill_value": np.nan
-        }
+        kwargs = {"fill_value": np.nan}
         if extrapolate:
             kwargs["fill_value"] = "extrapolate"
         self.data = self.data.interp(z=altitudes, method=method, kwargs=kwargs)
@@ -298,12 +300,9 @@ class Fascod(DataProviderBase):
             pressures:
 
         """
-        kwargs = {
-            "fill_value": np.nan
-        }
+        kwargs = {"fill_value": np.nan}
         if extrapolate:
             kwargs["fill_value"] = "extrapolate"
-
 
         log_pressures = np.log(pressures)
         data = self.data_raw.copy()
@@ -364,5 +363,5 @@ class Fascod(DataProviderBase):
         return self.data.H2O.data
 
     def get_surface_temperature(self, *args, **kargs):
+        """Returns temperature at lowest level."""
         return self.data.t.data[0]
-

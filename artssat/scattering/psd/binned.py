@@ -12,6 +12,7 @@ from pyarts.workspace import arts_agenda
 from artssat.scattering.psd.arts.arts_psd import ArtsPSD
 from artssat.scattering.psd.data.psd_data import PSDData, D_eq
 
+
 class Binned(ArtsPSD):
     """
     Discrete representation of a PSD using fixed bins.
@@ -26,11 +27,7 @@ class Binned(ArtsPSD):
         inds = (slice(None),) * (len(y.shape) - 1)
         self.moments = [y[inds + (i,)] for i in range(self.x.size)]
 
-    def __init__(self,
-                 x,
-                 size_parameter = D_eq(1000.0),
-                 t_min = 0.0,
-                 t_max = 400.0):
+    def __init__(self, x, size_parameter=D_eq(1000.0), t_min=0.0, t_max=400.0):
         """
         Arguments:
 
@@ -43,8 +40,7 @@ class Binned(ArtsPSD):
         self.t_min = t_min
         self.t_max = t_max
 
-
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         if not reference_size_parameter is None:
             a1 = self.size_parameter.a
             b1 = self.size_parameter.b
@@ -58,7 +54,7 @@ class Binned(ArtsPSD):
 
         data = np.array([m for m in self.moments]).T
         x = np.broadcast_to(self.x.reshape(1, -1), data.shape)
-        return c * np.trapz(data * x ** p, x = x)
+        return c * np.trapz(data * x**p, x=x)
 
     @property
     def moment_names(self):
@@ -85,11 +81,12 @@ class Binned(ArtsPSD):
             ws.scat_species_b = self.size_parameter.b
 
             xi = ws.psd_size_grid.value
-            y  = ws.pnd_agenda_input.value
-            y  = np.maximum(y, 1e-12)
-            yi = sp.interpolate.interp1d(self.x.ravel(),
-                                         np.log10(y), axis = 1, fill_value = 0.0)(xi)
-            yi = 10.0 ** yi
+            y = ws.pnd_agenda_input.value
+            y = np.maximum(y, 1e-12)
+            yi = sp.interpolate.interp1d(
+                self.x.ravel(), np.log10(y), axis=1, fill_value=0.0
+            )(xi)
+            yi = 10.0**yi
             yi[yi == 1e-12] == 0.0
 
             t = ws.pnd_agenda_input_t.value

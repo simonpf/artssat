@@ -17,11 +17,9 @@ import scipy.sparse
 # Covariances
 ################################################################################
 
+
 class Diagonal:
-    def __init__(self,
-                 diagonal,
-                 mask = None,
-                 mask_value = 1e-12):
+    def __init__(self, diagonal, mask=None, mask_value=1e-12):
         self.diagonal = np.array(diagonal)
         self.mask = mask
         self.mask_value = mask_value
@@ -40,21 +38,25 @@ class Diagonal:
             diagonal = self.diagonal
 
         diagonal[mask] = self.mask_value
-        diagonal = sp.sparse.diags(diagonal, format = "coo")
+        diagonal = sp.sparse.diags(diagonal, format="coo")
         return diagonal
+
 
 class SpatialCorrelation:
     """
     Adds spatial correlation to a given covariance matrix.
     """
-    def __init__(self,
-                 covariance,
-                 correlation_length,
-                 correlation_type = "exp",
-                 cutoff = 1e-12,
-                 mask = None,
-                 mask_value = 1e-12,
-                 z = None):
+
+    def __init__(
+        self,
+        covariance,
+        correlation_length,
+        correlation_type="exp",
+        cutoff=1e-12,
+        mask=None,
+        mask_value=1e-12,
+        z=None,
+    ):
         """
         Arguments:
 
@@ -68,9 +70,9 @@ class SpatialCorrelation:
             cutoff(:code:`float`): Threshold below which to set correlation
                 coefficients to zero.
         """
-        self.covariance         = covariance
+        self.covariance = covariance
         self.correlation_length = correlation_length
-        self.correlation_type   = correlation_type
+        self.correlation_type = correlation_type
         self.cutoff = cutoff
         self.mask = mask
         self.mask_value = mask_value
@@ -85,9 +87,9 @@ class SpatialCorrelation:
         dz = np.abs(z.reshape(-1, 1) - z.reshape(1, -1))
 
         if self.correlation_type == "exp":
-            corr = np.exp(- np.abs(dz / self.correlation_length) )
+            corr = np.exp(-np.abs(dz / self.correlation_length))
         elif self.correlation_type == "gauss":
-            corr = np.exp(- (dz / self.correlation_length) ** 2)
+            corr = np.exp(-((dz / self.correlation_length) ** 2))
 
         inds = corr < self.cutoff
         corr[inds] = 0.0
@@ -106,17 +108,21 @@ class SpatialCorrelation:
 
         return np.asarray(covmat)
 
+
 class Thikhonov:
     """
     Thikhonov regularization using second order finite differences.
     """
-    def __init__(self,
-                 scaling    = 1.0,
-                 diagonal   = 0.0,
-                 mask       = None,
-                 mask_value = 1e12,
-                 z_scaling  = True,
-                 z_grid = None):
+
+    def __init__(
+        self,
+        scaling=1.0,
+        diagonal=0.0,
+        mask=None,
+        mask_value=1e12,
+        z_scaling=True,
+        z_grid=None,
+    ):
         """
         Arguments:
             scaling(:code:`np.float`): Scalar to scale the precision matrix with.
@@ -130,17 +136,17 @@ class Thikhonov:
             z_scaling(:code:`Bool`): Whether or not to scale matrix coefficients
                 according to height differences between levels.
         """
-        self.scaling    = scaling
-        self.diagonal   = diagonal
-        self.mask       = mask
+        self.scaling = scaling
+        self.diagonal = diagonal
+        self.mask = mask
         self.mask_value = mask_value
-        self.z_scaling  = z_scaling
+        self.z_scaling = z_scaling
         self.z_grid = z_grid
 
     def get_covariance(self, data_provider, *args, **kwargs):
         precmat = self.get_precision(data_provider, *args, **kwargs)
         diag = precmat.diagonal()
-        return sp.sparse.diags(1.0 / diag, format = "coo")
+        return sp.sparse.diags(1.0 / diag, format="coo")
 
     def get_precision(self, data_provider, *args, **kwargs):
 
@@ -155,14 +161,14 @@ class Thikhonov:
         du2 = np.ones(n - 2)
 
         du1 = -4.0 * np.ones(n - 1)
-        du1[0]  = -2.0
+        du1[0] = -2.0
         du1[-1] = -2.0
 
         dl1 = np.copy(du1)
         dl2 = np.copy(du2)
 
-        d     = 6.0 * np.ones(n)
-        d[:2]  = [1, 5]
+        d = 6.0 * np.ones(n)
+        d[:2] = [1, 5]
         d[-2:] = [5, 1]
 
         if self.diagonal > 0.0:
@@ -171,43 +177,47 @@ class Thikhonov:
         if not self.mask is None:
             mask = self.mask(data_provider, *args, **kwargs).astype(np.float)
             if not z_old is None:
-                f = sp.interpolate.interp1d(z_old, mask,
-                                            axis = 0,
-                                            bounds_error = False,
-                                            fill_value = (mask[0], mask[-1]))
+                f = sp.interpolate.interp1d(
+                    z_old,
+                    mask,
+                    axis=0,
+                    bounds_error=False,
+                    fill_value=(mask[0], mask[-1]),
+                )
                 mask = f(z) > 0.5
 
             mask = np.logical_not(mask)
             du1[mask[:-1]] = 0
             du2[mask[:-2]] = 0
-            dl1[mask[1:]]  = 0
-            dl2[mask[2:]]  = 0
+            dl1[mask[1:]] = 0
+            dl2[mask[2:]] = 0
             d[mask] = self.mask_value
 
-
-        precmat = sp.sparse.diags(diagonals = [du2, du1, d, dl1, dl2],
-                                  offsets   = [2, 1, 0, -1, -2],
-                                  format    = "coo")
+        precmat = sp.sparse.diags(
+            diagonals=[du2, du1, d, dl1, dl2], offsets=[2, 1, 0, -1, -2], format="coo"
+        )
         precmat *= self.scaling
 
         if self.z_scaling:
             zf = (np.diff(z) / np.diff(z).mean()) ** 2.0
             zf1 = np.zeros(z.shape)
-            zf1[1:]  += zf
+            zf1[1:] += zf
             zf1[:-1] += zf
             zf1[1:-1] *= 0.5
-            precmat = sp.sparse.diags(diagonals = [zf1], offsets = [0], format = "coo") * precmat
+            precmat = (
+                sp.sparse.diags(diagonals=[zf1], offsets=[0], format="coo") * precmat
+            )
 
         return precmat.tocoo()
+
 
 ################################################################################
 # APrioriProviderBase
 ################################################################################
 
+
 class APrioriProviderBase(DataProviderBase):
-    def __init__(self,
-                 name,
-                 covariance):
+    def __init__(self, name, covariance):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -254,15 +264,18 @@ class APrioriProviderBase(DataProviderBase):
     def get_precision(self, *args, **kwargs):
         return self._covariance.get_precision(self.owner, *args, **kwargs)
 
+
 ################################################################################
 # Masks
 ################################################################################
+
 
 class And:
     """
     Creates a combined mask by applying logical and to a list
     of single masks.
     """
+
     def __init__(self, *args):
         self.masks = list(args)
 
@@ -286,12 +299,14 @@ class And:
 
         return m_and
 
+
 class TropopauseMask:
     """
     Returns a mask that is true only below the approximate height of the
     troposphere. The troposphere is detected as the first grid point
     where the lapse rate is negative and the temperature below 220.
     """
+
     def __init__(self):
         pass
 
@@ -305,21 +320,20 @@ class TropopauseMask:
 
             **kwargs: Keyword arguments to forward to data_provider.
         """
-        t     = data_provider.get_temperature(*args, **kwargs)
+        t = data_provider.get_temperature(*args, **kwargs)
         t_avg = 0.5 * (t[1:] + t[:-1])
-        lr    = - np.diff(t)
+        lr = -np.diff(t)
 
         tp = np.where(np.logical_and(lr < 0, t_avg < 220))[0]
-        inds  = np.ones(t.size, dtype = np.bool)
+        inds = np.ones(t.size, dtype=np.bool)
         if len(tp > 0):
-            i     = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
+            i = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
             inds[i + 1 : inds.size] = False
         return inds
 
+
 class FreezingLevel:
-    def __init__(self,
-                 lower_inclusive = False,
-                 invert = False):
+    def __init__(self, lower_inclusive=False, invert=False):
         self.lower_inclusive = lower_inclusive
         self.invert = invert
 
@@ -341,7 +355,7 @@ class FreezingLevel:
             i = 0
         if self.lower_inclusive:
             i = max(i - 1, 0)
-        inds = np.zeros(t.size, dtype = np.bool)
+        inds = np.zeros(t.size, dtype=np.bool)
         inds[i:] = True
 
         if self.invert:
@@ -349,16 +363,16 @@ class FreezingLevel:
 
         return inds
 
+
 class TemperatureMask:
     """
     The temperature mask replaces values at grid points outside of the
     given temperature interval with another value.
     """
-    def __init__(self,
-                 lower_limit,
-                 upper_limit,
-                 lower_inclusive = False,
-                 upper_inclusive = False):
+
+    def __init__(
+        self, lower_limit, upper_limit, lower_inclusive=False, upper_inclusive=False
+    ):
         """
         Arguments:
 
@@ -381,20 +395,23 @@ class TemperatureMask:
         self.lower_inclusive = lower_inclusive
 
     def __call__(self, data_provider, *args, **kwargs):
-        t    = data_provider.get_temperature(*args, **kwargs)
-        inds = np.logical_and(t.ravel() >= self.lower_limit,
-                              t.ravel() <  self.upper_limit)
+        t = data_provider.get_temperature(*args, **kwargs)
+        inds = np.logical_and(
+            t.ravel() >= self.lower_limit, t.ravel() < self.upper_limit
+        )
         if self.upper_inclusive:
             inds[1:] += inds[:-1]
         if self.lower_inclusive:
             inds[:-1] += inds[1:]
         return inds
 
+
 class AltitudeMask:
     """
     The altitude mask replaces values at grid points outside of the
     given altitude interval with another value.
     """
+
     def __init__(self, lower_limit, upper_limit):
         """
         Arguments:
@@ -408,9 +425,10 @@ class AltitudeMask:
         self.upper_limit = upper_limit
 
     def __call__(self, data_provider, *args, **kwargs):
-        z    = data_provider.get_altitude(*args, **kwargs)
-        inds = np.logical_and(z.ravel() >= self.lower_limit,
-                              z.ravel() <  self.upper_limit)
+        z = data_provider.get_altitude(*args, **kwargs)
+        inds = np.logical_and(
+            z.ravel() >= self.lower_limit, z.ravel() < self.upper_limit
+        )
         return inds
 
 
@@ -428,18 +446,16 @@ class Dilate:
 # A priori providers
 ################################################################################
 
+
 class DataProviderAPriori(APrioriProviderBase):
     """
     A priori provider that propagates an atmospheric quantity :code:`name`
     as a priori mean profile from the data provider.
     """
 
-    def __init__(self,
-                 name,
-                 covariance,
-                 transformation=None,
-                 mask=None,
-                 mask_value=None):
+    def __init__(
+        self, name, covariance, transformation=None, mask=None, mask_value=None
+    ):
         """
         Create :class:`DataProviderApriori` instance that will provide
         the value of the quantity :code:`name` from the owning data
@@ -476,8 +492,10 @@ class DataProviderAPriori(APrioriProviderBase):
         try:
             f = getattr(self.owner, f_name)
         except:
-            raise Exception("DataProviderApriori instance requires get method "
-                            " {0} from its owning data provider.")
+            raise Exception(
+                "DataProviderApriori instance requires get method "
+                " {0} from its owning data provider."
+            )
         x = f(*args, **kwargs)
         if self.transformation:
             x = self.transformation(x)
@@ -492,19 +510,15 @@ class FixedAPriori(APrioriProviderBase):
     Returns an a priori profile that does not depend on the atmospheric
     state.
     """
-    def __init__(self,
-                 name,
-                 xa,
-                 covariance,
-                 mask = None,
-                 mask_value = 1e-12):
+
+    def __init__(self, name, xa, covariance, mask=None, mask_value=1e-12):
 
         if not mask is None:
             if not hasattr(self, "get_mask"):
                 self.__dict__["get_mask"] = self._get_mask
 
         super().__init__(name, covariance)
-        self._xa   = np.array(xa)
+        self._xa = np.array(xa)
         self.mask = mask
         self.mask_value = mask_value
 
@@ -533,30 +547,27 @@ class FixedAPriori(APrioriProviderBase):
     def get_xa(self, *args, **kwargs):
         return self._get_xa(self.owner, *args, **kwargs)
 
+
 ################################################################################
 # Functional a priori
 ################################################################################
+
 
 class FunctionalAPriori(APrioriProviderBase):
     """
     Returns an a priori profile that is a functional  transform
     of some variable.
     """
-    def __init__(self,
-                 name,
-                 variable,
-                 f,
-                 covariance,
-                 mask = None,
-                 mask_value = 1e-12):
+
+    def __init__(self, name, variable, f, covariance, mask=None, mask_value=1e-12):
 
         if not mask is None:
             self.__dict__["get_mask"] = self._get_mask
 
         super().__init__(name, covariance)
-        self.variable   = variable
-        self.f          = f
-        self.mask       = mask
+        self.variable = variable
+        self.f = f
+        self.mask = mask
         self.mask_value = mask_value
 
     def _get_mask(self, data_provider, *args, **kwargs):
@@ -569,8 +580,9 @@ class FunctionalAPriori(APrioriProviderBase):
             f_get = getattr(self.owner, "get_" + self.variable)
             x = f_get(*args, **kwargs)
         except:
-            raise Exception("Could not get variable {} from data provider."
-                            .format(self.variable))
+            raise Exception(
+                "Could not get variable {} from data provider.".format(self.variable)
+            )
 
         xa = self.f(x)
 
@@ -580,25 +592,30 @@ class FunctionalAPriori(APrioriProviderBase):
 
         return xa
 
+
 ################################################################################
 # Reference A Priori
 ################################################################################
+
 
 class ReferenceAPriori(APrioriProviderBase):
     """
     Forwards value from data provider as a priori state. Useful for
     testing of retrieval implementation.
     """
-    def __init__(self,
-                 name,
-                 covariance,
-                 mask = None,
-                 mask_value = 1e-12,
-                 a_priori = None,
-                 transformation = None,
-                 variable = None):
+
+    def __init__(
+        self,
+        name,
+        covariance,
+        mask=None,
+        mask_value=1e-12,
+        a_priori=None,
+        transformation=None,
+        variable=None,
+    ):
         super().__init__(name, covariance)
-        self.mask       = mask
+        self.mask = mask
         self.mask_value = mask_value
         self.a_priori = a_priori
         self.transformation = transformation
@@ -633,9 +650,11 @@ class ReferenceAPriori(APrioriProviderBase):
 
         return x
 
+
 ################################################################################
 # Sensor a priori
 ################################################################################
+
 
 class SensorNoiseAPriori(DataProviderBase):
     """
@@ -654,8 +673,8 @@ class SensorNoiseAPriori(DataProviderBase):
         noise_scaling(:code:`dict`): Dictionary mapping sensor names to
             noise scaling factors.
     """
-    def __init__(self,
-                 sensors):
+
+    def __init__(self, sensors):
         """
         Arguments:
 
@@ -689,11 +708,13 @@ class SensorNoiseAPriori(DataProviderBase):
                 stds += [c * s.nedt]
 
         sig = np.concatenate(stds).ravel()
-        return sp.sparse.diags(sig ** 2.0, format = "coo")
+        return sp.sparse.diags(sig**2.0, format="coo")
+
 
 ################################################################################
 # Reduced retrieval grids
 ################################################################################
+
 
 class PiecewiseLinear(Transformation):
     def __init__(self, grid):
@@ -723,12 +744,12 @@ class PiecewiseLinear(Transformation):
                 zl = new_grid[i - 1]
                 z = new_grid[i]
                 zr = new_grid[i + 1]
-                conditions = [old_grid < z,
-                            old_grid == z,
-                            old_grid > z]
-                values = [lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0),
-                        1.0,
-                        lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0)]
+                conditions = [old_grid < z, old_grid == z, old_grid > z]
+                values = [
+                    lambda x: np.maximum(1.0 - (z - x) / (z - zl), 0.0),
+                    1.0,
+                    lambda x: np.maximum(1.0 - (x - z) / (zr - z), 0.0),
+                ]
                 A[i, :] = np.piecewise(old_grid, conditions, values)
 
             z = new_grid[-1]
@@ -744,11 +765,12 @@ class PiecewiseLinear(Transformation):
 
     def setup(self, ws, data_provider, *args, **kwargs):
         self.initialize(data_provider, *args, **kwargs)
-        ws.jacobianSetAffineTransformation(transformation_matrix = self.A,
-                                           offset_vector = self.b)
+        ws.jacobianSetAffineTransformation(
+            transformation_matrix=self.A, offset_vector=self.b
+        )
 
     def __call__(self, x):
-        A_ = A / np.sum(A, axis = -1, keepdims = True)
+        A_ = A / np.sum(A, axis=-1, keepdims=True)
         return A_ @ (x - self.b)
 
     def invert(self, x):
@@ -756,13 +778,14 @@ class PiecewiseLinear(Transformation):
 
 
 class ReducedVerticalGrid(APrioriProviderBase):
-
-    def __init__(self,
-                 a_priori,
-                 grid,
-                 quantity = "pressure",
-                 covariance = None,
-                 provide_retrieval_grid = True):
+    def __init__(
+        self,
+        a_priori,
+        grid,
+        quantity="pressure",
+        covariance=None,
+        provide_retrieval_grid=True,
+    ):
 
         if hasattr(a_priori, "mask"):
             if not a_priori.mask is None:
@@ -787,38 +810,44 @@ class ReducedVerticalGrid(APrioriProviderBase):
         try:
             old_grid = getattr(self.owner, f_name)(*args, **kwargs)
         except:
-            raise Exception("Data provider does not provide get function "
-                            "for quantity {} required to determine original "
-                            "size of retrieval grid."
-                            .format(self.quantity))
+            raise Exception(
+                "Data provider does not provide get function "
+                "for quantity {} required to determine original "
+                "size of retrieval grid.".format(self.quantity)
+            )
         return old_grid, self.new_grid
-
 
     def _interpolate(self, y, *args, **kwargs):
         old_grid, new_grid = self._get_grids(*args, **kwargs)
         if self.quantity == "pressure":
-            f = sp.interpolate.interp1d(old_grid[::-1], y[::-1],
-                                        axis = 0,
-                                        bounds_error = False,
-                                        fill_value = (y[-1], y[0]))
+            f = sp.interpolate.interp1d(
+                old_grid[::-1],
+                y[::-1],
+                axis=0,
+                bounds_error=False,
+                fill_value=(y[-1], y[0]),
+            )
             yi = f(new_grid[::-1])[::-1]
         else:
-            f = sp.interpolate.interp1d(old_grid, y,
-                                        axis = 0,
-                                        bounds_error = False,
-                                        fill_value = (y[0], y[-1]))
+            f = sp.interpolate.interp1d(
+                old_grid, y, axis=0, bounds_error=False, fill_value=(y[0], y[-1])
+            )
             yi = f(new_grid)
         return yi
 
     def _interpolate_matrix(self, y, *args, **kwargs):
         old_grid, new_grid = self._get_grids(*args, **kwargs)
         if self.quantity == "pressure":
-            f = sp.interpolate.interp2d(old_grid[::-1], old_grid[::-1], y[::-1, ::-1],
-                                        bounds_error = False, fill_value=np.nan)
+            f = sp.interpolate.interp2d(
+                old_grid[::-1],
+                old_grid[::-1],
+                y[::-1, ::-1],
+                bounds_error=False,
+                fill_value=np.nan,
+            )
             yi = f(new_grid[::-1], new_grid[::-1])[::-1, ::-1]
         else:
-            f = sp.interpolate.interp2d(old_grid, old_grid, y,
-                                        bounds_error = False)
+            f = sp.interpolate.interp2d(old_grid, old_grid, y, bounds_error=False)
             yi = f(new_grid, new_grid)
 
         if (yi.shape[0] > 1) and (yi.shape[1] > 1):
@@ -844,7 +873,6 @@ class ReducedVerticalGrid(APrioriProviderBase):
         # Return if mask is false everywhere
         if np.all(np.logical_not(mask)):
             return mask_i
-
 
         old_grid, new_grid = self._get_grids(*args, **kwargs)
         i_0_old, i_1_old = np.where(mask)[0][[0, -1]]
@@ -886,7 +914,7 @@ class ReducedVerticalGrid(APrioriProviderBase):
             mask = self._get_mask(self.owner, *args, **kwargs)
             for i in np.where(np.logical_not(mask))[0]:
                 covmat[i, i + 1 :] = 0.0
-                covmat[i+1 :, i] = 0.0
+                covmat[i + 1 :, i] = 0.0
             return covmat
         else:
             return self._covariance.get_covariance(self.owner, *args, **kwargs)
@@ -910,22 +938,28 @@ class ReducedVerticalGrid(APrioriProviderBase):
 
 
 class MaskedRegularGrid(ReducedVerticalGrid):
-
-    def __init__(self,
-                 a_priori,
-                 n_points,
-                 mask,
-                 quantity = "pressure",
-                 covariance = None,
-                 provide_retrieval_grid = True,
-                 transition = None):
+    def __init__(
+        self,
+        a_priori,
+        n_points,
+        mask,
+        quantity="pressure",
+        covariance=None,
+        provide_retrieval_grid=True,
+        transition=None,
+    ):
 
         if not a_priori.mask is None:
             if not hasattr(self, "get_mask"):
                 self.__dict__["get_mask"] = self._get_mask
 
-        super().__init__(a_priori, None, quantity, covariance,
-                         provide_retrieval_grid = provide_retrieval_grid)
+        super().__init__(
+            a_priori,
+            None,
+            quantity,
+            covariance,
+            provide_retrieval_grid=provide_retrieval_grid,
+        )
         self.n_points = n_points
         self.mask = mask
 
@@ -950,10 +984,11 @@ class MaskedRegularGrid(ReducedVerticalGrid):
         try:
             old_grid = getattr(self.owner, f_name)(*args, **kwargs)
         except:
-            raise Exception("Data provider does not provide get function "
-                            "for quantity {} required to determine original "
-                            "size of retrieval grid."
-                            .format(self.quantity))
+            raise Exception(
+                "Data provider does not provide get function "
+                "for quantity {} required to determine original "
+                "size of retrieval grid.".format(self.quantity)
+            )
 
         mask = self.mask(self.owner, *args, **kwargs)
 
@@ -962,12 +997,11 @@ class MaskedRegularGrid(ReducedVerticalGrid):
             i_last = np.where(mask)[0][-1]
         else:
             i_first = 0
-            i_last  = len(mask) - 1
+            i_last = len(mask) - 1
 
         n = min(self.n_points + 2, mask.sum() + 2)
         new_grid = np.zeros((n,))
-        new_grid[1 : -1] = np.linspace(old_grid[i_first], old_grid[i_last],
-                                       n - 2)
+        new_grid[1:-1] = np.linspace(old_grid[i_first], old_grid[i_last], n - 2)
 
         if n == 2:
             new_grid[0] = old_grid[0]

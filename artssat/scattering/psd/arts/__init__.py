@@ -7,4 +7,3 @@ implements common functionality for the handling of PSDs in ARTS and defines
 the interaction with the :class:`ArtsSimulation` and in particular
 the :class:`ScatteringSpecies` instance in which the PSD is used.
 """
-

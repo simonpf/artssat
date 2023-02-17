@@ -24,6 +24,7 @@ from artssat import dimensions as dim
 from artssat.scattering.psd.arts.arts_psd import ArtsPSD
 from artssat.scattering.psd.data.psd_data import PSDData, D_eq
 
+
 class ModifiedGamma(ArtsPSD):
     r"""
     The :class:`ModifiedGamma` class describes the size distribution of
@@ -31,17 +32,16 @@ class ModifiedGamma(ArtsPSD):
     particle size distribution.
     """
 
-    properties = [("intercept_parameter", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("alpha", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("lmbd", (dim.p, dim.lat, dim.lon), np.ndarray),
-                  ("nu", (dim.p, dim.lat, dim.lon), np.ndarray)]
+    properties = [
+        ("intercept_parameter", (dim.p, dim.lat, dim.lon), np.ndarray),
+        ("alpha", (dim.p, dim.lat, dim.lon), np.ndarray),
+        ("lmbd", (dim.p, dim.lat, dim.lon), np.ndarray),
+        ("nu", (dim.p, dim.lat, dim.lon), np.ndarray),
+    ]
 
-    def __init__(self,
-                 size_parameter,
-                 intercept_parameter = None,
-                 alpha = None,
-                 lmbd = None,
-                 nu = None):
+    def __init__(
+        self, size_parameter, intercept_parameter=None, alpha=None, lmbd=None, nu=None
+    ):
         r"""
         Create instance of the modified gamma distribution with given parameters.
 
@@ -75,22 +75,27 @@ class ModifiedGamma(ArtsPSD):
             try:
                 self.alpha = np.broadcast_to(alpha, shape)
             except:
-                raise Exception("Could not broadcast alpha parameter to shape "
-                                "of intercept parameter.")
+                raise Exception(
+                    "Could not broadcast alpha parameter to shape "
+                    "of intercept parameter."
+                )
 
         if not lmbd is None:
             try:
                 self.lmbd = np.broadcast_to(lmbd, shape)
             except:
-                raise Exception("Could not broadcast lambda parameter to shape "
-                                " of intercept parameter.")
+                raise Exception(
+                    "Could not broadcast lambda parameter to shape "
+                    " of intercept parameter."
+                )
 
         if not nu is None:
             try:
                 self.nu = np.broadcast_to(nu, shape)
             except:
-                raise Exception("Could not broadcast nu parameter to shape "
-                                " of N parameter.")
+                raise Exception(
+                    "Could not broadcast nu parameter to shape " " of N parameter."
+                )
 
         super().__init__(size_parameter)
 
@@ -112,46 +117,54 @@ class ModifiedGamma(ArtsPSD):
 
         n = self.intercept_parameter
         if n is None:
-           raise Exception("The intercept parameter needs to be set to use"
-                            " this function.")
+            raise Exception(
+                "The intercept parameter needs to be set to use" " this function."
+            )
         shape = n.shape
 
         # Lambda parameter
 
         lmbd = self.lmbd
         if lmbd is None:
-            raise Exception("The lambda parameter needs to be set to use "
-                            "this function")
+            raise Exception(
+                "The lambda parameter needs to be set to use " "this function"
+            )
         try:
             lmbd = np.broadcast_to(lmbd, shape)
         except:
-            raise Exception("Could not broadcast lambda paramter to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast lambda paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         # Alpha parameter
 
         alpha = self.alpha
         if alpha is None:
-            raise Exception("The alpha parameter needs to be set to use "
-                            "this function.")
+            raise Exception(
+                "The alpha parameter needs to be set to use " "this function."
+            )
         try:
             alpha = np.broadcast_to(alpha, shape)
         except:
-            raise Exception("Could not broadcast alpha paramter to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast alpha paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         # Nu parameter
 
         nu = self.nu
         if nu is None:
-            raise Exception("The nu parameter needs to be set to use this"
-                            "function.")
+            raise Exception("The nu parameter needs to be set to use this" "function.")
 
         try:
             nu = np.broadcast_to(nu, shape)
         except:
-            raise Exception("Could not broadcast nu paramter to the shape"
-                            "of the provided intercept parameter N.")
+            raise Exception(
+                "Could not broadcast nu paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         return n, lmbd, alpha, nu
 
@@ -162,7 +175,7 @@ class ModifiedGamma(ArtsPSD):
         """
         return []
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         r"""
         Computes the :math:`p` th moment :math:`M(p)` of the PSD using
 
@@ -190,7 +203,7 @@ class ModifiedGamma(ArtsPSD):
 
         n, lmbd, alpha, nu = self._get_parameters()
 
-        m = n / lmbd ** p
+        m = n / lmbd**p
         m *= gamma(1 + alpha + p / nu)
         m /= gamma(1 + alpha)
 
@@ -223,33 +236,26 @@ class ModifiedGamma(ArtsPSD):
         """
 
         n0 = np.nan
-        if not self.intercept_parameter is None \
-           and self.intercept_parameter.size == 1:
+        if not self.intercept_parameter is None and self.intercept_parameter.size == 1:
             n0 = self.intercept_parameter[0]
 
         mu = np.nan
-        if not self.mu is None \
-           and self.mu.size == 1:
+        if not self.mu is None and self.mu.size == 1:
             mu = self.mu[0]
 
         lmbd = np.nan
-        if not self.lmbd is None \
-           and self.lmbd.size == 1:
+        if not self.lmbd is None and self.lmbd.size == 1:
             lmbd = self.lmbd[0]
 
         nu = np.nan
-        if not self.nu is None \
-           and self.nu.size == 1:
+        if not self.nu is None and self.nu.size == 1:
             nu = self.nu[0]
 
         @arts_agenda
         def pnd_call(ws):
-            ws.psdMgd(n0 = n0,
-                      mu = mu,
-                      la = lambd,
-                      gam   = nu,
-                      t_min  = self.t_min,
-                      t_max  = self.t_max)
+            ws.psdMgd(
+                n0=n0, mu=mu, la=lambd, gam=nu, t_min=self.t_min, t_max=self.t_max
+            )
 
         return pnd_call
 
@@ -273,15 +279,12 @@ class ModifiedGamma(ArtsPSD):
 
         shape = n.shape
 
-        n     = n.reshape(shape + (1,))
-        lmbd  = lmbd.reshape(shape  + (1,))
-        alpha = alpha.reshape(shape  + (1,))
-        nu    = nu.reshape(shape + (1,))
-
-        print(n, lmbd, alpha, nu)
+        n = n.reshape(shape + (1,))
+        lmbd = lmbd.reshape(shape + (1,))
+        alpha = alpha.reshape(shape + (1,))
+        nu = nu.reshape(shape + (1,))
 
         y = n * nu / gamma(1 + alpha)
         y *= lmbd ** (nu * (1.0 + alpha))
-        y = y * x ** (nu * (1.0 + alpha) - 1) \
-             * np.exp(- (lmbd * x) ** nu)
+        y = y * x ** (nu * (1.0 + alpha) - 1) * np.exp(-((lmbd * x) ** nu))
         return PSDData(x, y, self.size_parameter)

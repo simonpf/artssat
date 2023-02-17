@@ -11,6 +11,7 @@ from artssat.data_provider import DataProviderBase
 from netCDF4 import Dataset
 import numpy as np
 
+
 class NetCDFDataProvider(DataProviderBase):
     """
     The NetCDFDataProvider class exposes the variables in a
@@ -23,6 +24,7 @@ class NetCDFDataProvider(DataProviderBase):
     The positional arguments :code:`*args` given to the
     get methods are consecutively applied to the variable.
     """
+
     @staticmethod
     def _make_getter(variable, fixed_dimensions, offsets):
         def get(*args):
@@ -53,16 +55,17 @@ class NetCDFDataProvider(DataProviderBase):
                 return v[:]
             else:
                 return v
+
         return get
 
-    def __init__(self, path, *args, group = None, **kwargs):
+    def __init__(self, path, *args, group=None, **kwargs):
         """
         Arguments:
 
             path(str): Path to a NetCDF4 file.
 
         """
-        self.file_handle      = Dataset(path, *args, **kwargs)
+        self.file_handle = Dataset(path, *args, **kwargs)
         self.fixed_dimensions = {}
         self.offsets = {}
 
@@ -77,9 +80,9 @@ class NetCDFDataProvider(DataProviderBase):
         for name in group.variables:
             fname = "get_" + name
             v = group.variables[name]
-            self.__dict__[fname] = NetCDFDataProvider._make_getter(v,
-                                                                   self.fixed_dimensions,
-                                                                   self.offsets)
+            self.__dict__[fname] = NetCDFDataProvider._make_getter(
+                v, self.fixed_dimensions, self.offsets
+            )
 
         super().__init__()
 

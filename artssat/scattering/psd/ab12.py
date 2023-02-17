@@ -33,7 +33,6 @@ from artssat.scattering.psd.arts.arts_psd import ArtsPSD
 from artssat.scattering.psd.data.psd_data import PSDData
 
 
-
 class AB12(ArtsPSD):
     r"""
     The AB12 class provides an implementation of the Abel-Boutle (2012) single-moment
@@ -41,7 +40,7 @@ class AB12(ArtsPSD):
     """
 
     @classmethod
-    def from_psd_data(self, psd, mu = 0.0):
+    def from_psd_data(self, psd, mu=0.0):
         r"""
         Create a AB12 PSD from given psd data.
 
@@ -51,12 +50,10 @@ class AB12(ArtsPSD):
             representation.
             mu(:code:`float` or array): The value of the mu parameter to use.
         """
-        mass_density   = psd.get_mass_density()
+        mass_density = psd.get_mass_density()
         return AB12(mu, mass_density)
 
-    def __init__(self,
-                 mu = 0.0,
-                 mass_density = None):
+    def __init__(self, mu=0.0, mass_density=None):
         r"""
         Parameters:
             mu(:code:`numpy.float`): The :math:`\mu` parameter of the PSD
@@ -80,7 +77,7 @@ class AB12(ArtsPSD):
             psd: Other PSD providing :code:`get_moment` and :code:`get_mass_density`
             member functions.
         """
-        self.mass_density   = psd.get_mass_density()
+        self.mass_density = psd.get_mass_density()
 
     def _get_parameters(self):
         """
@@ -103,23 +100,22 @@ class AB12(ArtsPSD):
         # Mass density
         m = self.mass_density
         if m is None:
-           raise Exception("The mass density needs to be set to use"
-                            " this function.")
+            raise Exception("The mass density needs to be set to use" " this function.")
         shape = m.shape
 
         try:
             mu = np.broadcast_to(np.array(self.mu), shape)
         except:
-            raise Exception("Could not broadcast mu paramter to the shape"
-                            "of the provided intercept parameter N.")
-
+            raise Exception(
+                "Could not broadcast mu paramter to the shape"
+                "of the provided intercept parameter N."
+            )
 
         x1 = 0.22
         x2 = 2.2
-        lmbd = (np.pi * 1000.0 * x1 * gamma(4 + mu)) / (6.0 *  m)
+        lmbd = (np.pi * 1000.0 * x1 * gamma(4 + mu)) / (6.0 * m)
         lmbd = lmbd ** (1.0 / (4.0 + mu - x2))
-        print(lmbd)
-        n0 = x1 * lmbd ** x2
+        n0 = x1 * lmbd**x2
 
         return n0, lmbd, mu
 
@@ -142,13 +138,14 @@ class AB12(ArtsPSD):
         """
         The ARTS SM implementing the MY05 PSD.
         """
+
         @arts_agenda
         def pnd_call(ws):
-            ws.psdAbelBoutle12(t_min = self.t_min,
-                               t_max = self.t_max)
+            ws.psdAbelBoutle12(t_min=self.t_min, t_max=self.t_max)
+
         return pnd_call
 
-    def get_moment(self, p, reference_size_parameter = None):
+    def get_moment(self, p, reference_size_parameter=None):
         r"""
         Analytically computes the :math:`p` th moment :math:`M(p)` of the PSD
         using
@@ -219,11 +216,11 @@ class AB12(ArtsPSD):
         shape = n0.shape
         result_shape = shape + (1,)
 
-        n0   = np.reshape(n0, result_shape)
+        n0 = np.reshape(n0, result_shape)
         lmbd = np.broadcast_to(lmbd, shape).reshape(result_shape)
-        mu   = np.broadcast_to(mu, shape).reshape(result_shape)
+        mu = np.broadcast_to(mu, shape).reshape(result_shape)
 
         x = x.reshape((1,) * len(shape) + (-1,))
 
-        y = n0 * x ** mu * np.exp(- lmbd * x)
+        y = n0 * x**mu * np.exp(-lmbd * x)
         return PSDData(x, y, self.size_parameter)
