@@ -325,7 +325,7 @@ class TropopauseMask:
         lr = -np.diff(t)
 
         tp = np.where(np.logical_and(lr < 0, t_avg < 220))[0]
-        inds = np.ones(t.size, dtype=np.bool)
+        inds = np.ones(t.size, dtype=bool)
         if len(tp > 0):
             i = np.where(np.logical_and(lr < 0, t_avg < 220))[0][0]
             inds[i + 1 : inds.size] = False
@@ -355,7 +355,7 @@ class FreezingLevel:
             i = 0
         if self.lower_inclusive:
             i = max(i - 1, 0)
-        inds = np.zeros(t.size, dtype=np.bool)
+        inds = np.zeros(t.size, dtype=bool)
         inds[i:] = True
 
         if self.invert:
@@ -481,7 +481,7 @@ class DataProviderAPriori(APrioriProviderBase):
     def _get_mask(self, data_provider, *args, **kwargs):
         if self.mask is None:
             xa = self.get_xa(*args, **kwargs)
-            mask = np.ones(xa.shape, dtype=np.bool)
+            mask = np.ones(xa.shape, dtype=bool)
         else:
             mask = self.mask(data_provider, *args, **kwargs)
         return mask
@@ -525,7 +525,7 @@ class FixedAPriori(APrioriProviderBase):
     def _get_mask(self, data_provider, *args, **kwargs):
         if self.mask is None:
             xa = self._get_xa(data_provider, *args, **kwargs)
-            mask = np.ones(xa.shape, dtype=np.bool)
+            mask = np.ones(xa.shape, dtype=bool)
         else:
             mask = self.mask(data_provider, *args, **kwargs)
         return mask
@@ -889,7 +889,7 @@ class ReducedVerticalGrid(APrioriProviderBase):
             if old_grid[i_1_old] > new_grid[i_1_new]:
                 mask_i[min(i_1_new + 1, new_grid.size - 1)] = 1.0
 
-        return mask_i.astype(np.bool)
+        return mask_i.astype(bool)
 
     def get_xa(self, *args, **kwargs):
         self.a_priori.owner = self.owner
