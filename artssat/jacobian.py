@@ -427,6 +427,7 @@ class JacobianBase(ArtsObject, metaclass=ABCMeta):
         x = x[::-1]
         retrieval_grids[0] = retrieval_grids[0][::-1]
         grids[0] = grids[0][::-1]
+        retrieval_grids = [np.ascontiguousarray(grid) for grid in retrieval_grids]
 
         interp = sp.interpolate.RegularGridInterpolator(
             retrieval_grids, x, method="linear", bounds_error=False, fill_value=np.nan
@@ -438,13 +439,13 @@ class JacobianBase(ArtsObject, metaclass=ABCMeta):
         else:
             xi = mesh_grids[0].reshape(-1, 1)
 
-        y = interp(xi.copy(order="C"))
+        y = interp(xi)
 
         inds = np.array(np.isnan(y))
         interp = sp.interpolate.RegularGridInterpolator(
             retrieval_grids, x, method="nearest", bounds_error=False, fill_value=None
         )
-        y[inds] = interp(xi.copy(order="C"))[inds]
+        y[inds] = interp(xi)[inds]
 
         grids_shape = [g.size for g in grids]
         y = np.reshape(y, grids_shape)[::-1]
