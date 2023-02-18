@@ -404,6 +404,7 @@ class RetrievalRun:
         retrieval_quantities,
         previous_run=None,
     ):
+        super().__init__()
 
         for rq in retrieval_quantities:
             rq.fixed = False
@@ -411,12 +412,11 @@ class RetrievalRun:
         self.name = name
         self.y = np.copy(y)
         self.settings = settings
-        self.sensors = simulation.sensors.copy()
         self.sensor_indices = sensor_indices
         self.rq_indices = {}
-        self.retrieval_quantities = retrieval_quantities.copy()
         self.previous_run = previous_run
 
+        self._retrieval_quantities = [weakref.ref(rq) for rq in retrieval_quantities]
         self._simulation = weakref.ref(simulation)
         self._data_provider = weakref.ref(simulation.data_provider)
 
@@ -437,6 +437,18 @@ class RetrievalRun:
             return data_provider
         else:
             raise ValueError("The corresponding data provider has " " been destroyed.")
+
+    @property
+    def sensors(self):
+        return self.simulation.sensors
+
+    @property
+    def retrieval_quantities(self):
+        rqs = [rq() for rq in self._retrieval_quantities]
+        if any([rq is None for rq in rqs]):
+            raise ValueError("The corresponding retrieval quantities have been deleted.")
+        else:
+            return rqs
 
     def get_result(self, q, attribute="x", interpolate=False, transform_back=False):
 
@@ -756,17 +768,26 @@ class RetrievalRun:
                 (i, j) = self.sensor_indices[s.name]
                 covmat_blocks += [covmat_se[i:j, i:j]]
 
-        print(len(covmat_blocks))
-
         covmat_se = sp.sparse.block_diag(covmat_blocks, format="coo")
         ws.covmat_seAddBlock(block=covmat_se)
 
+
     def setup_iteration_agenda(self):
+        """
+        Sets up the ARTS OEM iteration agenda for the simulations sensors
+        and retrieval quantities.
 
+        NOTE: Running the retrieval in debug mode may cause memory to
+             leak.
+        """
         debug = self.simulation.retrieval.debug_mode
-
         if debug:
-            self.debug = {"x": [], "yf": [], "jacobian": [], "iteration_index": []}
+            self.debug = {
+                "x": [],
+                "yf": [],
+                "jacobian": [],
+                "iteration_index": []
+            }
 
         ws = self.simulation.workspace
         data_provider = self.data_provider
@@ -782,11 +803,11 @@ class RetrievalRun:
 
         agenda = Agenda.create("inversion_iterate_agenda")
 
-        @arts_agenda
-        def debug_print(ws):
-            ws.Print(ws.x, 0)
-
-        # agenda.append(debug_print)
+        if debug:
+            @arts_agenda
+            def debug_print(ws):
+                ws.Print(ws.x, 0)
+            agenda.append(debug_print)
 
         for i, rq in enumerate(self.retrieval_quantities):
             preps = rq.retrieval.get_iteration_preparations(i)
@@ -837,32 +858,28 @@ class RetrievalRun:
 
         def iteration_finalize(ws):
             ws.Ignore(ws.inversion_iteration_counter)
-
             ws.Copy(ws.yf, ws.y)
             ws.jacobianAdjustAndTransform()
 
         agenda.append(arts_agenda(iteration_finalize))
 
-        @arts_agenda
-        def get_debug(ws):
-            self.debug["x"] += [np.copy(ws.x.value)]
-            self.debug["yf"] += [np.copy(ws.yf.value)]
-            self.debug["jacobian"] += [np.copy(ws.jacobian.value)]
-            self.debug["iteration_index"] += [ws.inversion_iteration_counter.value]
-
-            x = ws.x.value
-
-            for rq in self.simulation.retrieval.retrieval_quantities:
-                if rq.debug_callback is not None:
-                    i, j = self.rq_indices[rq]
-                    x_q = x[i:j]
-                    x_q = rq.transformation.invert(x_q)
-                    grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
-                    grids = [g for g in grids if g.size > 0]
-                    x_q = rq.retrieval.interpolate_to_grids(x_q, grids)
-                    rq.debug_callback(ws, x_q)
-
         if debug:
+            @arts_agenda
+            def get_debug(ws):
+                self.debug["x"] += [np.copy(ws.x.value)]
+                self.debug["yf"] += [np.copy(ws.yf.value)]
+                self.debug["jacobian"] += [np.copy(ws.jacobian.value)]
+                self.debug["iteration_index"] += [ws.inversion_iteration_counter.value]
+                x = ws.x.value
+                for rq in self.simulation.retrieval.retrieval_quantities:
+                    if rq.debug_callback is not None:
+                        i, j = self.rq_indices[rq]
+                        x_q = x[i:j]
+                        x_q = rq.transformation.invert(x_q)
+                        grids = [ws.p_grid.value, ws.lat_grid.value, ws.lon_grid.value]
+                        grids = [g for g in grids if g.size > 0]
+                        x_q = rq.retrieval.interpolate_to_grids(x_q, grids)
+                        rq.debug_callback(ws, x_q)
             agenda.append(get_debug)
 
         ws.inversion_iterate_agenda = agenda
@@ -1056,8 +1073,10 @@ class RetrievalCalculation:
         self._y = self._get_y_vector(simulation, *args, **kwargs)
 
         ws = simulation.workspace
-
         previous_run = None
+        if hasattr(self, "results"):
+            del self.results
+
         if self.callbacks == []:
             #
             # No retrieval callback provided. The retrieval consists only
@@ -1101,7 +1120,7 @@ class RetrievalCalculation:
                     cb(retrieval)
 
                 retrieval.run(*args, **kwargs)
-                self.results += [retrieval]
+                self.results.append(retrieval)
                 previous_run = retrieval
 
     def get_results(self, full_retrieval_output=False):
@@ -1116,7 +1135,7 @@ class RetrievalCalculation:
             A dictionary containing the retrieval results.
         """
         if not isinstance(self.results, list):
-            results = [results.results]
+            results = [self.results]
         else:
             results = self.results
 

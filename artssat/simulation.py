@@ -308,11 +308,8 @@ class ArtsSimulation:
 
         # Run retrieval calculation
         if len(self.retrieval.retrieval_quantities) > 0:
-            scattering = len(self.atmosphere.scatterers) > 0
-
             self.retrieval.run(self, *args, **kwargs)
         else:
-
             self._run_forward_simulation()
         return self
 
