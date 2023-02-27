@@ -109,10 +109,10 @@ class MY05(ArtsPSD):
             mu(:code:`numpy.float`): The :math:`\mu` parameter of the PSD
 
             a(:code:`numpy.float`): The :math:`a` coefficient of the
-            mass-size realtionship.
+            mass-size relationship.
 
             b(:code:`numpy.float`): The :math:`b` coefficient of the
-            mass-size realtionship.
+            mass-size relationship.
 
             number_density(:code:`numpy.ndarray`): Array containing
             the number density for a given set of volume elements in an
