@@ -416,9 +416,10 @@ class RetrievalRun:
         self.rq_indices = {}
         self.previous_run = previous_run
 
-        self._retrieval_quantities = [weakref.ref(rq) for rq in retrieval_quantities]
         self._simulation = weakref.ref(simulation)
         self._data_provider = weakref.ref(simulation.data_provider)
+        self.sensors = simulation.sensors
+        self.retrieval_quantities = retrieval_quantities
 
         self.x = None
 
@@ -437,18 +438,6 @@ class RetrievalRun:
             return data_provider
         else:
             raise ValueError("The corresponding data provider has " " been destroyed.")
-
-    @property
-    def sensors(self):
-        return self.simulation.sensors
-
-    @property
-    def retrieval_quantities(self):
-        rqs = [rq() for rq in self._retrieval_quantities]
-        if any([rq is None for rq in rqs]):
-            raise ValueError("The corresponding retrieval quantities have been deleted.")
-        else:
-            return rqs
 
     def get_result(self, q, attribute="x", interpolate=False, transform_back=False):
 
