@@ -134,6 +134,19 @@ def evaluate_d14(x, n0, dm, alpha, beta):
 
     return y
 
+def n0_a_priori(t):
+    """
+    Functional relation for of the a priori mean of :math:`N_0^*`
+    as described in Cazenave et al. 2019.
+
+    Args:
+        t: Array containing the temperature profile.
+
+    Returns:
+        A priori for :math:`log(N_0^*)`
+    """
+    t = t - 273.15
+    return np.log10(np.exp(-0.076586 * t + 17.948))
 
 ################################################################################
 # PSD classes
@@ -775,6 +788,93 @@ class D14MN(D14N):
             )
 
         return n0, dm, alpha, beta
+
+    def get_mass_density(self):
+        """
+        Returns:
+            Array containing the mass density for all the bulk volumes described
+            by this PSD.
+        """
+        return self.mass_density
+
+    def evaluate(self, x):
+        """
+        Compute value of the particle size distribution for given values of the
+        size parameter.
+
+        Parameters:
+            x(numpy.array): Array containing the values of :math:`D_eq` at which to
+                compute the number density.
+
+        Returns:
+
+            Array :code:`dNdD_eq` containing the computed values of the PSD. The first
+            dimensions of :code:`dNdD_eq` correspond to the shape of the :code:`n0`
+            parameter and the last dimension to the size parameter.
+
+        """
+        n0, dm, alpha, beta = self._get_parameters()
+        y = evaluate_d14(x, n0, dm, alpha, beta)
+        return PSDData(x, y, D_eq(self.rho))
+
+
+class D14M(D14MN):
+    """
+
+    Implementation of the D14 PSD that uses only the mass density $m$ as free parameters
+    and uses an a priori relationship to predict N_0^* from the temperature.
+    """
+    def __init__(
+        self, alpha, beta, rho=917.0, mass_density=None, temperature=None
+    ):
+        """
+        Parameters:
+            alpha(numpy.float): The value of the :math:`alpha` parameter for
+                the PSD
+            beta(numpy.float): The value of the :math:`beta` parameter for
+                the PSD
+            rho(numpy.float): The particle density to use for the conversion
+                to mass density.
+            mass_density(numpy.array): If provided, this can be used to fix
+                the mass density which will then not be queried from the data
+                provider.
+            intercept_parameter(numpy.array): If provided, this can be used to fix
+                the value of the intercept parameter $N_0^*$ which will then not
+                be queried from the data provider.
+
+        """
+        if mass_density is not None and temperature is not None:
+            intercept_parameter = n0_a_priori(temperature)
+        else:
+            intercept_parameter = None
+        from artssat.scattering.psd.data.psd_data import D_eq
+        super().__init__(alpha, beta, rho, mass_density, intercept_parameter)
+
+    @property
+    def moment_names(self):
+        return ["mass_density"]
+
+    @property
+    def moments(self):
+        return [self.mass_density]
+
+    @property
+    def pnd_call_agenda(self):
+        @arts_agenda
+        def pnd_call(ws):
+            ws.psdDelanoeEtAl14(
+                n0Star=-999.0,
+                Dm=-999.0,
+                iwc=np.nan,
+                rho=self.rho,
+                alpha=self.alpha,
+                beta=self.beta,
+                t_min=self.t_min,
+                dm_min=self.dm_min,
+                t_max=self.t_max,
+            )
+
+        return pnd_call
 
     def get_mass_density(self):
         """

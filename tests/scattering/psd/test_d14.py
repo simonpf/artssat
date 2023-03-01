@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from artssat.scattering.psd import D14, D14N, D14MN
+from artssat.scattering.psd import D14, D14N, D14MN, D14M
 from artssat.scattering.psd import MY05
 
 ################################################################################
@@ -107,3 +107,19 @@ def test_d14_from_psd_data(random_d14_psd):
 
     assert np.all(np.isclose(psd.mass_weighted_diameter,
                              psd_ref.mass_weighted_diameter))
+
+
+def test_d14m():
+    """
+    Test single-moment version of D14 PSD.
+    """
+    md = (1.0 + np.arange(10)) * 1e-4
+    temperature = 260.0 * np.ones(10)
+
+    psd = D14M(-0.26, 1.75, 917.0, md, temperature)
+
+    x = np.logspace(-9, 0, 1001)
+    psd_data = psd.evaluate(x)
+
+    iwc = psd_data.get_mass_density()
+    assert np.all(np.isclose(iwc, md, rtol=1e-2))

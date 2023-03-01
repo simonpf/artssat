@@ -1138,7 +1138,7 @@ class RetrievalCalculation:
                 data.setdefault(q_r.name, []).append(res)
 
             # OEM diagnostics.
-            data.setdefault("diagnostics", []).append(res)
+            data.setdefault("diagnostics", []).append(result.oem_diagnostics)
 
             # Observation and fit.
             for sensor in result.sensors:
